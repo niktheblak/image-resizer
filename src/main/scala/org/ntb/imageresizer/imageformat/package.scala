@@ -44,10 +44,10 @@ package object imageformat {
   }
   
   def parseImageFormatFromUri(uri: URI): Option[ImageFormat] = {
-    val fileName = uri.getPath().toLowerCase()
+    val fileName = if (uri.getPath() != null) uri.getPath().toLowerCase() else ""
     if ((fileName endsWith "jpg") || (fileName endsWith "jpeg")) Some(JPEG)
-    else if (fileName endsWith "png") Some(JPEG)
-    else if (fileName endsWith "gif") Some(JPEG)
+    else if (fileName endsWith "png") Some(PNG)
+    else if (fileName endsWith "gif") Some(GIF)
     else None
   }
 }

@@ -1,42 +1,44 @@
 package org.ntb.imageresizer.io
 
-import java.net.URI
-import akka.util.ByteString
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.HttpClient
-import org.apache.http.HttpException
-import org.ntb.imageresizer.util.Loans.using
-import com.google.common.io.ByteStreams
-import java.io.File
+import java.io.InputStream
 import java.io.OutputStream
-import org.apache.http.params.HttpConnectionParams
+import java.net.URI
+
+import org.apache.http.HttpException
+import org.apache.http.client.ClientProtocolException
+import org.apache.http.client.HttpClient
+import org.apache.http.client.methods.HttpGet
+import org.ntb.imageresizer.util.Loans.using
+
+import com.google.common.io.ByteStreams
+
+import akka.util.ByteString
 
 trait Downloader {
   val httpClient: HttpClient
-  
+
   def download(uri: URI): ByteString = {
-    val get = new HttpGet(uri)
-    val response = httpClient.execute(get)
-    if (response.getStatusLine().getStatusCode() >= 300) {
-      get.abort()
-      throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine().getStatusCode(), uri))
-    }
-    val entity = response.getEntity()
-    using(entity.getContent()) { input =>
-      ByteString(ByteStreams.toByteArray(input))
-    }
+    downloadWith(uri, input => ByteString(ByteStreams.toByteArray(input)))
   }
-  
+
   def download(uri: URI, output: OutputStream): Long = {
-    val get = new HttpGet(uri)
-    val response = httpClient.execute(get)
-    if (response.getStatusLine().getStatusCode() >= 300) {
-      get.abort()
-      throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine().getStatusCode(), uri))
-    }
-    val entity = response.getEntity()
-    using(entity.getContent()) { input =>
-      ByteStreams.copy(input, output)
+    downloadWith(uri, input => ByteStreams.copy(input, output))
+  }
+
+  def downloadWith[A](uri: URI, contentProcessor: InputStream => A): A = {
+    try {
+      val get = new HttpGet(uri)
+      val response = httpClient.execute(get)
+      if (response.getStatusLine().getStatusCode() >= 300) {
+        get.abort()
+        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine().getStatusCode(), uri))
+      }
+      val entity = response.getEntity()
+      using(entity.getContent()) { input =>
+        contentProcessor(input)
+      }
+    } catch {
+      case e: ClientProtocolException => throw new HttpException(e.getMessage(), e)
     }
   }
 }

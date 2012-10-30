@@ -3,11 +3,9 @@ package org.ntb.imageresizer.actor
 import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeoutException
-
 import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.Status
@@ -15,6 +13,7 @@ import akka.actor.actorRef2Scala
 import akka.dispatch.Await
 import akka.util.Timeout
 import akka.util.duration.intToDurationInt
+import org.apache.http.HttpException
 
 class FileCacheImageBrokerActor extends Actor
   with ActorLogging
@@ -43,21 +42,27 @@ class FileCacheImageBrokerActor extends Actor
           log.debug("Image from request %s was successfully downloaded to %s".format(request, file.getPath()))
           sender ! GetImageResponse(file)
         } catch {
-          case e: TimeoutException =>
-            file.delete()
-            sender ! Status.Failure(e)
-          case e: UnsupportedImageFormatException =>
-            file.delete()
-            sender ! Status.Failure(e)
-          case e: Exception =>
-            file.delete()
-            sender ! Status.Failure(e)
-            throw e
+          case e: Exception => handleException(file, e)
         }
       }
     case ClearCache() =>
       log.info("Cleaning cache directory " + cacheDirectory().getAbsolutePath())
       clearCacheDirectory()
+  }
+
+  def handleException(file: File, ex: Exception) {
+    file.delete()
+    ex match {
+      case e: TimeoutException =>
+        sender ! Status.Failure(e)
+      case e: UnsupportedImageFormatException =>
+        sender ! Status.Failure(e)
+      case e: HttpException =>
+        sender ! Status.Failure(e)
+      case e: Exception =>
+        sender ! Status.Failure(e)
+        throw e
+    }
   }
 }
 

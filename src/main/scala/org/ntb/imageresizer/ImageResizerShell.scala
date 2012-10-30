@@ -31,7 +31,7 @@ object ImageResizerShell extends App {
     }
   """)
   println("Starting ImageResizer shell")
-  val resizeNodes = Runtime.getRuntime().availableProcessors()
+  val resizeNodes = math.max(Runtime.getRuntime().availableProcessors() - 1, 1)
   println("Deploying " + resizeNodes + " resizers")
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)), "resizer")
@@ -43,6 +43,7 @@ object ImageResizerShell extends App {
     try {
       while (true) {
         Console.print("> ")
+        Console.flush()
         val command = Console.readLine()
         val tokens = command.split(' ').toList
         handleCommand(tokens)
