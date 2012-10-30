@@ -6,7 +6,7 @@ package object imageformat {
   abstract class ImageFormat {
     val extension: String
     val mimeType: String
-    override def toString = extension
+    override def toString() = extension
   }
 
   case object JPEG extends ImageFormat {

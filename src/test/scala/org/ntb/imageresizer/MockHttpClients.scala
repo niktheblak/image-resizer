@@ -11,7 +11,7 @@ import org.apache.http.HttpResponse
 import org.apache.http.StatusLine
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
-import org.ntb.imageresizer.io.FileDownloader
+import org.ntb.imageresizer.io.Downloader
 import org.specs2.runner.JUnitRunner
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification

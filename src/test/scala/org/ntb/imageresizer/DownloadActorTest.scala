@@ -6,9 +6,9 @@ import org.apache.http.HttpException
 import org.apache.http.client.HttpClient
 import org.junit.runner.RunWith
 import org.ntb.imageresizer.MockHttpClients.canBeEqual
-import org.ntb.imageresizer.actor.DownloadActor
-import org.ntb.imageresizer.actor.DownloadActor.DownloadRequest
-import org.ntb.imageresizer.actor.DownloadActor.DownloadResponse
+import org.ntb.imageresizer.actor.BaseDownloadActor
+import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadRequest
+import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadResponse
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.google.common.io.Files
@@ -19,7 +19,7 @@ import akka.actor.Status
 import akka.testkit.ImplicitSender
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import org.ntb.imageresizer.io.FileDownloader
+import org.ntb.imageresizer.io.Downloader
 
 @RunWith(classOf[JUnitRunner])
 class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with Specification {
@@ -57,7 +57,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     success
   }
   
-  class TestDownloadActor(backingHttpClient: HttpClient) extends DownloadActor {
+  class TestDownloadActor(backingHttpClient: HttpClient) extends BaseDownloadActor {
     override val httpClient = backingHttpClient
   }
 }

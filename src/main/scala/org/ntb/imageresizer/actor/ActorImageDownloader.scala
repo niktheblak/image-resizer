@@ -1,21 +1,26 @@
-package org.ntb.imageresizer.resize
+package org.ntb.imageresizer.actor
 
+import java.io.File
 import java.net.URI
-import org.ntb.imageresizer.actor.DownloadActor._
-import org.ntb.imageresizer.actor.ResizeActor._
-import org.ntb.imageresizer.imageformat._
-import org.ntb.imageresizer.util.FilePathUtils
+
+import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadRequest
+import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadResponse
+import org.ntb.imageresizer.actor.ResizeActor.ResizeImageToFileRequest
+import org.ntb.imageresizer.actor.ResizeActor.ResizeImageToFileResponse
+import org.ntb.imageresizer.imageformat.defaultImageFormat
+import org.ntb.imageresizer.imageformat.parseImageFormatFromUri
+
 import akka.actor.ActorContext
 import akka.dispatch.Future
 import akka.pattern.ask
-import akka.util.ByteString
 import akka.util.Timeout
-import java.io.File
 
-trait ResizingImageDownloader {
+trait ActorImageDownloader {
   val tempFilePrefix = "ResizingImageDownloader-"
+  protected val context: ActorContext
+  implicit val timeout: Timeout
   
-  def downloadToFile(uri: URI, target: File)(implicit context: ActorContext, timeout: Timeout): Future[Long] = {
+  def downloadToFile(uri: URI, target: File): Future[Long] = {
     val downloadActor = context.actorFor("/user/downloader")
     val downloadTask = ask(downloadActor, DownloadRequest(uri, target))
     for {
@@ -23,7 +28,7 @@ trait ResizingImageDownloader {
     } yield downloadResponse.fileSize
   }
   
-  def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int)(implicit context: ActorContext, timeout: Timeout): Future[Unit] = {
+  def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int): Future[Unit] = {
     val resizeActor = context.actorFor("/user/resizer")
     val format = parseImageFormatFromUri(uri) getOrElse defaultImageFormat
     val tempFile = File.createTempFile(tempFilePrefix, ".tmp")

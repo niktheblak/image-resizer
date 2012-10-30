@@ -11,10 +11,8 @@ import java.io.File
 import java.io.OutputStream
 import org.apache.http.params.HttpConnectionParams
 
-trait FileDownloader {
+trait Downloader {
   val httpClient: HttpClient
-  
-  val defaultHttpTimeout = 10000
   
   def download(uri: URI): ByteString = {
     val get = new HttpGet(uri)
@@ -40,13 +38,5 @@ trait FileDownloader {
     using(entity.getContent()) { input =>
       ByteStreams.copy(input, output)
     }
-  }
-  
-  def createDefaultHttpClient(timeout: Int = defaultHttpTimeout): HttpClient = {
-    val httpClient = new org.apache.http.impl.client.DefaultHttpClient()
-    val params = httpClient.getParams()
-    HttpConnectionParams.setConnectionTimeout(params, timeout)
-    HttpConnectionParams.setSoTimeout(params, timeout)
-    httpClient
   }
 }

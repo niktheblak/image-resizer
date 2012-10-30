@@ -9,10 +9,8 @@ import akka.actor.ActorLogging
 import akka.actor.actorRef2Scala
 import akka.util.ByteString
 
-class CacheActor extends Actor with ActorLogging with TempFileCacheProvider[Tuple2[URI, Int]] {
+class CacheActor extends Actor with ActorLogging with TempFileCacheProvider[Tuple2[URI, Int]] with ActorNameCachePath {
   import CacheActor._
-  
-  override def cacheDirectoryName: String = self.path.name
   
   def receive = {
     case InsertToCacheRequest(uri, data, size) =>

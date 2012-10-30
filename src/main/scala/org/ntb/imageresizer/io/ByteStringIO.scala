@@ -12,7 +12,7 @@ import akka.util.ByteString
 
 object ByteStringIO {
   def read(file: File): ByteString = {
-    assume(file.exists())
+    require(file.exists())
     using(new FileInputStream(file)) { input =>
       using(new ByteStringOutputStream()) { output =>
         ByteStreams.copy(input, output)

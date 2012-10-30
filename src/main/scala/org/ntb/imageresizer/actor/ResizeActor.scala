@@ -24,7 +24,7 @@ class ResizeActor extends Actor with ActorLogging {
     case ResizeImageRequest(data, size, format) =>
       try {
         val resized = resizeImage(data, size, format)
-        log.info("Image resized successfully, replying with ResizeImageResponse([%d bytes])".format(resized.length))
+        log.debug("Image resized successfully, replying with ResizeImageResponse([%d bytes])".format(resized.length))
         sender ! ResizeImageResponse(resized)
       } catch {
         case e: UnsupportedImageFormatException =>
@@ -36,7 +36,7 @@ class ResizeActor extends Actor with ActorLogging {
     case ResizeImageToFileRequest(source, target, size, format) =>
       try {
         resizeImage(source, target, size, format)
-        log.info("Image resized successfully, replying with ResizeImageToFileResponse()")
+        log.debug("Image resized successfully, replying with ResizeImageToFileResponse()")
         sender ! ResizeImageToFileResponse()
       } catch {
         case e: UnsupportedImageFormatException =>
