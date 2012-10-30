@@ -7,8 +7,7 @@ import java.util.regex.PatternSyntaxException
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.DownloadActor
 import org.ntb.imageresizer.actor.FileCacheImageBrokerActor
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor.GetImageRequest
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor.GetImageResponse
+import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.actor.ResizeActor
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 
@@ -72,6 +71,8 @@ object ImageResizerShell extends App {
           case e: UnsupportedImageFormatException => Console.err.println("Unsupported image format for " + path)
           case e: HttpException => Console.err.println("Could not download '%s': %s".format(path, e.getMessage()))
         }
+      case "clear" :: Nil =>
+        imageBrokerActor ! ClearCache()
       case "exit" :: Nil =>
         exit()
       case command @ _ =>

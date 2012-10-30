@@ -25,7 +25,7 @@ class FileCacheImageBrokerActor extends Actor
   val timeout = Timeout(10 seconds)
 
   override def preStart() {
-    log.info("Starting %s with cache directory %s".format(classOf[FileCacheImageBrokerActor].getCanonicalName(), cachePath))
+    log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cachePath))
   }
 
   def receive = {
@@ -46,7 +46,7 @@ class FileCacheImageBrokerActor extends Actor
         }
       }
     case ClearCache() =>
-      log.info("Cleaning cache directory " + cacheDirectory().getAbsolutePath())
+      log.info("Clearing cache directory " + cacheDirectory().getAbsolutePath())
       clearCacheDirectory()
   }
 
