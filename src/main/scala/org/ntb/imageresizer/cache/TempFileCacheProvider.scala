@@ -5,15 +5,15 @@ import akka.util.ByteString
 import java.io.File
 import org.apache.commons.codec.digest.DigestUtils.md5Hex
 
-trait TempFileCacher[A] extends FileCacher[A] {
-  val appPrefix = "image-resizer"
+trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
+  def cacheDirectoryName: String
     
-  def tempDirCachePathProviderProvider(key: A): String = {
+  def tempDirCacheFileProvider(key: A): File = {
     require(key != null, "Argument key cannot be null")
     require(!isNullOrEmpty(key.toString), "toString() method of argument key must return a nonempty string")
     val dir = cacheDirectory()
     val fileName = md5Hex(key.toString())
-    new File(dir, fileName).getAbsolutePath()
+    new File(dir, fileName)
   }
   
   def clearCacheDirectory() {
@@ -24,11 +24,11 @@ trait TempFileCacher[A] extends FileCacher[A] {
   def cacheDirectory(): File = {
     val tmpdirProperty = System.getProperty("java.io.tmpdir")
     assert(tmpdirProperty != null, "Environment variable java.io.tmpdir is not set")
-    val applicationTempDir = new File(tmpdirProperty, appPrefix)
-    assert(!applicationTempDir.isFile(), "File with path %s already exists".format(applicationTempDir.getAbsolutePath()))
-    if (!applicationTempDir.exists()) applicationTempDir.mkdir()
-    applicationTempDir
+    val cacheDir = new File(tmpdirProperty, cacheDirectoryName)
+    assert(!cacheDir.isFile(), "File with path %s already exists".format(cacheDir.getAbsolutePath()))
+    if (!cacheDir.exists()) cacheDir.mkdir()
+    cacheDir
   }
   
-  override val cachePathProvider: A => String = tempDirCachePathProviderProvider
+  override val cacheFileProvider: A => File = tempDirCacheFileProvider
 }

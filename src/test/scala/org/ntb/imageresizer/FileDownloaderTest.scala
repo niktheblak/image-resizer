@@ -25,7 +25,7 @@ class FileDownloaderTest extends Specification with Mockito {
       val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
-      val data = downloader.downloadFile(uri)
+      val data = downloader.downloadToByteString(uri)
       val captor = ArgumentCaptor.forClass(classOf[HttpGet])
       there was one(httpClient).execute(captor.capture())
       captor.getValue().getURI() must_== uri
@@ -35,7 +35,7 @@ class FileDownloaderTest extends Specification with Mockito {
     "throw HttpException when HTTP server respons with an error code" in {
       val httpClient = statusCodeHttpClient(404)
       val downloader = fileDownloader(httpClient)
-      downloader.downloadFile(URI.create("http://www.server.com/logo.png")) must throwA[HttpException]
+      downloader.downloadToByteString(URI.create("http://www.server.com/logo.png")) must throwA[HttpException]
       there was one(httpClient).execute(any[HttpGet])
     }
   }

@@ -16,15 +16,12 @@ import akka.util.Timeout
 import org.apache.http.HttpException
 import org.ntb.imageresizer.resize.ResizingImageDownloader
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-
-case class GetImageRequest(uri: URI, preferredSize: Int)
-case class GetImageResponse(data: ByteString)
+import CacheActor._
 
 class ImageBrokerActor extends Actor with ActorLogging with ResizingImageDownloader {
   import context.dispatcher
+  import ImageBrokerActor._
   implicit val timeout = Timeout(10 seconds)
-
-  val defaultImageFormat = "jpg"
 
   def receive = {
     case GetImageRequest(uri, preferredSize) =>
@@ -55,4 +52,9 @@ class ImageBrokerActor extends Actor with ActorLogging with ResizingImageDownloa
           throw e
       }
   }
+}
+
+object ImageBrokerActor {
+  case class GetImageRequest(uri: URI, preferredSize: Int)
+  case class GetImageResponse(data: ByteString)
 }

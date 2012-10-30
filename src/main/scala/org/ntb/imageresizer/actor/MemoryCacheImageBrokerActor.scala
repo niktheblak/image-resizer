@@ -2,14 +2,10 @@ package org.ntb.imageresizer.actor
 
 import java.net.URI
 import java.util.concurrent.ExecutionException
-
 import org.apache.http.HttpException
-import org.ntb.imageresizer.cache.TempFileCacher
 import org.ntb.imageresizer.resize.ResizingImageDownloader
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-
 import com.google.common.util.concurrent.UncheckedExecutionException
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
@@ -19,9 +15,11 @@ import akka.dispatch.Await
 import akka.util.ByteString
 import akka.util.Timeout
 import akka.util.duration.intToDurationInt
+import org.ntb.imageresizer.cache.GuavaMemoryCacheProvider
 
-class CachingImageBrokerActor extends Actor with ActorLogging with ResizingImageDownloader with TempFileCacher[(URI, Int)] {
+class MemoryCacheImageBrokerActor extends Actor with ActorLogging with ResizingImageDownloader with GuavaMemoryCacheProvider[(URI, Int), ByteString] {
   import context.dispatcher
+  import MemoryCacheImageBrokerActor._
   implicit val timeout = Timeout(10 seconds)
 
   def receive = {
@@ -34,11 +32,6 @@ class CachingImageBrokerActor extends Actor with ActorLogging with ResizingImage
         case e: Throwable =>
           handleExceptions(e, sender)
       }
-  }
-
-  override def postStop() {
-    log.info("Cleaning cache directory")
-    clearCacheDirectory()
   }
   
   def loadImage(uri: URI, preferredSize: Int)(): ByteString = {
@@ -67,4 +60,9 @@ class CachingImageBrokerActor extends Actor with ActorLogging with ResizingImage
         sender ! Status.Failure(e)
         throw e
     }
+}
+
+object MemoryCacheImageBrokerActor {
+  case class GetImageRequest(uri: URI, preferredSize: Int)
+  case class GetImageResponse(data: ByteString)
 }

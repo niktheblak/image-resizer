@@ -2,19 +2,18 @@ package org.ntb.imageresizer.actor
 
 import java.net.URI
 
-import org.ntb.imageresizer.cache.TempFileCacher
+import org.ntb.imageresizer.cache.TempFileCacheProvider
 
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.actorRef2Scala
 import akka.util.ByteString
 
-case class InsertToCacheRequest(url: URI, data: ByteString, size: Int)
-case class GetFromCacheRequest(url: URI, size: Int)
-case class DataFromCacheResponse(data: ByteString)
-case object NotCachedResponse
-
-class CacheActor extends Actor with ActorLogging with TempFileCacher[Tuple2[URI, Int]] {
+class CacheActor extends Actor with ActorLogging with TempFileCacheProvider[Tuple2[URI, Int]] {
+  import CacheActor._
+  
+  override def cacheDirectoryName: String = self.path.name
+  
   def receive = {
     case InsertToCacheRequest(uri, data, size) =>
       log.info("Caching %s, %d pixels, %d bytes".format(uri, data, size))
@@ -30,4 +29,11 @@ class CacheActor extends Actor with ActorLogging with TempFileCacher[Tuple2[URI,
     log.info("Cleaning cache")
     clearCacheDirectory()
   }
+}
+
+object CacheActor {
+  case class InsertToCacheRequest(url: URI, data: ByteString, size: Int)
+  case class GetFromCacheRequest(url: URI, size: Int)
+  case class DataFromCacheResponse(data: ByteString)
+  case object NotCachedResponse
 }

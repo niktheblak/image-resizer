@@ -2,15 +2,13 @@ package org.ntb.imageresizer
 
 import java.io.File
 import java.nio.charset.Charset
-
 import org.junit.runner.RunWith
 import org.ntb.imageresizer.cache.FileCache
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
-
 import com.google.common.io.Files
-
 import akka.util.ByteString
+import java.util.UUID
 
 @RunWith(classOf[JUnitRunner])
 class FileCacheTest extends Specification {
@@ -20,7 +18,9 @@ class FileCacheTest extends Specification {
     tempFile
   }
   
-  def filePathProvider(file: File)(key: String): String = file.getAbsolutePath()
+  def filePathProvider(file: File)(key: String): File = file
+  
+  def nonExistingFile: File = new File(UUID.randomUUID().toString())
   
   "put" should {
     "create a file with name given by cachePathProvider" in {
@@ -52,7 +52,7 @@ class FileCacheTest extends Specification {
     }
     
     "return None if file with specified key does not exist" in {
-      val fileCache = new FileCache((key: String) => key)
+      val fileCache = new FileCache((key: String) => nonExistingFile)
       new File("testFile").exists() must beFalse
       val content = fileCache.get("testFile")
       content.isDefined must beFalse
@@ -62,7 +62,7 @@ class FileCacheTest extends Specification {
   "get(key, loader)" should {
     "create a file with content given by loader" in {
       val tmpdir = System.getProperty("java.io.tmpdir")
-      val tempFile = new File(tmpdir, "testFile")
+      val tempFile = nonExistingFile
       tempFile.deleteOnExit()
       tempFile.exists() must beFalse
       val fileCache = new FileCache(filePathProvider(tempFile)_)

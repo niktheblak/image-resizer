@@ -1,6 +1,6 @@
 package org.ntb.imageresizer.cache
 
-trait MemoryCacher[Key, Value] {
+trait MemoryCacheProvider[Key, Value] {
   val maxCacheSize: Long
   val cache: MemoryCache[Key, Value]
 }
