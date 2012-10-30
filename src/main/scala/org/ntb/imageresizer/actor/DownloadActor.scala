@@ -5,7 +5,6 @@ import java.io.FileOutputStream
 import java.net.URI
 
 import org.apache.http.HttpException
-import org.ntb.imageresizer.io.DefaultHttpClient
 import org.ntb.imageresizer.io.FileDownloader
 import org.ntb.imageresizer.util.Loans.using
 
@@ -14,26 +13,18 @@ import akka.actor.Status
 import akka.actor.actorRef2Scala
 import akka.util.ByteString
 
-class DownloadActor extends Actor with FileDownloader with DefaultHttpClient {
+class DownloadActor extends Actor with FileDownloader {
   import context.dispatcher
   import DownloadActor._
 
+  override val httpClient = createDefaultHttpClient()
+  
   def receive = {
-    case DownloadRequest(uri) =>
-      try {
-        val data = downloadToByteString(uri)
-        sender ! DownloadResponse(data)
-      } catch {
-        case e: HttpException => sender ! Status.Failure(e)
-        case e: Exception =>
-          sender ! Status.Failure(e)
-          throw e
-      }
-    case DownloadFileRequest(uri, target) =>
+    case DownloadRequest(uri, target) =>
       try {
         using(new FileOutputStream(target)) { output =>
-          val fileSize = downloadToFile(uri, output)
-          sender ! DownloadFileResponse(fileSize)
+          val fileSize = download(uri, output)
+          sender ! DownloadResponse(fileSize)
         }
       } catch {
         case e: HttpException => sender ! Status.Failure(e)
@@ -45,8 +36,6 @@ class DownloadActor extends Actor with FileDownloader with DefaultHttpClient {
 }
 
 object DownloadActor {
-  case class DownloadRequest(uri: URI)
-  case class DownloadResponse(data: ByteString)
-  case class DownloadFileRequest(uri: URI, target: File)
-  case class DownloadFileResponse(fileSize: Long)
+  case class DownloadRequest(uri: URI, target: File)
+  case class DownloadResponse(fileSize: Long)
 }

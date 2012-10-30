@@ -14,29 +14,12 @@ import java.io.File
 
 trait ResizingImageDownloader {
   val tempFilePrefix = "ResizingImageDownloader-"
-    
-  def download(uri: URI)(implicit context: ActorContext, timeout: Timeout): Future[ByteString] = {
-    val downloadActor = context.actorFor("/user/downloader")
-    val downloadTask = ask(downloadActor, DownloadRequest(uri))
-    for {
-      downloadResponse <- downloadTask.mapTo[DownloadResponse]
-    } yield downloadResponse.data
-  }
-    
-  def downloadAndResize(uri: URI, preferredSize: Int)(implicit context: ActorContext, timeout: Timeout): Future[ByteString] = {
-    val resizeActor = context.actorFor("/user/resizer")
-    val format = parseImageFormatFromUri(uri) getOrElse defaultImageFormat
-    for (
-        data <- download(uri);
-        resizeResponse <- ask(resizeActor, ResizeImageRequest(data, preferredSize, format)).mapTo[ResizeImageResponse]
-    ) yield resizeResponse.data
-  }
   
   def downloadToFile(uri: URI, target: File)(implicit context: ActorContext, timeout: Timeout): Future[Long] = {
     val downloadActor = context.actorFor("/user/downloader")
-    val downloadTask = ask(downloadActor, DownloadFileRequest(uri, target))
+    val downloadTask = ask(downloadActor, DownloadRequest(uri, target))
     for {
-      downloadResponse <- downloadTask.mapTo[DownloadFileResponse]
+      downloadResponse <- downloadTask.mapTo[DownloadResponse]
     } yield downloadResponse.fileSize
   }
   

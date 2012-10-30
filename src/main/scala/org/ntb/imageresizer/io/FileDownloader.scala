@@ -9,11 +9,14 @@ import org.ntb.imageresizer.util.Loans.using
 import com.google.common.io.ByteStreams
 import java.io.File
 import java.io.OutputStream
+import org.apache.http.params.HttpConnectionParams
 
 trait FileDownloader {
   val httpClient: HttpClient
   
-  def downloadToByteString(uri: URI): ByteString = {
+  val defaultHttpTimeout = 10000
+  
+  def download(uri: URI): ByteString = {
     val get = new HttpGet(uri)
     val response = httpClient.execute(get)
     if (response.getStatusLine().getStatusCode() >= 300) {
@@ -26,7 +29,7 @@ trait FileDownloader {
     }
   }
   
-  def downloadToFile(uri: URI, output: OutputStream): Long = {
+  def download(uri: URI, output: OutputStream): Long = {
     val get = new HttpGet(uri)
     val response = httpClient.execute(get)
     if (response.getStatusLine().getStatusCode() >= 300) {
@@ -37,5 +40,13 @@ trait FileDownloader {
     using(entity.getContent()) { input =>
       ByteStreams.copy(input, output)
     }
+  }
+  
+  def createDefaultHttpClient(timeout: Int = defaultHttpTimeout): HttpClient = {
+    val httpClient = new org.apache.http.impl.client.DefaultHttpClient()
+    val params = httpClient.getParams()
+    HttpConnectionParams.setConnectionTimeout(params, timeout)
+    HttpConnectionParams.setSoTimeout(params, timeout)
+    httpClient
   }
 }

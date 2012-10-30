@@ -1,41 +1,52 @@
 package org.ntb.imageresizer
 
-import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.net.URI
 
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.HttpClient
-import org.apache.http.HttpEntity
 import org.apache.http.HttpException
-import org.apache.http.HttpResponse
-import org.apache.http.StatusLine
+import org.apache.http.client.HttpClient
+import org.apache.http.client.methods.HttpGet
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
+import org.ntb.imageresizer.MockHttpClients.canBeEqual
 import org.ntb.imageresizer.io.FileDownloader
-import org.specs2.runner.JUnitRunner
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import org.specs2.runner.JUnitRunner
+
+import MockHttpClients.statusCodeHttpClient
+import MockHttpClients.successfulHttpClient
 
 @RunWith(classOf[JUnitRunner])
 class FileDownloaderTest extends Specification with Mockito {
   import MockHttpClients._
   "FileDownloader" should {
-    "successfully download data from HTTP URL" in {
+    "successfully download data from HTTP URL to ByteString" in {
       val uri = URI.create("http://www.server.com/logo.png")
       val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
-      val data = downloader.downloadToByteString(uri)
+      val data = downloader.download(uri)
       val captor = ArgumentCaptor.forClass(classOf[HttpGet])
       there was one(httpClient).execute(captor.capture())
-      captor.getValue().getURI() must_== uri
-      data.seq must_== testData.toSeq
+      captor.getValue().getURI() === uri
+      data.seq === testData.toSeq
+    }
+    
+    "successfully download data from HTTP URL to OutputStream" in {
+      val uri = URI.create("http://www.server.com/logo.png")
+      val testData: Array[Byte] = Array(1, 2, 3)
+      val httpClient = successfulHttpClient(testData)
+      val downloader = fileDownloader(httpClient)
+      val output = new ByteArrayOutputStream()
+      val data = downloader.download(uri, output)
+      output.toByteArray().toSeq === testData.toSeq
     }
     
     "throw HttpException when HTTP server respons with an error code" in {
       val httpClient = statusCodeHttpClient(404)
       val downloader = fileDownloader(httpClient)
-      downloader.downloadToByteString(URI.create("http://www.server.com/logo.png")) must throwA[HttpException]
+      downloader.download(URI.create("http://www.server.com/logo.png")) must throwA[HttpException]
       there was one(httpClient).execute(any[HttpGet])
     }
   }
