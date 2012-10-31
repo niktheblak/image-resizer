@@ -4,7 +4,7 @@ import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeoutException
 import org.ntb.imageresizer.cache.TempFileCacheProvider
-import org.ntb.imageresizer.imageformat.ImageFormat
+import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.Actor
 import akka.actor.ActorLogging
@@ -29,14 +29,14 @@ class FileCacheImageBrokerActor extends Actor
   }
 
   def receive = {
-    case request @ GetImageRequest(uri, preferredSize) =>
+    case request @ GetImageRequest(uri, preferredSize, imageFormat) =>
       val file = cacheFileProvider((uri, preferredSize))
       if (file.exists()) {
         log.debug("Serving already cached image %s for request %s".format(file.getPath(), request))
         sender ! GetImageResponse(file)
       } else {
         log.debug("Downloading and resizing image from request %s to %s".format(request, file.getPath()))
-        val downloadTask = downloadAndResizeToFile(uri, file, preferredSize)
+        val downloadTask = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
         try {
           Await.result(downloadTask, timeout.duration)
           log.debug("Image from request %s was successfully downloaded to %s".format(request, file.getPath()))
@@ -67,9 +67,7 @@ class FileCacheImageBrokerActor extends Actor
 }
 
 object FileCacheImageBrokerActor {
-  case class GetImageRequest(uri: URI, preferredSize: Int)
+  case class GetImageRequest(uri: URI, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: File)
-  case class ResizeImageRequest(source: File, size: Int, format: ImageFormat)
-  case class ResizeImageResponse(target: File)
   case class ClearCache()
 }

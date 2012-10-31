@@ -2,14 +2,9 @@ package org.ntb.imageresizer.actor
 
 import java.io.File
 import java.net.URI
-
-import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadToFileRequest
-import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadToFileResponse
-import org.ntb.imageresizer.actor.ResizeActor.ResizeImageToFileRequest
-import org.ntb.imageresizer.actor.ResizeActor.ResizeImageToFileResponse
-import org.ntb.imageresizer.imageformat.defaultImageFormat
-import org.ntb.imageresizer.imageformat.parseImageFormatFromUri
-
+import org.ntb.imageresizer.actor.BaseDownloadActor._
+import org.ntb.imageresizer.actor.ResizeActor._
+import org.ntb.imageresizer.imageformat._
 import akka.actor.ActorContext
 import akka.dispatch.Future
 import akka.pattern.ask
@@ -28,9 +23,8 @@ trait ActorImageDownloader {
     } yield downloadResponse.fileSize
   }
   
-  def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int): Future[Unit] = {
+  def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Unit] = {
     val resizeActor = context.actorFor("/user/resizer")
-    val format = parseImageFormatFromUri(uri) getOrElse defaultImageFormat
     val tempFile = File.createTempFile(tempFilePrefix, ".tmp")
     tempFile.deleteOnExit()
     for (

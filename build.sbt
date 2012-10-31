@@ -7,6 +7,8 @@ scalaVersion := "2.9.2"
 EclipseKeys.withSource := true
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+resolvers += "spray repo" at "http://repo.spray.io"
  
 libraryDependencies += "com.typesafe.akka" % "akka-actor" % "2.0.3"
 
@@ -19,6 +21,8 @@ libraryDependencies += "com.google.guava" % "guava" % "11.0.2"
 libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.2.1"
 
 libraryDependencies += "commons-codec" % "commons-codec" % "1.7"
+
+libraryDependencies += "io.spray" % "spray-can" % "1.0-M4.2"
 
 libraryDependencies += "junit" % "junit" % "4.10"
 
