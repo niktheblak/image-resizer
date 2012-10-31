@@ -7,8 +7,7 @@ import org.apache.http.client.HttpClient
 import org.junit.runner.RunWith
 import org.ntb.imageresizer.MockHttpClients.canBeEqual
 import org.ntb.imageresizer.actor.BaseDownloadActor
-import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadRequest
-import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadResponse
+import org.ntb.imageresizer.actor.BaseDownloadActor._
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import com.google.common.io.Files
@@ -26,18 +25,27 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
   import MockHttpClients._
   
   "DownloadActor" should {
-    "reply with DownloadResponse when download succeeded" in {
+    "return downloaded data for DownloadRequest" in {
+      val testData: Array[Byte] = Array(1, 2, 3)
+      val uri = URI.create("http://localhost/logo.png")
+      val httpClient = successfulHttpClient(testData)
+      val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
+      downloadActor ! DownloadRequest(uri)
+      val response = expectMsgType[DownloadResponse]
+      response.data.toSeq === testData.toSeq
+    }
+    
+    "download data to file for DownloadFileRequest" in {
       val testData: Array[Byte] = Array(1, 2, 3)
       val uri = URI.create("http://localhost/logo.png")
       val httpClient = successfulHttpClient(testData)
       val target = File.createTempFile("DownloadActorTest", ".tmp")
       target.deleteOnExit()
       val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
-      downloadActor ! DownloadRequest(uri, target)
-      val response = expectMsgType[DownloadResponse]
+      downloadActor ! DownloadToFileRequest(uri, target)
+      val response = expectMsgType[DownloadToFileResponse]
       response.fileSize === 3
       Files.toByteArray(target).toSeq === testData.toSeq
-      success
     }
     
     "reply with failure status when download failed" in {
@@ -46,7 +54,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
       val target = File.createTempFile("DownloadActorTest", ".tmp")
       target.deleteOnExit()
       val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
-      downloadActor ! DownloadRequest(uri, target)
+      downloadActor ! DownloadToFileRequest(uri, target)
       val failure = expectMsgType[Status.Failure]
       failure.cause must beAnInstanceOf[HttpException]
     }

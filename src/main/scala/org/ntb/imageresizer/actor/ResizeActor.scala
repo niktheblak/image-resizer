@@ -1,7 +1,6 @@
 package org.ntb.imageresizer.actor
 
 import java.io.File
-import java.io.IOException
 
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize._
@@ -29,7 +28,7 @@ class ResizeActor extends Actor with ActorLogging {
       } catch {
         case e: UnsupportedImageFormatException =>
           sender ! Status.Failure(e)
-        case e: IOException =>
+        case e: Exception =>
           sender ! Status.Failure(e)
           throw e
       }
@@ -41,7 +40,7 @@ class ResizeActor extends Actor with ActorLogging {
       } catch {
         case e: UnsupportedImageFormatException =>
           sender ! Status.Failure(e)
-        case e: IOException =>
+        case e: Exception =>
           sender ! Status.Failure(e)
           throw e
       }

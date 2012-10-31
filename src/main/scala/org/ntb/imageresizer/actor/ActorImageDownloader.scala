@@ -3,8 +3,8 @@ package org.ntb.imageresizer.actor
 import java.io.File
 import java.net.URI
 
-import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadRequest
-import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadResponse
+import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadToFileRequest
+import org.ntb.imageresizer.actor.BaseDownloadActor.DownloadToFileResponse
 import org.ntb.imageresizer.actor.ResizeActor.ResizeImageToFileRequest
 import org.ntb.imageresizer.actor.ResizeActor.ResizeImageToFileResponse
 import org.ntb.imageresizer.imageformat.defaultImageFormat
@@ -22,9 +22,9 @@ trait ActorImageDownloader {
   
   def downloadToFile(uri: URI, target: File): Future[Long] = {
     val downloadActor = context.actorFor("/user/downloader")
-    val downloadTask = ask(downloadActor, DownloadRequest(uri, target))
+    val downloadTask = ask(downloadActor, DownloadToFileRequest(uri, target))
     for {
-      downloadResponse <- downloadTask.mapTo[DownloadResponse]
+      downloadResponse <- downloadTask.mapTo[DownloadToFileResponse]
     } yield downloadResponse.fileSize
   }
   
