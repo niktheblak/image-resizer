@@ -22,7 +22,7 @@ class FileCacheImageBrokerActor extends Actor
   with ActorNameCachePath {
   import context.dispatcher
   import FileCacheImageBrokerActor._
-  val timeout = Timeout(10 seconds)
+  val timeout = Timeout(30 seconds)
 
   override def preStart() {
     log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cachePath))
@@ -42,7 +42,9 @@ class FileCacheImageBrokerActor extends Actor
           log.debug("Image from request %s was successfully downloaded to %s".format(request, file.getPath()))
           sender ! GetImageResponse(file)
         } catch {
-          case e: Exception => handleException(file, e)
+          case e: Exception =>
+            file.delete()
+            handleException(e)
         }
       }
     case ClearCache() =>
@@ -50,8 +52,7 @@ class FileCacheImageBrokerActor extends Actor
       clearCacheDirectory()
   }
 
-  def handleException(file: File, ex: Exception) {
-    file.delete()
+  def handleException(ex: Exception) {
     ex match {
       case e: TimeoutException =>
         sender ! Status.Failure(e)
