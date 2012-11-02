@@ -32,6 +32,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
       val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
       downloadActor ! DownloadRequest(uri)
       val response = expectMsgType[DownloadResponse]
+      system.stop(downloadActor)
       response.data.toSeq === testData.toSeq
     }
     
@@ -44,6 +45,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
       val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
       downloadActor ! DownloadToFileRequest(uri, target)
       val response = expectMsgType[DownloadToFileResponse]
+      system.stop(downloadActor)
       response.fileSize === 3
       Files.toByteArray(target).toSeq === testData.toSeq
     }
@@ -56,6 +58,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
       val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
       downloadActor ! DownloadToFileRequest(uri, target)
       val failure = expectMsgType[Status.Failure]
+      system.stop(downloadActor)
       failure.cause must beAnInstanceOf[HttpException]
     }
   }
