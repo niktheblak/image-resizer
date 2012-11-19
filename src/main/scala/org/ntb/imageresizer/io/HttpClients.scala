@@ -3,9 +3,7 @@ package org.ntb.imageresizer.io
 import org.apache.http.client.HttpClient
 import org.apache.http.params.HttpConnectionParams
 
-trait DefaultHttpClient {
-  val httpClient = createDefaultHttpClient()
-  
+object HttpClients {
   val defaultHttpTimeout = 10000
   
   def createDefaultHttpClient(timeout: Int = defaultHttpTimeout): HttpClient = {

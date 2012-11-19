@@ -22,7 +22,7 @@ class FileDownloaderTest extends Specification with Mockito {
   import MockHttpClients._
   "FileDownloader" should {
     "successfully download data from HTTP URL to ByteString" in {
-      val uri = URI.create("http://www.server.com/logo.png")
+      val uri = URI.create("http://localhost/logo.png")
       val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
@@ -34,7 +34,7 @@ class FileDownloaderTest extends Specification with Mockito {
     }
     
     "successfully download data from HTTP URL to OutputStream" in {
-      val uri = URI.create("http://www.server.com/logo.png")
+      val uri = URI.create("http://localhost/logo.png")
       val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
@@ -46,7 +46,7 @@ class FileDownloaderTest extends Specification with Mockito {
     "throw HttpException when HTTP server respons with an error code" in {
       val httpClient = statusCodeHttpClient(404)
       val downloader = fileDownloader(httpClient)
-      downloader.download(URI.create("http://www.server.com/logo.png")) must throwA[HttpException]
+      downloader.download(URI.create("http://localhost/logo.png")) must throwA[HttpException]
       there was one(httpClient).execute(any[HttpGet])
     }
   }

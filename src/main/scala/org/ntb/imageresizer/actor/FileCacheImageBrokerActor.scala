@@ -3,7 +3,7 @@ package org.ntb.imageresizer.actor
 import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeoutException
-import org.ntb.imageresizer.actor.BaseDownloadActor._
+import org.ntb.imageresizer.actor.DownloadActor._
 import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException

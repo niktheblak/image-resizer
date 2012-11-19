@@ -8,6 +8,8 @@ scalacOptions += "-Ydependent-method-types"
 
 EclipseKeys.withSource := true
 
+parallelExecution in Test := false
+
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 resolvers += "spray repo" at "http://repo.spray.io"
@@ -32,7 +34,7 @@ libraryDependencies += "io.spray" % "spray-routing" % "1.0-M4.2"
 
 libraryDependencies += "junit" % "junit" % "4.10" % "test"
 
-libraryDependencies += "org.mockito" % "mockito-all" % "1.9.0" % "test"
+libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % "test"
 
-libraryDependencies += "org.specs2" % "specs2_2.9.2" % "1.12.2" % "test"
+libraryDependencies += "org.specs2" % "specs2_2.9.2" % "1.12.1" % "test"
   
