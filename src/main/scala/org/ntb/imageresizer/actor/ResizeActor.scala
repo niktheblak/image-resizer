@@ -36,7 +36,7 @@ class ResizeActor extends Actor with ActorLogging {
       try {
         resizeImage(source, target, size, format)
         log.debug("Image resized successfully, replying with ResizeImageToFileResponse()")
-        sender ! ResizeImageToFileResponse()
+        sender ! ResizeImageToFileResponse(target.length())
       } catch {
         case e: UnsupportedImageFormatException =>
           sender ! Status.Failure(e)
@@ -55,5 +55,5 @@ object ResizeActor {
   case class ResizeImageRequest(data: ByteString, size: Int, format: ImageFormat)
   case class ResizeImageResponse(data: ByteString)
   case class ResizeImageToFileRequest(source: File, target: File, size: Int, format: ImageFormat)
-  case class ResizeImageToFileResponse()
+  case class ResizeImageToFileResponse(fileSize: Long)
 }

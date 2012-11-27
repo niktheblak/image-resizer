@@ -57,17 +57,18 @@ class FileCacheImageBrokerActor extends Actor
       clearCacheDirectory()
   }
   
-  def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Unit] = {
+  def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
     val resizeActor = context.actorFor("/user/resizer")
     val tempFile = File.createTempFile(tempFilePrefix, ".tmp")
     tempFile.deleteOnExit()
-    for (
+    val resizeTask = for (
         data <- downloadToFile(uri, tempFile);
         resizeResponse <- ask(resizeActor, ResizeImageToFileRequest(tempFile, target, preferredSize, format)).mapTo[ResizeImageToFileResponse]
-    ) yield {
-      tempFile.delete()
-      ()
+    ) yield resizeResponse.fileSize
+    resizeTask onComplete {
+      case _ => tempFile.delete()
     }
+    resizeTask
   }
   
   def downloadToFile(uri: URI, target: File): Future[Long] = {
