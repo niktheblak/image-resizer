@@ -4,23 +4,19 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URI
-
 import org.apache.http.HttpException
 import org.apache.http.client.HttpClient
 import org.ntb.imageresizer.io.Downloader
-import org.ntb.imageresizer.io.HttpClients.createDefaultHttpClient
+import org.ntb.imageresizer.io.DefaultHttpClientProvider
 import org.ntb.imageresizer.util.Loans.using
-
 import akka.actor.Actor
 import akka.actor.Status
 import akka.actor.actorRef2Scala
 import akka.util.ByteString
 
-class DownloadActor(val httpClient: HttpClient) extends Actor with Downloader {
+class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider {
   import context.dispatcher
   import DownloadActor._
-
-  def this() = this(createDefaultHttpClient())
 
   def receive = {
     case DownloadRequest(uri) =>

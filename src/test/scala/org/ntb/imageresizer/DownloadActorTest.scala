@@ -24,6 +24,7 @@ import akka.testkit.TestKit
 import akka.pattern.ask
 import akka.util.ByteString
 import akka.util.FiniteDuration
+import org.ntb.imageresizer.io.HttpClientProvider
 
 @RunWith(classOf[JUnitRunner])
 class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with Specification {
@@ -35,7 +36,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
       val testData: Array[Byte] = Array(1, 2, 3)
       val uri = URI.create("http://localhost/logo.png")
       val httpClient = successfulHttpClient(testData)
-      val downloadActor = TestActorRef(new DownloadActor(httpClient))
+      val downloadActor = TestActorRef(testDownloadActor(httpClient))
       val downloadTask = ask(downloadActor, DownloadRequest(uri))(timeout)
       Await.result(downloadTask, timeout) match {
         case DownloadResponse(data) => data === ByteString(1, 2, 3)
@@ -49,7 +50,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
       val httpClient = successfulHttpClient(testData)
       val target = File.createTempFile("DownloadActorTest", ".tmp")
       target.deleteOnExit()
-      val downloadActor = TestActorRef(new DownloadActor(httpClient))
+      val downloadActor = TestActorRef(testDownloadActor(httpClient))
       val downloadTask = ask(downloadActor, DownloadToFileRequest(uri, target))(timeout)
       Await.result(downloadTask, timeout) match {
         case DownloadToFileResponse(size) =>
@@ -62,7 +63,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     "reply with failure status when download failed" in {
       val uri = URI.create("http://localhost/logo.png")
       val httpClient = statusCodeHttpClient(404)
-      val downloadActor = TestActorRef(new DownloadActor(httpClient))
+      val downloadActor = TestActorRef(testDownloadActor(httpClient))
       val downloadTask = ask(downloadActor, DownloadRequest(uri))(timeout)
       Await.result(downloadTask, timeout) must throwA[HttpException]
     }
@@ -71,5 +72,12 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
   step {
     system.shutdown()
     success
+  }
+  
+  def testDownloadActor(backingHttpClient: HttpClient): DownloadActor =
+    new TestDownloadActor(backingHttpClient)
+  
+  class TestDownloadActor(backingHttpClient: HttpClient) extends DownloadActor with HttpClientProvider {
+    override val httpClient = backingHttpClient
   }
 }

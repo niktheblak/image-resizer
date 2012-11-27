@@ -14,9 +14,7 @@ import com.google.common.io.ByteStreams
 
 import akka.util.ByteString
 
-trait Downloader {
-  val httpClient: HttpClient
-
+trait Downloader { self: HttpClientProvider =>
   def download(uri: URI): ByteString = {
     downloadWith(uri, input => ByteString(ByteStreams.toByteArray(input)))
   }
