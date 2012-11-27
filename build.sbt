@@ -34,7 +34,7 @@ libraryDependencies += "io.spray" % "spray-routing" % "1.0-M4.2"
 
 libraryDependencies += "junit" % "junit" % "4.10" % "test"
 
-libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % "test"
+libraryDependencies += "org.mockito" % "mockito-all" % "1.9.0" % "test"
 
-libraryDependencies += "org.specs2" % "specs2_2.9.2" % "1.12.1" % "test"
+libraryDependencies += "org.specs2" %% "specs2" % "1.12.3" % "test"
   

@@ -18,3 +18,7 @@ project/target/
 .classpath
 .project
 lib/*
+
+# Idea specific
+.idea
+.idea_modules
