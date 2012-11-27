@@ -33,7 +33,6 @@ object ServiceUtils {
       val data = Files.toByteArray(file)
       sender ! HttpResponse(entity = HttpBody(mimeType, data))
     }
-    val data = Files.toByteArray(file)
   }
 
   def readFileChunked(file: File, chunkSize: Int = 16 * 1024)(f: Array[Byte] => Unit) {
