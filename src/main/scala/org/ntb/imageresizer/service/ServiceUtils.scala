@@ -1,22 +1,17 @@
 package org.ntb.imageresizer.service
 
-import java.io.File
-import java.io.FileInputStream
-
 import org.ntb.imageresizer.util.Loans.using
 
 import com.google.common.io.Files
 
 import akka.actor.ActorRef
 import akka.actor.actorRef2Scala
-import spray.http.ChunkedMessageEnd
-import spray.http.ChunkedResponseStart
+
+import spray.http._
 import spray.http.ContentType.apply
-import spray.http.HttpBody
-import spray.http.HttpHeaders
-import spray.http.HttpResponse
-import spray.http.MediaType
-import spray.http.MessageChunk
+
+import java.io.File
+import java.io.FileInputStream
 
 object ServiceUtils {
   val chunkTreshold = 100000L

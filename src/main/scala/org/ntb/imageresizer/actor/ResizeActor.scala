@@ -3,7 +3,8 @@ package org.ntb.imageresizer.actor
 import java.io.File
 
 import org.ntb.imageresizer.imageformat.ImageFormat
-import org.ntb.imageresizer.resize._
+import org.ntb.imageresizer.resize.Resizer._
+import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 
 import akka.actor.Actor
 import akka.actor.ActorLogging

@@ -4,8 +4,6 @@ version := "1.0.0-SNAPSHOT"
  
 scalaVersion := "2.9.2"
 
-scalacOptions += "-Ydependent-method-types"
-
 EclipseKeys.withSource := true
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
