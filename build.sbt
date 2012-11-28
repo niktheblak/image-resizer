@@ -28,8 +28,6 @@ libraryDependencies += "commons-codec" % "commons-codec" % "1.7"
 
 libraryDependencies += "io.spray" % "spray-can" % "1.0-M5"
 
-libraryDependencies += "io.spray" % "spray-routing" % "1.0-M5"
-
 libraryDependencies += "junit" % "junit" % "4.10" % "test"
 
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.0" % "test"

@@ -1,6 +1,7 @@
 package org.ntb.imageresizer.util
 
 import java.net.URI
+import java.io.File
 
 object FilePathUtils {
   def getFileExtension(uri: URI): Option[String] = {
@@ -25,5 +26,9 @@ object FilePathUtils {
     }
   }
   
-  def isNullOrEmpty(str: String): Boolean = str == null || str.isEmpty()
+  def createTempFile(): File = {
+    val file = File.createTempFile("FilePathUtils", ".tmp")
+    file.deleteOnExit()
+    file
+  }
 }

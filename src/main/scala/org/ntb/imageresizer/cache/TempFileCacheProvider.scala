@@ -1,9 +1,9 @@
 package org.ntb.imageresizer.cache
 
-import org.ntb.imageresizer.util.FilePathUtils.isNullOrEmpty
+import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
+import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import akka.util.ByteString
 import java.io.File
-import org.apache.commons.codec.digest.DigestUtils.md5Hex
 
 trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
   def cachePath: String
