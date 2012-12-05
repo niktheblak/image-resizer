@@ -14,7 +14,7 @@ object ServiceBootstrap extends App {
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(2)), "resizer")
   val downloadActor = system.actorOf(Props[DownloadActor], "downloader")
   val imageBrokerActor = system.actorOf(Props[FileCacheImageBrokerActor].withRouter(SmallestMailboxRouter(2)), "imagebroker")
-  val handler = system.actorOf(Props[ImageResizeServiceActor])
+  val handler = system.actorOf(Props[SprayRoutingImageResizeServiceActor])
   val server = system.actorOf(
     props = Props(new HttpServer(ioBridge, SingletonHandler(handler))),
     name = "http-server")
