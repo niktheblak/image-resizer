@@ -7,13 +7,22 @@ import java.io.File
 
 trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
   def cachePath: String
+  
+  val maxAge: Long = 24 * 3600 * 1000L
     
   def tempDirCacheFileProvider(key: A): File = {
     require(key != null, "Argument key cannot be null")
     require(!isNullOrEmpty(key.toString), "toString() method of argument key must return a nonempty string")
     val dir = cacheDirectory()
     val fileName = md5Hex(key.toString())
-    new File(dir, fileName)
+    val file = new File(dir, fileName)
+    if (expired(file)) file.delete()
+    file
+  }
+  
+  def expired(file: File): Boolean = {
+    val lastModified = file.lastModified()
+    lastModified > 0 && (System.currentTimeMillis() - lastModified) > maxAge
   }
   
   def clearCacheDirectory() {

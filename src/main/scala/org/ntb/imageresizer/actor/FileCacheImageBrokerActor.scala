@@ -20,16 +20,25 @@ import akka.dispatch.Future
 import akka.pattern.ask
 import akka.util.Timeout
 import akka.util.duration.intToDurationInt
+import scala.collection.mutable.Map
 import org.apache.http.HttpException
+import akka.actor.ActorRef
 
 class FileCacheImageBrokerActor extends Actor
   with ActorLogging
-  with TempFileCacheProvider[(String, Int)]
-  with ActorNameCachePath {
+  with TempFileCacheProvider[(String, Int, ImageFormat)] {
   import context.dispatcher
   import FileCacheImageBrokerActor._
+  
+  protected type Key = Tuple3[String, Int, ImageFormat]
 
+  protected case class RemoveFromBuffer(key: Key)
+  
   implicit val timeout = Timeout(30 seconds)
+  
+  val encodingTasks: Map[Key, Future[Long]] = Map.empty
+  
+  def cachePath = "imagebroker"
 
   override def preStart() {
     log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cachePath))
@@ -38,44 +47,43 @@ class FileCacheImageBrokerActor extends Actor
   def receive = {
     case request @ GetImageRequest(uri, preferredSize, imageFormat) =>
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
-      val file = cacheFileProvider((uri.toString(), preferredSize))
+      val source = uri.toString()
+      val file = cacheFileProvider((source, preferredSize, imageFormat))
       if (file.exists()) {
         log.debug("Serving already cached image %s for request %s".format(file.getPath(), request))
         sender ! GetImageResponse(file)
       } else {
         log.debug("Downloading and resizing image from request %s to %s".format(request, file.getPath()))
-        val downloadTask = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
-        try {
-          Await.result(downloadTask, timeout.duration)
-          log.debug("Image from request %s was successfully downloaded to %s".format(request, file.getPath()))
-          sender ! GetImageResponse(file)
-        } catch {
-          case e: Exception =>
-            file.delete()
-            handleException(e)
-        }
+        handleResizeTask(sender)((source, preferredSize, imageFormat), file, downloadAndResizeToFile(uri, file, preferredSize, imageFormat))
       }
     case GetLocalImageRequest(source, id, preferredSize, imageFormat) =>
       requireArgument(sender)(source.exists() && source.canRead(), "Source file must exist and be readable")
       requireArgument(sender)(!isNullOrEmpty(id), "Image ID must not be empty")
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
-      val file = cacheFileProvider(id, preferredSize)
+      val file = cacheFileProvider(id, preferredSize, imageFormat)
       if (file.exists()) {
         sender ! GetImageResponse(file)
       } else {
-        val resizeTask = resize(source, file, preferredSize, imageFormat)
-        try {
-          Await.result(resizeTask, timeout.duration)
-          sender ! GetImageResponse(file)
-        } catch {
-          case e: Exception =>
-            file.delete()
-            handleException(e)
-        }
+        handleResizeTask(sender)((id, preferredSize, imageFormat), file, resize(source, file, preferredSize, imageFormat))
       }
+    case RemoveFromBuffer(key) =>
+      encodingTasks.remove(key)
     case ClearCache() =>
       log.info("Clearing cache directory " + cacheDirectory().getAbsolutePath())
       clearCacheDirectory()
+  }
+
+  def handleResizeTask(sender: ActorRef)(key: Key, file: File, resizeOp: => Future[Long]) {
+    val resizeTask = encodingTasks.getOrElseUpdate(key, resizeOp)
+    resizeTask onComplete {
+      case Right(size) =>
+        self ! RemoveFromBuffer(key)
+        sender ! GetImageResponse(file)
+      case Left(t) =>
+        self ! RemoveFromBuffer(key)
+        file.delete()
+        handleException(sender)(t)
+    }
   }
 
   def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
@@ -104,15 +112,15 @@ class FileCacheImageBrokerActor extends Actor
     for (response <- resizeTask) yield response.fileSize
   }
 
-  def handleException(ex: Exception) {
-    ex match {
+  def handleException(sender: ActorRef)(t: Throwable) {
+    t match {
       case e: TimeoutException =>
         sender ! Status.Failure(e)
       case e: UnsupportedImageFormatException =>
         sender ! Status.Failure(e)
       case e: HttpException =>
         sender ! Status.Failure(e)
-      case e: Exception =>
+      case e: Throwable =>
         sender ! Status.Failure(e)
         throw e
     }
