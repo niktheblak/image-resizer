@@ -1,22 +1,14 @@
 package org.ntb.imageresizer
 
-import java.io.File
-import java.net.URI
-import java.util.concurrent.TimeUnit
-import org.apache.http.HttpException
-import org.apache.http.client.HttpClient
-import org.junit.runner.RunWith
-import org.ntb.imageresizer.MockHttpClients.canBeEqual
-import org.ntb.imageresizer.actor.DownloadActor
+import org.ntb.imageresizer.MockHttpClients._
 import org.ntb.imageresizer.actor.DownloadActor._
-import org.ntb.imageresizer.io.Downloader
+
+import com.google.common.io.Files
+import org.apache.http.HttpException
+import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
-import com.google.common.io.Files
-import MockHttpClients.statusCodeHttpClient
-import MockHttpClients.successfulHttpClient
 import akka.actor.ActorSystem
-import akka.actor.Status
 import akka.dispatch.Await
 import akka.testkit.ImplicitSender
 import akka.testkit.TestActorRef
@@ -24,19 +16,20 @@ import akka.testkit.TestKit
 import akka.pattern.ask
 import akka.util.ByteString
 import akka.util.FiniteDuration
-import org.ntb.imageresizer.io.HttpClientProvider
+import java.io.File
+import java.net.URI
+import java.util.concurrent.TimeUnit
 
 @RunWith(classOf[JUnitRunner])
 class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with Specification {
-  import MockHttpClients._
+  val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
   val timeout = new FiniteDuration(5, TimeUnit.SECONDS)
   
   "DownloadActor" should {
     "return downloaded data for DownloadRequest" in {
-      val testData: Array[Byte] = Array(1, 2, 3)
       val uri = URI.create("http://localhost/logo.png")
       val httpClient = successfulHttpClient(testData)
-      val downloadActor = TestActorRef(testDownloadActor(httpClient))
+      val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
       val downloadTask = ask(downloadActor, DownloadRequest(uri))(timeout)
       Await.result(downloadTask, timeout) match {
         case DownloadResponse(data) => data === ByteString(1, 2, 3)
@@ -45,12 +38,11 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     }
     
     "download data to file for DownloadFileRequest" in {
-      val testData: Array[Byte] = Array(1, 2, 3)
       val uri = URI.create("http://localhost/logo.png")
       val httpClient = successfulHttpClient(testData)
       val target = File.createTempFile("DownloadActorTest", ".tmp")
       target.deleteOnExit()
-      val downloadActor = TestActorRef(testDownloadActor(httpClient))
+      val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
       val downloadTask = ask(downloadActor, DownloadToFileRequest(uri, target))(timeout)
       Await.result(downloadTask, timeout) match {
         case DownloadToFileResponse(size) =>
@@ -63,7 +55,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     "reply with failure status when download failed" in {
       val uri = URI.create("http://localhost/logo.png")
       val httpClient = statusCodeHttpClient(404)
-      val downloadActor = TestActorRef(testDownloadActor(httpClient))
+      val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
       val downloadTask = ask(downloadActor, DownloadRequest(uri))(timeout)
       Await.result(downloadTask, timeout) must throwA[HttpException]
     }
@@ -72,12 +64,5 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
   step {
     system.shutdown()
     success
-  }
-  
-  def testDownloadActor(backingHttpClient: HttpClient): DownloadActor =
-    new TestDownloadActor(backingHttpClient)
-  
-  class TestDownloadActor(backingHttpClient: HttpClient) extends DownloadActor with HttpClientProvider {
-    override val httpClient = backingHttpClient
   }
 }

@@ -20,10 +20,12 @@ import org.ntb.imageresizer.io.HttpClientProvider
 @RunWith(classOf[JUnitRunner])
 class FileDownloaderTest extends Specification with Mockito {
   import MockHttpClients._
+
+  val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
+
   "FileDownloader" should {
     "successfully download data from HTTP URL to ByteString" in {
       val uri = URI.create("http://localhost/logo.png")
-      val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
       val data = downloader.download(uri)
@@ -35,7 +37,6 @@ class FileDownloaderTest extends Specification with Mockito {
     
     "successfully download data from HTTP URL to OutputStream" in {
       val uri = URI.create("http://localhost/logo.png")
-      val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
       val output = new ByteArrayOutputStream()
@@ -45,7 +46,6 @@ class FileDownloaderTest extends Specification with Mockito {
     
     "download if content is modified" in {
       val uri = URI.create("http://localhost/logo.png")
-      val testData: Array[Byte] = Array(1, 2, 3)
       val httpClient = successfulHttpClient(testData)
       val downloader = fileDownloader(httpClient)
       val result = downloader.downloadIfModified(uri, 1)

@@ -20,8 +20,6 @@ import java.util.TimeZone
 import java.util.Date
 
 trait Downloader { self: HttpClientProvider =>
-  val httpDateFormatTemplate = "EEE, dd MMM yyyy HH:mm:ss z"
-
   def download(uri: URI): ByteString = {
     downloadWith(uri, input => ByteString(ByteStreams.toByteArray(input)))
   }
@@ -34,16 +32,16 @@ trait Downloader { self: HttpClientProvider =>
     try {
       val get = new HttpGet(uri)
       val response = httpClient.execute(get)
-      if (response.getStatusLine().getStatusCode() != SC_OK) {
+      if (response.getStatusLine.getStatusCode != SC_OK) {
         get.abort()
-        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine().getStatusCode(), uri))
+        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine.getStatusCode, uri))
       }
-      val entity = response.getEntity()
-      using(entity.getContent()) { input =>
+      val entity = response.getEntity
+      using(entity.getContent) { input =>
         contentProcessor(input)
       }
     } catch {
-      case e: ClientProtocolException => throw new HttpException(e.getMessage(), e)
+      case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
     }
   }
   
@@ -56,21 +54,21 @@ trait Downloader { self: HttpClientProvider =>
       val get = new HttpGet(uri)
       get.setHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified))
       val response = httpClient.execute(get)
-      val statusCode = response.getStatusLine().getStatusCode()
+      val statusCode = response.getStatusLine.getStatusCode
       if (statusCode == SC_NOT_MODIFIED) {
         get.abort()
         None
       } else if (statusCode == SC_OK) {
-        val entity = response.getEntity()
-        using(entity.getContent()) { input =>
+        val entity = response.getEntity
+        using(entity.getContent) { input =>
           Some(contentProcessor(input))
         }
       } else {
         get.abort()
-        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine().getStatusCode(), uri))
+        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine.getStatusCode, uri))
       }
     } catch {
-      case e: ClientProtocolException => throw new HttpException(e.getMessage(), e)
+      case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
     }
   }
 
@@ -79,23 +77,27 @@ trait Downloader { self: HttpClientProvider =>
       val head = new HttpHead(uri)
       val response = httpClient.execute(head)
       val lastModified = response.getFirstHeader(LAST_MODIFIED)
-      fromLastModifiedHeader(lastModified.getValue())
+      fromLastModifiedHeader(lastModified.getValue)
     } catch {
-      case e: ParseException => throw new HttpException(e.getMessage(), e)
-      case e: ClientProtocolException => throw new HttpException(e.getMessage(), e)
+      case e: ParseException => throw new HttpException(e.getMessage, e)
+      case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
     }
   }
   
   def toLastModifiedHeader(lastModified: Long): String = {
-    val dateFormat = new SimpleDateFormat(httpDateFormatTemplate, Locale.US);
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));    
+    val dateFormat = httpDateFormat
     dateFormat.format(new Date(lastModified))
   }
   
   def fromLastModifiedHeader(lastModifiedString: String): Long = {
-    val dateFormat = new SimpleDateFormat(httpDateFormatTemplate, Locale.US);
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    val dateFormat = httpDateFormat
     val lastModified = dateFormat.parse(lastModifiedString)
-    lastModified.getTime()
+    lastModified.getTime
+  }
+
+  def httpDateFormat: SimpleDateFormat = {
+    val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    dateFormat
   }
 }
