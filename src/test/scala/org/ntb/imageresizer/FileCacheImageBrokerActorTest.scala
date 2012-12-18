@@ -18,18 +18,18 @@ import org.ntb.imageresizer.MockHttpClients._
 import org.specs2.mutable.Specification
 
 class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with Specification {
-  type Key = (String, Int, ImageFormat)
+  import FileCacheImageBrokerActorTest._
+
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
   val timeout = new FiniteDuration(5, TimeUnit.SECONDS)
 
   "FileCacheImageBrokerActor" should {
     "serve existing file" in {
       val testFile = tempFile(testData)
-      val imageBrokerActor = TestActorRef(Props(new TestFileCacheImageBrokerActor(_ => testFile)), "imagebroker")
-      val resizeTask = ask(imageBrokerActor, GetImageRequest(new URI("http://localhost/file.png"), 200))(timeout)
-      Await.result(resizeTask, timeout) match {
+      val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(_ => testFile)), "imagebroker")
+      imageBrokerActor ! GetImageRequest(new URI("http://localhost/file.png"), 200)
+      expectMsgPF(timeout) {
         case GetImageResponse(data) => data.getAbsolutePath === testFile.getAbsolutePath
-        case msg => failure("Unexpected response " + msg)
       }
       testFile.delete()
       system.stop(imageBrokerActor)
@@ -39,16 +39,15 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
     "download and resize nonexisting file" in {
       val httpClient = successfulHttpClient(testData)
       val testFile = nonExistingFile()
-      val downloadActor = TestActorRef(Props(new TestDownloadActor(httpClient)), "downloader")
-      val resizeActor = TestActorRef(Props(new TestResizeActor), "resizer")
-      val imageBrokerActor = TestActorRef(new TestFileCacheImageBrokerActor(_ => testFile), "imagebroker")
-      val resizeTask = ask(imageBrokerActor, GetImageRequest(new URI("http://localhost/file.png"), 200))(timeout)
-      Await.result(resizeTask, timeout) match {
+      val downloadActor = system.actorOf(Props(new TestDownloadActor(httpClient)), "downloader")
+      val resizeActor = system.actorOf(Props[TestResizeActor], "resizer")
+      val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(_ => testFile)), "imagebroker")
+      imageBrokerActor ! GetImageRequest(new URI("http://localhost/file.png"), 200)
+      expectMsgPF(timeout) {
         case GetImageResponse(data) =>
           testFile must exist
           Files.toByteArray(testFile).toSeq === testData.toSeq
           data.getAbsolutePath === testFile.getAbsolutePath
-        case msg => failure("Unexpected response " + msg)
       }
       testFile.delete()
       system.stop(downloadActor)
@@ -62,6 +61,10 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
       success
     }
   }
+}
+
+object FileCacheImageBrokerActorTest {
+  type Key = (String, Int, ImageFormat)
 
   def nonExistingFile(): File = {
     val file = new File(UUID.randomUUID().toString)
@@ -70,7 +73,7 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
   }
 
   def tempFile(data: Array[Byte] = Array()): File = {
-    val tempFile = File.createTempFile(getClass().getName, ".tmp")
+    val tempFile = File.createTempFile(getClass.getName, ".tmp")
     tempFile.deleteOnExit()
     if (data.length > 0) {
       Files.write(data, tempFile)
