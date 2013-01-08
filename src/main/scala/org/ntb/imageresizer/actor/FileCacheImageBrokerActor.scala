@@ -1,38 +1,50 @@
 package org.ntb.imageresizer.actor
 
-import java.io.File
-import java.net.URI
-import java.util.concurrent.TimeoutException
 import org.ntb.imageresizer.actor.ActorUtils.requireArgument
 import org.ntb.imageresizer.actor.DownloadActor._
+import org.ntb.imageresizer.actor.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
+import org.ntb.imageresizer.util.FilePathUtils.createTempFile
+import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
+import org.apache.http.HttpException
+import org.ntb.imageresizer.actor.ActorUtils.requireArgument
+import org.ntb.imageresizer.actor.DownloadActor._
 import org.ntb.imageresizer.actor.ResizeActor._
+import org.ntb.imageresizer.cache.TempFileCacheProvider
+import org.ntb.imageresizer.imageformat._
+import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import org.ntb.imageresizer.util.FilePathUtils.createTempFile
 import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
 import akka.actor.Actor
 import akka.actor.ActorLogging
+import akka.actor.ActorRef
 import akka.actor.Status
 import akka.actor.actorRef2Scala
-import akka.dispatch.Future
 import akka.pattern.ask
-import akka.util.duration.intToDurationInt
+import akka.util.Timeout
 import scala.collection.mutable
-import org.apache.http.HttpException
-import akka.actor.ActorRef
-import akka.util
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.{Success, Failure}
+import java.io.File
+import java.net.URI
+import java.util.concurrent.TimeoutException
+
+import language.postfixOps
 
 class FileCacheImageBrokerActor extends Actor
   with ActorLogging
   with TempFileCacheProvider[(String, Int, ImageFormat)] {
   import FileCacheImageBrokerActor._
+  import context.dispatcher
   
   type Key = (String, Int, ImageFormat)
 
   protected case class RemoveFromBuffer(key: Key)
   
-  implicit val timeout = util.Timeout(30 seconds)
+  implicit val timeout = Timeout(30 seconds)
   
   val encodingTasks: mutable.Map[Key, Future[Long]] = mutable.Map.empty
   
@@ -74,10 +86,10 @@ class FileCacheImageBrokerActor extends Actor
   def handleResizeTask(sender: ActorRef)(key: Key, file: File, resizeOp: => Future[Long]) {
     val resizeTask = encodingTasks.getOrElseUpdate(key, resizeOp)
     resizeTask onComplete {
-      case Right(size) =>
+      case Success(size) =>
         self ! RemoveFromBuffer(key)
         sender ! GetImageResponse(file)
-      case Left(t) =>
+      case Failure(t) =>
         self ! RemoveFromBuffer(key)
         file.delete()
         handleException(sender)(t)

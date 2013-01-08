@@ -1,22 +1,25 @@
 package org.ntb.imageresizer
 
+import org.ntb.imageresizer.MockHttpClients._
+import org.ntb.imageresizer.imageformat.ImageFormat
 import actor.FileCacheImageBrokerActor
 import actor.FileCacheImageBrokerActor._
 import actor.ResizeActor._
+import com.google.common.io.Files
+import org.specs2.mutable.Specification
+import org.specs2.runner.JUnitRunner
+import org.junit.runner.RunWith
 import akka.actor.{Actor, Props, ActorSystem}
-import akka.dispatch.Await
 import akka.pattern.ask
 import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
-import akka.util.FiniteDuration
-import com.google.common.io.Files
-import imageformat.ImageFormat
+import scala.concurrent.Await
+import scala.concurrent.duration.FiniteDuration
 import java.io.File
 import java.net.URI
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import org.ntb.imageresizer.MockHttpClients._
-import org.specs2.mutable.Specification
 
+@RunWith(classOf[JUnitRunner])
 class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with Specification {
   import FileCacheImageBrokerActorTest._
 

@@ -1,19 +1,21 @@
 package org.ntb.imageresizer.actor
 
-import java.io.File
-
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize.Resizer._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-
+import org.ntb.imageresizer.imageformat.ImageFormat
+import org.ntb.imageresizer.resize.Resizer._
+import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.Status
 import akka.actor.actorRef2Scala
 import akka.util.ByteString
 import akka.util.Timeout
-import akka.util.duration.intToDurationInt
+import scala.concurrent.duration._
+import java.io.File
 import javax.imageio.ImageIO
+import language.postfixOps
 
 class ResizeActor extends Actor with ActorLogging {
   import context.dispatcher

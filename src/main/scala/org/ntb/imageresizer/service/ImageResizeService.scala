@@ -9,13 +9,14 @@ import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import akka.util.duration.intToDurationInt
 import spray.http._
 import spray.httpx.unmarshalling._
 import spray.routing._
 import spray.util.pimpFile
+import scala.concurrent.duration._
 import java.net.MalformedURLException
 import java.net.URI
+import language.postfixOps
 
 class ImageResizeServiceActor extends Actor with HttpServiceActor with ImageResizeService {
   override val timeout = Timeout(30 seconds)

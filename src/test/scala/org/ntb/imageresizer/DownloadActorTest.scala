@@ -9,13 +9,13 @@ import org.junit.runner.RunWith
 import org.specs2.mutable.Specification
 import org.specs2.runner.JUnitRunner
 import akka.actor.ActorSystem
-import akka.dispatch.Await
 import akka.testkit.ImplicitSender
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.pattern.ask
 import akka.util.ByteString
-import akka.util.FiniteDuration
+import scala.concurrent.Await
+import scala.concurrent.duration.FiniteDuration
 import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeUnit

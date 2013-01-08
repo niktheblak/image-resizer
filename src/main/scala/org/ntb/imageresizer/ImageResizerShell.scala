@@ -1,25 +1,27 @@
 package org.ntb.imageresizer
 
-import java.net.URI
-import java.net.URISyntaxException
-import java.util.regex.PatternSyntaxException
-
+import org.ntb.imageresizer.actor.DownloadActor
+import org.ntb.imageresizer.actor.FileCacheImageBrokerActor
+import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
+import org.ntb.imageresizer.actor.ResizeActor
+import org.ntb.imageresizer.resize.UnsupportedImageFormatException
+import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.DownloadActor
 import org.ntb.imageresizer.actor.FileCacheImageBrokerActor
 import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.actor.ResizeActor
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-
-import com.typesafe.config.ConfigFactory
-
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.dispatch.Await
 import akka.pattern.ask
 import akka.routing.SmallestMailboxRouter
 import akka.util.Timeout
-import akka.util.duration.intToDurationInt
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import java.net.URI
+import java.net.URISyntaxException
+import language.postfixOps
 
 object ImageResizerShell extends App {
   implicit val timeout = Timeout(10 seconds)
