@@ -11,6 +11,7 @@ import org.mockito.Mockito.verify
 import org.mockito.Matchers.any
 import org.ntb.imageresizer.io.Downloader
 import org.scalatest.FlatSpec
+import org.scalatest.OptionValues._
 import org.scalatest.matchers.ShouldMatchers
 import MockHttpClients.statusCodeHttpClient
 import MockHttpClients.successfulHttpClient
@@ -47,8 +48,7 @@ class FileDownloaderTest extends FlatSpec with ShouldMatchers {
     val httpClient = successfulHttpClient(testData)
     val downloader = fileDownloader(httpClient)
     val result = downloader.downloadIfModified(uri, 1)
-    result should be ('defined)
-    result.get.toArray should equal (testData)
+    result.value.toArray should equal (testData)
   }
 
   it should "not download if content is not modified" in {

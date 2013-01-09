@@ -6,6 +6,7 @@ import org.junit.runner.RunWith
 import org.ntb.imageresizer.cache.FileCache
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.OptionValues._
 import com.google.common.io.Files
 import akka.util.ByteString
 import java.util.UUID
@@ -38,8 +39,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
       val fileCache = new FileCache(filePathProvider(tempFile)_)
       fileCache.put("testFile", ByteString("abcd"))
       val content = fileCache.get("testFile")
-      content should be ('defined)
-      content.get.utf8String should equal ("abcd")
+      content.value.utf8String should equal ("abcd")
     }
     
     "return None if file with specified key does not exist" in {
