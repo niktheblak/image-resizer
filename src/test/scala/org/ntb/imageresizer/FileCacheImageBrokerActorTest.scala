@@ -2,6 +2,7 @@ package org.ntb.imageresizer
 
 import org.ntb.imageresizer.MockHttpClients._
 import org.ntb.imageresizer.imageformat.ImageFormat
+import actor.DownloadActor._
 import actor.FileCacheImageBrokerActor
 import actor.FileCacheImageBrokerActor._
 import actor.ResizeActor._
@@ -40,12 +41,21 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
   }
 
   it should "download and resize nonexisting file" in {
-    val httpClient = successfulHttpClient(testData)
     val testFile = nonExistingFile()
-    val downloadActor = system.actorOf(Props(new TestDownloadActor(httpClient)))
-    val resizeActor = system.actorOf(Props[TestResizeActor])
-    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadActor, resizeActor, (_ => testFile))))
+    val downloadProbe = TestProbe()
+    val resizeProbe = TestProbe()
+    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadProbe.ref, resizeProbe.ref, (_ => testFile))))
     imageBrokerActor ! GetImageRequest(new URI("http://localhost/file.png"), 200)
+    downloadProbe.expectMsgPF(timeout) {
+      case DownloadToFileRequest(uri, target) =>
+        Files.write(testData, target)
+        downloadProbe.reply(DownloadToFileResponse(target.length()))
+    }
+    resizeProbe.expectMsgPF(timeout) {
+      case ResizeImageToFileRequest(source, target, _, _) =>
+        Files.copy(source, target)
+        resizeProbe.reply(ResizeImageToFileResponse(target.length()))
+    }
     expectMsgPF(timeout) {
       case GetImageResponse(data) =>
         testFile should be('exists)
@@ -53,8 +63,6 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
         data.getAbsolutePath should equal(testFile.getAbsolutePath)
     }
     testFile.delete()
-    system.stop(downloadActor)
-    system.stop(resizeActor)
     system.stop(imageBrokerActor)
   }
 
@@ -83,13 +91,5 @@ object FileCacheImageBrokerActorTest {
 
   class TestFileCacheImageBrokerActor(downloader: ActorRef, resizer: ActorRef, provider: Key => File) extends FileCacheImageBrokerActor(downloader, resizer) {
     override val cacheFileProvider = provider
-  }
-
-  class TestResizeActor extends Actor {
-    def receive = {
-      case ResizeImageToFileRequest(source, target, _, _) =>
-        Files.copy(source, target)
-        sender ! ResizeImageToFileResponse(target.length())
-    }
   }
 }

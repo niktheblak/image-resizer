@@ -36,18 +36,18 @@ import language.postfixOps
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
   with ActorLogging
-  with TempFileCacheProvider[(String, Int, ImageFormat)] {
+  with TempFileCacheProvider[FileCacheImageBrokerActor.Key] {
   import FileCacheImageBrokerActor._
   import context.dispatcher
   
-  type Key = (String, Int, ImageFormat)
   protected case class RemoveFromBuffer(key: Key)
   implicit val timeout = Timeout(30 seconds)
-  val cachePath = "imagebroker"
   val encodingTasks: mutable.Map[Key, Future[Long]] = mutable.Map.empty
+  
+  override def cachePath = "imagebroker"
 
   override def preStart() {
-    log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cachePath))
+    log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cacheDirectory()))
   }
 
   def receive = {
@@ -132,6 +132,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 }
 
 object FileCacheImageBrokerActor {
+  type Key = (String, Int, ImageFormat)
   case class GetImageRequest(uri: URI, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetLocalImageRequest(source: File, id: String, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: File)
