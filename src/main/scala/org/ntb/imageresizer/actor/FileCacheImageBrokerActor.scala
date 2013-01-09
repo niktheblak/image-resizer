@@ -34,21 +34,17 @@ import java.util.concurrent.TimeoutException
 
 import language.postfixOps
 
-class FileCacheImageBrokerActor extends Actor
+class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
   with ActorLogging
   with TempFileCacheProvider[(String, Int, ImageFormat)] {
   import FileCacheImageBrokerActor._
   import context.dispatcher
   
   type Key = (String, Int, ImageFormat)
-
   protected case class RemoveFromBuffer(key: Key)
-  
   implicit val timeout = Timeout(30 seconds)
-  
+  val cachePath = "imagebroker"
   val encodingTasks: mutable.Map[Key, Future[Long]] = mutable.Map.empty
-  
-  def cachePath = "imagebroker"
 
   override def preStart() {
     log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cachePath))
@@ -109,7 +105,6 @@ class FileCacheImageBrokerActor extends Actor
   }
 
   def download(uri: URI, target: File): Future[Long] = {
-    val downloadActor = context.actorFor("/user/downloader")
     val downloadTask = ask(downloadActor, DownloadToFileRequest(uri, target))
     for {
       downloadResponse <- downloadTask.mapTo[DownloadToFileResponse]
@@ -117,7 +112,6 @@ class FileCacheImageBrokerActor extends Actor
   }
 
   def resize(source: File, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
-    val resizeActor = context.actorFor("/user/resizer")
     val resizeTask = ask(resizeActor, ResizeImageToFileRequest(source, target, preferredSize, format)).mapTo[ResizeImageToFileResponse]
     for (response <- resizeTask) yield response.fileSize
   }

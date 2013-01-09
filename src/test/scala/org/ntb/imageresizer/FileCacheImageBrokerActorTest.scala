@@ -11,13 +11,14 @@ import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 import akka.actor.{ Actor, Props, ActorSystem }
 import akka.pattern.ask
-import akka.testkit.{ TestActorRef, ImplicitSender, TestKit }
+import akka.testkit.{ TestActorRef, ImplicitSender, TestKit, TestProbe }
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 import java.io.File
 import java.net.URI
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import akka.actor.ActorRef
 
 class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpec with ShouldMatchers with BeforeAndAfterAll {
   import FileCacheImageBrokerActorTest._
@@ -27,7 +28,9 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
 
   "FileCacheImageBrokerActor" should "serve existing file" in {
     val testFile = tempFile(testData)
-    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(_ => testFile)), "imagebroker")
+    val downloadActor = TestProbe()
+    val resizeActor = TestProbe()
+    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadActor.ref, resizeActor.ref, (_ => testFile))))
     imageBrokerActor ! GetImageRequest(new URI("http://localhost/file.png"), 200)
     expectMsgPF(timeout) {
       case GetImageResponse(data) => data.getAbsolutePath should equal(testFile.getAbsolutePath)
@@ -39,9 +42,9 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
   it should "download and resize nonexisting file" in {
     val httpClient = successfulHttpClient(testData)
     val testFile = nonExistingFile()
-    val downloadActor = system.actorOf(Props(new TestDownloadActor(httpClient)), "downloader")
-    val resizeActor = system.actorOf(Props[TestResizeActor], "resizer")
-    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(_ => testFile)), "imagebroker")
+    val downloadActor = system.actorOf(Props(new TestDownloadActor(httpClient)))
+    val resizeActor = system.actorOf(Props[TestResizeActor])
+    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadActor, resizeActor, (_ => testFile))))
     imageBrokerActor ! GetImageRequest(new URI("http://localhost/file.png"), 200)
     expectMsgPF(timeout) {
       case GetImageResponse(data) =>
@@ -78,7 +81,7 @@ object FileCacheImageBrokerActorTest {
     tempFile
   }
 
-  class TestFileCacheImageBrokerActor(provider: Key => File) extends FileCacheImageBrokerActor {
+  class TestFileCacheImageBrokerActor(downloader: ActorRef, resizer: ActorRef, provider: Key => File) extends FileCacheImageBrokerActor(downloader, resizer) {
     override val cacheFileProvider = provider
   }
 

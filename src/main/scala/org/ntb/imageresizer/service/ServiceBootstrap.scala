@@ -9,10 +9,10 @@ import spray.can.server.SprayCanHttpServerApp
 import spray.io.IOServer.Unbind
 
 object ServiceBootstrap extends App with SprayCanHttpServerApp {
-  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(2)), "resizer")
-  val downloadActor = system.actorOf(Props[DownloadActor], "downloader")
-  val imageBrokerActor = system.actorOf(Props[FileCacheImageBrokerActor].withRouter(SmallestMailboxRouter(2)), "imagebroker")
-  val service = system.actorOf(Props[ImageResizeServiceActor])
+  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(2)))
+  val downloadActor = system.actorOf(Props[DownloadActor])
+  val imageBrokerActor = system.actorOf(Props(new FileCacheImageBrokerActor(downloadActor, resizeActor)).withRouter(SmallestMailboxRouter(2)))
+  val service = system.actorOf(Props(new ImageResizeServiceActor(imageBrokerActor)))
   val httpServer = newHttpServer(service)
   httpServer ! Bind(interface = "localhost", port = 8080)
   

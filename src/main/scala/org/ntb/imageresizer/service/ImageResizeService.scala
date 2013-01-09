@@ -18,9 +18,8 @@ import java.net.MalformedURLException
 import java.net.URI
 import language.postfixOps
 
-class ImageResizeServiceActor extends Actor with HttpServiceActor with ImageResizeService {
+class ImageResizeServiceActor(val imageBroker: ActorRef) extends Actor with HttpServiceActor with ImageResizeService {
   override val timeout = Timeout(30 seconds)
-  override val imageBroker = actorSystem.actorFor("/user/imagebroker")
 
   def receive = runRoute(resizeRoute)
 }
