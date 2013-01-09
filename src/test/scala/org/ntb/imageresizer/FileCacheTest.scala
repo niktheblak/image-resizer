@@ -4,40 +4,31 @@ import java.io.File
 import java.nio.charset.Charset
 import org.junit.runner.RunWith
 import org.ntb.imageresizer.cache.FileCache
-import org.specs2.mutable.Specification
-import org.specs2.runner.JUnitRunner
+import org.scalatest.WordSpec
+import org.scalatest.matchers.ShouldMatchers
 import com.google.common.io.Files
 import akka.util.ByteString
 import java.util.UUID
 
-@RunWith(classOf[JUnitRunner])
-class FileCacheTest extends Specification {
-  def createTempFile(nameFragment: String): File = {
-    val tempFile = File.createTempFile("FileCacheTest-" + nameFragment, ".tmp")
-    tempFile.deleteOnExit()    
-    tempFile
-  }
-  
-  def filePathProvider(file: File)(key: String): File = file
-  
-  def nonExistingFile: File = new File(UUID.randomUUID().toString())
+class FileCacheTest extends WordSpec with ShouldMatchers {
+  import FileCacheTest._
   
   "put" should {
     "create a file with name given by cachePathProvider" in {
       val tempFile = createTempFile("testFile")
       val fileCache = new FileCache(filePathProvider(tempFile)_)
       fileCache.put("testFile", ByteString("abcd"))
-      tempFile.exists() must beTrue
-      Files.toString(tempFile, Charset.forName("UTF-8")) mustEqual "abcd"
+      tempFile should be ('exists)
+      Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("abcd")
     }
     
     "overwrite existing file with new content" in {
       val tempFile = createTempFile("testFile")
       val fileCache = new FileCache(filePathProvider(tempFile)_)
       fileCache.put("testFile", ByteString("abcd"))
-      tempFile.exists() must beTrue
+      tempFile should be ('exists)
       fileCache.put("testFile", ByteString("efgh"))
-      Files.toString(tempFile, Charset.forName("UTF-8")) mustEqual "efgh"
+      Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("efgh")
     }
   }
   
@@ -47,15 +38,15 @@ class FileCacheTest extends Specification {
       val fileCache = new FileCache(filePathProvider(tempFile)_)
       fileCache.put("testFile", ByteString("abcd"))
       val content = fileCache.get("testFile")
-      content.isDefined must beTrue
-      content.get.utf8String mustEqual "abcd"
+      content should be ('defined)
+      content.get.utf8String should equal ("abcd")
     }
     
     "return None if file with specified key does not exist" in {
       val fileCache = new FileCache((key: String) => nonExistingFile)
-      new File("testFile").exists() must beFalse
+      new File("testFile") should not be ('exists)
       val content = fileCache.get("testFile")
-      content.isDefined must beFalse
+      content should not be ('defined)
     }
   }
   
@@ -64,12 +55,24 @@ class FileCacheTest extends Specification {
       val tmpdir = System.getProperty("java.io.tmpdir")
       val tempFile = nonExistingFile
       tempFile.deleteOnExit()
-      tempFile.exists() must beFalse
+      tempFile should not be ('exists)
       val fileCache = new FileCache(filePathProvider(tempFile)_)
       val content = fileCache.get("testFile", () => ByteString("abcd"))
-      tempFile.exists() must beTrue
-      content.utf8String mustEqual "abcd"
-      Files.toString(tempFile, Charset.forName("UTF-8")) mustEqual "abcd"
+      tempFile should be ('exists)
+      content.utf8String should equal ("abcd")
+      Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("abcd")
     }
   }
+}
+
+object FileCacheTest {
+  def createTempFile(nameFragment: String): File = {
+    val tempFile = File.createTempFile("FileCacheTest-" + nameFragment, ".tmp")
+    tempFile.deleteOnExit()    
+    tempFile
+  }
+  
+  def filePathProvider(file: File)(key: String): File = file
+  
+  def nonExistingFile: File = new File(UUID.randomUUID().toString())
 }

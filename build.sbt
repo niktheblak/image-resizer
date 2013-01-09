@@ -32,5 +32,5 @@ libraryDependencies += "junit" % "junit" % "4.10" % "test"
 
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.0" % "test"
 
-libraryDependencies += "org.specs2" %% "specs2" % "1.13" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
   

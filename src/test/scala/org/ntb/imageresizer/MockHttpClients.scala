@@ -10,39 +10,39 @@ import org.apache.http.HttpException
 import org.apache.http.HttpResponse
 import org.apache.http.StatusLine
 import org.junit.runner.RunWith
+import org.scalatest.mock.MockitoSugar
 import org.mockito.ArgumentCaptor
+import org.mockito.Mockito.when
+import org.mockito.Matchers.any
 import org.ntb.imageresizer.io.Downloader
-import org.specs2.runner.JUnitRunner
-import org.specs2.mock.Mockito
-import org.specs2.mutable.Specification
 
-object MockHttpClients extends Mockito {
+object MockHttpClients extends MockitoSugar {
   def successfulHttpClient(data: Array[Byte], statusCode: Int = 200): HttpClient = {
-      val statusLine = mock[StatusLine]
-      val entity = mock[HttpEntity]
-      val response = mock[HttpResponse]
-      val httpClient = mock[HttpClient]
-      statusLine.getStatusCode() returns statusCode
-      entity.getContent() returns new ByteArrayInputStream(data) thenThrows new RuntimeException("getContent already called")
-      response.getStatusLine() returns statusLine
-      response.getEntity() returns entity
-      httpClient.execute(any[HttpGet]) returns response
-      httpClient
+    val statusLine = mock[StatusLine]
+    val entity = mock[HttpEntity]
+    val response = mock[HttpResponse]
+    val httpClient = mock[HttpClient]
+    when(statusLine.getStatusCode()).thenReturn(statusCode)
+    when(entity.getContent()).thenReturn(new ByteArrayInputStream(data)).thenThrow(new RuntimeException("getContent already called"))
+    when(response.getStatusLine()).thenReturn(statusLine)
+    when(response.getEntity()).thenReturn(entity)
+    when(httpClient.execute(any[HttpGet])).thenReturn(response)
+    httpClient
   }
-  
+
   def statusCodeHttpClient(statusCode: Int): HttpClient = {
-      val statusLine = mock[StatusLine]
-      val response = mock[HttpResponse]
-      val httpClient = mock[HttpClient]
-      statusLine.getStatusCode() returns statusCode
-      response.getStatusLine() returns statusLine
-      httpClient.execute(any[HttpGet]) returns response
-      httpClient
+    val statusLine = mock[StatusLine]
+    val response = mock[HttpResponse]
+    val httpClient = mock[HttpClient]
+    when(statusLine.getStatusCode()).thenReturn(statusCode)
+    when(response.getStatusLine()).thenReturn(statusLine)
+    when(httpClient.execute(any[HttpGet])).thenReturn(response)
+    httpClient
   }
-  
+
   def failingHttpClient(e: Exception) = {
-      val httpClient = mock[HttpClient]
-      httpClient.execute(any[HttpGet]) throws e
-      httpClient
+    val httpClient = mock[HttpClient]
+    when(httpClient.execute(any[HttpGet])).thenThrow(e)
+    httpClient
   }
 }
