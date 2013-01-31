@@ -6,6 +6,8 @@ scalaVersion := "2.10.0"
 
 EclipseKeys.withSource := true
 
+retrieveManaged := true
+
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 resolvers += "spray repo" at "http://repo.spray.io"
