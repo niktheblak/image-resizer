@@ -1,14 +1,15 @@
 package org.ntb.imageresizer.cache
 
 import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
+import org.ntb.imageresizer.util.FileUtils.deleteIfExpired
 import org.apache.commons.codec.digest.DigestUtils.md5Hex
-import akka.util.ByteString
 import java.io.File
+import concurrent.duration._
 
 trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
   def cachePath: String
   
-  val maxAge: Long = 24 * 3600 * 1000L
+  val maxAge: Duration = 24 hours
     
   def tempDirCacheFileProvider(key: A): File = {
     require(key != null, "Argument key cannot be null")
@@ -16,13 +17,8 @@ trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
     val dir = cacheDirectory()
     val fileName = md5Hex(key.toString())
     val file = new File(dir, fileName)
-    if (expired(file)) file.delete()
+    deleteIfExpired(file, maxAge)
     file
-  }
-  
-  def expired(file: File): Boolean = {
-    val lastModified = file.lastModified()
-    lastModified > 0 && (System.currentTimeMillis() - lastModified) > maxAge
   }
   
   def clearCacheDirectory() {

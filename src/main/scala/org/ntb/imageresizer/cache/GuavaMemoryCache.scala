@@ -2,7 +2,6 @@ package org.ntb.imageresizer.cache
 
 import java.util.concurrent.Callable
 import com.google.common.cache.{ Cache => GCache }
-import akka.util.ByteString
 import org.apache.http.HttpException
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import java.io.IOException

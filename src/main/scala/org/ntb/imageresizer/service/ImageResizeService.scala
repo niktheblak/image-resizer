@@ -2,7 +2,7 @@ package org.ntb.imageresizer.service
 
 import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
-import org.ntb.imageresizer.util.FilePathUtils.createTempFile
+import org.ntb.imageresizer.util.FileUtils.createTempFile
 import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import com.google.common.io.Files
 import akka.actor.Actor

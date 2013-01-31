@@ -6,7 +6,7 @@ import org.ntb.imageresizer.actor.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-import org.ntb.imageresizer.util.FilePathUtils.createTempFile
+import org.ntb.imageresizer.util.FileUtils.createTempFile
 import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.ActorUtils.requireArgument
@@ -15,7 +15,7 @@ import org.ntb.imageresizer.actor.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-import org.ntb.imageresizer.util.FilePathUtils.createTempFile
+import org.ntb.imageresizer.util.FileUtils.createTempFile
 import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
 import akka.actor.Actor
 import akka.actor.ActorLogging
