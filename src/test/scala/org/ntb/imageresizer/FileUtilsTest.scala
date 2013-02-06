@@ -11,6 +11,8 @@ import org.scalatest.mock.MockitoSugar
 import scala.concurrent.duration._
 
 class FileUtilsTest extends WordSpec with ShouldMatchers with MockitoSugar {
+  import scala.language.postfixOps
+
   "getFileExtension" should {
     "return extension of a filename in HTTP URL" in {
       val uri = URI.create("http://www.server.com/logo.png")
