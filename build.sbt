@@ -8,6 +8,8 @@ EclipseKeys.withSource := true
 
 retrieveManaged := true
 
+scalacOptions += "-feature"
+
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 resolvers += "spray repo" at "http://repo.spray.io"

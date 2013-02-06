@@ -7,6 +7,8 @@ import java.io.File
 import concurrent.duration._
 
 trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
+  import scala.language.postfixOps
+  
   def cachePath: String
   
   val maxAge: Duration = 24 hours
