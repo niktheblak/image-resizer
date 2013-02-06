@@ -2,7 +2,6 @@ package org.ntb.imageresizer
 
 import java.io.File
 import java.nio.charset.Charset
-import org.junit.runner.RunWith
 import org.ntb.imageresizer.cache.FileCache
 import org.scalatest.WordSpec
 import org.scalatest.matchers.ShouldMatchers
