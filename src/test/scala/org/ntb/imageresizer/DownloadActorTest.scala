@@ -23,25 +23,15 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
   val timeout = new FiniteDuration(2, TimeUnit.SECONDS)
 
-  "DownloadActor" should "return downloaded data for DownloadRequest" in {
-    val uri = URI.create("http://localhost/logo.png")
-    val httpClient = successfulHttpClient(testData)
-    val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
-    downloadActor ! DownloadRequest(uri)
-    expectMsgPF(timeout) {
-      case DownloadResponse(data) => data should equal(ByteString(1, 2, 3))
-    }
-  }
-
-  it should "download data to file for DownloadFileRequest" in {
+  "DownloadActor" should "download data to file for DownloadFileRequest" in {
     val uri = URI.create("http://localhost/logo.png")
     val httpClient = successfulHttpClient(testData)
     val target = File.createTempFile("DownloadActorTest", ".tmp")
     target.deleteOnExit()
     val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
-    downloadActor ! DownloadToFileRequest(uri, target)
+    downloadActor ! DownloadRequest(uri, target)
     expectMsgPF(timeout) {
-      case DownloadToFileResponse(size) =>
+      case DownloadResponse(size) =>
         size should equal(3)
         Files.toByteArray(target) should equal(testData)
     }
@@ -51,8 +41,11 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     val uri = URI.create("http://localhost/logo.png")
     val httpClient = statusCodeHttpClient(404)
     val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
-    val downloadTask = ask(downloadActor, DownloadRequest(uri))(timeout)
-    evaluating { Await.result(downloadTask, timeout) } should produce[HttpException]
+    val file = mock[File]
+    val downloadTask = ask(downloadActor, DownloadRequest(uri, file))(timeout)
+    evaluating {
+      Await.result(downloadTask, timeout)
+    } should produce[HttpException]
   }
 
   override def afterAll {

@@ -1,7 +1,6 @@
 package org.ntb.imageresizer.resize
 
 import org.ntb.imageresizer.imageformat.ImageFormat
-import org.ntb.imageresizer.imageformat.ImageFormat
 
 import org.imgscalr.Scalr
 

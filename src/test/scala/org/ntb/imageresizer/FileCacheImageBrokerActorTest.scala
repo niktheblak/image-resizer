@@ -47,14 +47,14 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
     val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadProbe.ref, resizeProbe.ref, (_ => testFile))))
     imageBrokerActor ! GetImageRequest(new URI("http://localhost/file.png"), 200)
     downloadProbe.expectMsgPF(timeout) {
-      case DownloadToFileRequest(uri, target) =>
+      case DownloadRequest(uri, target) =>
         Files.write(testData, target)
-        downloadProbe.reply(DownloadToFileResponse(target.length()))
+        downloadProbe.reply(DownloadResponse(target.length()))
     }
     resizeProbe.expectMsgPF(timeout) {
-      case ResizeImageToFileRequest(source, target, _, _) =>
+      case ResizeImageRequest(source, target, _, _) =>
         Files.copy(source, target)
-        resizeProbe.reply(ResizeImageToFileResponse(target.length()))
+        resizeProbe.reply(ResizeImageResponse(target.length()))
     }
     expectMsgPF(timeout) {
       case GetImageResponse(data) =>

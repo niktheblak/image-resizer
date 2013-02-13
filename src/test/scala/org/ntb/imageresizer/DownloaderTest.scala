@@ -23,18 +23,7 @@ class DownloaderTest extends FlatSpec with ShouldMatchers {
 
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
 
-  "Downloader" should "successfully download data from HTTP URL to ByteString" in {
-    val uri = URI.create("http://localhost/logo.png")
-    val httpClient = successfulHttpClient(testData)
-    val downloader = testDownloader(httpClient)
-    val data = downloader.download(uri)
-    val captor = ArgumentCaptor.forClass(classOf[HttpGet])
-    verify(httpClient).execute(captor.capture())
-    captor.getValue().getURI() should equal (uri)
-    data.toArray should equal (testData)
-  }
-
-  it should "successfully download data from HTTP URL to OutputStream" in {
+  "Downloader" should "successfully download data from HTTP URL to OutputStream" in {
     val uri = URI.create("http://localhost/logo.png")
     val httpClient = successfulHttpClient(testData)
     val downloader = testDownloader(httpClient)
@@ -63,7 +52,10 @@ class DownloaderTest extends FlatSpec with ShouldMatchers {
   it should "throw HttpException when HTTP server responds with an error code" in {
     val httpClient = statusCodeHttpClient(404)
     val downloader = testDownloader(httpClient)
-    evaluating { downloader.download(URI.create("http://localhost/logo.png")) } should produce [HttpException]
+    val output = new ByteArrayOutputStream()
+    evaluating {
+      downloader.download(URI.create("http://localhost/logo.png"), output)
+    } should produce [HttpException]
     verify(httpClient).execute(any[HttpGet])
   }
 }

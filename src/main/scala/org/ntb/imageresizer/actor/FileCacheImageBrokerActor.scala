@@ -1,15 +1,6 @@
 package org.ntb.imageresizer.actor
 
-import org.ntb.imageresizer.actor.ActorUtils.requireArgument
-import org.ntb.imageresizer.actor.DownloadActor._
-import org.ntb.imageresizer.actor.ResizeActor._
-import org.ntb.imageresizer.cache.TempFileCacheProvider
-import org.ntb.imageresizer.imageformat._
-import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-import org.ntb.imageresizer.util.FileUtils.createTempFile
-import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
 import org.apache.http.HttpException
-import org.ntb.imageresizer.actor.ActorUtils.requireArgument
 import org.ntb.imageresizer.actor.DownloadActor._
 import org.ntb.imageresizer.actor.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCacheProvider
@@ -20,29 +11,25 @@ import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
-import akka.actor.Status
 import akka.actor.actorRef2Scala
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.collection.mutable
-import scala.concurrent.Future
+import concurrent.{Await, Future}
 import scala.concurrent.duration._
-import scala.util.{Success, Failure}
 import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeoutException
-
 import language.postfixOps
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
-  with ActorLogging
-  with TempFileCacheProvider[FileCacheImageBrokerActor.Key] {
+    with ActorLogging
+    with TempFileCacheProvider[FileCacheImageBrokerActor.Key]
+    with ActorUtils {
   import FileCacheImageBrokerActor._
   import context.dispatcher
-  
-  protected case class RemoveFromBuffer(key: Key)
-  implicit val timeout = Timeout(30 seconds)
-  val encodingTasks: mutable.Map[Key, Future[Long]] = mutable.Map.empty
+
+  val timeout: FiniteDuration = 30 seconds
+  implicit val akkaTimeout = Timeout(timeout)
   
   override def cachePath = "imagebroker"
 
@@ -60,7 +47,15 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
         sender ! GetImageResponse(file)
       } else {
         log.debug("Downloading and resizing image from request %s to %s".format(request, file.getPath))
-        handleResizeTask(sender)((source, preferredSize, imageFormat), file, downloadAndResizeToFile(uri, file, preferredSize, imageFormat))
+        val downloadAndResizeTask = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
+        actorTry(sender) {
+          Await.result(downloadAndResizeTask, timeout)
+          sender ! GetImageResponse(file)
+        } actorCatch  {
+          case e: TimeoutException =>
+          case e: UnsupportedImageFormatException =>
+          case e: HttpException =>
+        }
       }
     case GetLocalImageRequest(source, id, preferredSize, imageFormat) =>
       requireArgument(sender)(source.exists && source.canRead, "Source file must exist and be readable")
@@ -70,26 +65,27 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
       if (file.exists()) {
         sender ! GetImageResponse(file)
       } else {
-        handleResizeTask(sender)((id, preferredSize, imageFormat), file, resize(source, file, preferredSize, imageFormat))
+        val resizeTask = resize(source, file, preferredSize, imageFormat)
+        actorTry(sender) {
+          Await.result(resizeTask, timeout)
+          sender ! GetImageResponse(file)
+        } actorCatch  {
+          case e: TimeoutException =>
+          case e: UnsupportedImageFormatException =>
+          case e: HttpException =>
+        }
+        actorTry(sender) {
+          Await.result(resizeTask, timeout)
+          sender ! GetImageResponse(file)
+        } actorCatch  {
+          case e: TimeoutException =>
+          case e: UnsupportedImageFormatException =>
+          case e: HttpException =>
+        }
       }
-    case RemoveFromBuffer(key) =>
-      encodingTasks.remove(key)
     case ClearCache() =>
       log.info("Clearing cache directory " + cacheDirectory().getAbsolutePath)
       clearCacheDirectory()
-  }
-
-  def handleResizeTask(sender: ActorRef)(key: Key, file: File, resizeOp: => Future[Long]) {
-    val resizeTask = encodingTasks.getOrElseUpdate(key, resizeOp)
-    resizeTask onComplete {
-      case Success(size) =>
-        self ! RemoveFromBuffer(key)
-        sender ! GetImageResponse(file)
-      case Failure(t) =>
-        self ! RemoveFromBuffer(key)
-        file.delete()
-        handleException(sender)(t)
-    }
   }
 
   def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
@@ -105,29 +101,15 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def download(uri: URI, target: File): Future[Long] = {
-    val downloadTask = ask(downloadActor, DownloadToFileRequest(uri, target))
+    val downloadTask = ask(downloadActor, DownloadRequest(uri, target))
     for {
-      downloadResponse <- downloadTask.mapTo[DownloadToFileResponse]
+      downloadResponse <- downloadTask.mapTo[DownloadResponse]
     } yield downloadResponse.fileSize
   }
 
   def resize(source: File, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
-    val resizeTask = ask(resizeActor, ResizeImageToFileRequest(source, target, preferredSize, format)).mapTo[ResizeImageToFileResponse]
+    val resizeTask = ask(resizeActor, ResizeImageRequest(source, target, preferredSize, format)).mapTo[ResizeImageResponse]
     for (response <- resizeTask) yield response.fileSize
-  }
-
-  def handleException(sender: ActorRef)(t: Throwable) {
-    t match {
-      case e: TimeoutException =>
-        sender ! Status.Failure(e)
-      case e: UnsupportedImageFormatException =>
-        sender ! Status.Failure(e)
-      case e: HttpException =>
-        sender ! Status.Failure(e)
-      case e: Throwable =>
-        sender ! Status.Failure(e)
-        throw e
-    }
   }
 }
 

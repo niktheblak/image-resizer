@@ -3,8 +3,8 @@ package org.ntb.imageresizer.service
 import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
-import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import com.google.common.io.Files
+import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.pattern.ask
@@ -48,36 +48,39 @@ trait ImageResizeService extends HttpService {
   }
 
   val resizeRoute = path("resize") {
-    (get & parameters('source.as[URI], 'size.as[Int], 'format.as[ImageFormat] ?)) { (source, size, format) =>
-      val imageFormat = format.getOrElse(JPEG)
-      val mediaType = MediaTypes.forExtension(imageFormat.extension).get
-      val request = GetImageRequest(source, size, imageFormat)
-      val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
-      val result = resizeTask map { response =>
-        Files.toByteArray(response.data)
-      }
-      respondWithMediaType(mediaType) {
-        complete(result)
-      }
-    } ~ (post & parameters('size.as[Int], 'format.as[ImageFormat] ?)) { (size, format) =>
-      entity(as[Array[Byte]]) { body =>
+    (get & parameters('source.as[URI], 'size.as[Int], 'format.as[ImageFormat] ?)) {
+      (source, size, format) =>
         val imageFormat = format.getOrElse(JPEG)
         val mediaType = MediaTypes.forExtension(imageFormat.extension).get
-        val id = md5Hex(body)
-        val tempFile = createTempFile()
-        Files.write(body, tempFile)
-        val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
+        val request = GetImageRequest(source, size, imageFormat)
         val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
-        resizeTask onComplete {
-          case _ => tempFile.delete()
-        }
         val result = resizeTask map { response =>
-          Files.toByteArray(response.data)
+            response.data.toByteArrayStream(chunkSize)
         }
         respondWithMediaType(mediaType) {
           complete(result)
         }
-      }
+    } ~ (post & parameters('size.as[Int], 'format.as[ImageFormat] ?)) {
+      (size, format) =>
+        entity(as[Array[Byte]]) {
+          body =>
+            val imageFormat = format.getOrElse(JPEG)
+            val mediaType = MediaTypes.forExtension(imageFormat.extension).get
+            val id = md5Hex(body)
+            val tempFile = createTempFile()
+            Files.write(body, tempFile)
+            val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
+            val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
+            resizeTask onComplete {
+              case _ => tempFile.delete()
+            }
+            val result = resizeTask map { response =>
+                response.data.toByteArrayStream(chunkSize)
+            }
+            respondWithMediaType(mediaType) {
+              complete(result)
+            }
+        }
     }
   }
 }

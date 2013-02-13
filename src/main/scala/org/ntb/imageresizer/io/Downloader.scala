@@ -5,13 +5,11 @@ import org.apache.http.HttpException
 import org.apache.http.HttpHeaders._
 import org.apache.http.HttpStatus._
 import org.apache.http.client.ClientProtocolException
-import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpHead
 import com.google.common.io.ByteStreams
 import akka.util.ByteString
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.{FileOutputStream, File, InputStream, OutputStream}
 import java.net.URI
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -20,15 +18,17 @@ import java.util.TimeZone
 import java.util.Date
 
 trait Downloader { self: HttpClientProvider =>
-  def download(uri: URI): ByteString = {
-    downloadWith(uri, input => ByteString(ByteStreams.toByteArray(input)))
-  }
-
   def download(uri: URI, output: OutputStream): Long = {
-    downloadWith(uri, input => ByteStreams.copy(input, output))
+    download(uri, input => ByteStreams.copy(input, output))
   }
 
-  def downloadWith[A](uri: URI, contentProcessor: InputStream => A): A = {
+  def download(uri: URI, target: File): Long = {
+    download(uri, input => using (new FileOutputStream(target)) { output =>
+      ByteStreams.copy(input, output)
+    })
+  }
+
+  def download[A](uri: URI, f: InputStream => A): A = {
     try {
       val get = new HttpGet(uri)
       val response = httpClient.execute(get)
@@ -38,7 +38,7 @@ trait Downloader { self: HttpClientProvider =>
       }
       val entity = response.getEntity
       using(entity.getContent) { input =>
-        contentProcessor(input)
+        f(input)
       }
     } catch {
       case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
@@ -46,10 +46,10 @@ trait Downloader { self: HttpClientProvider =>
   }
   
   def downloadIfModified(uri: URI, lastModified: Long): Option[ByteString] = {
-    downloadWithIfModified(uri, lastModified, input => ByteString(ByteStreams.toByteArray(input)))
+    downloadIfModified(uri, lastModified, input => ByteString(ByteStreams.toByteArray(input)))
   }
 
-  def downloadWithIfModified[A](uri: URI, lastModified: Long, contentProcessor: InputStream => A): Option[A] = {
+  def downloadIfModified[A](uri: URI, lastModified: Long, f: InputStream => A): Option[A] = {
     try {
       val get = new HttpGet(uri)
       get.setHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified))
@@ -61,7 +61,7 @@ trait Downloader { self: HttpClientProvider =>
       } else if (statusCode == SC_OK) {
         val entity = response.getEntity
         using(entity.getContent) { input =>
-          Some(contentProcessor(input))
+          Some(f(input))
         }
       } else {
         get.abort()

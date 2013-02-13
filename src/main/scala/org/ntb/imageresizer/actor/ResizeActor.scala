@@ -3,43 +3,24 @@ package org.ntb.imageresizer.actor
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize.Resizer._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-import org.ntb.imageresizer.imageformat.ImageFormat
-import org.ntb.imageresizer.resize.Resizer._
-import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.Status
-import akka.actor.actorRef2Scala
-import akka.util.ByteString
 import akka.util.Timeout
 import scala.concurrent.duration._
 import java.io.File
-import javax.imageio.ImageIO
 import language.postfixOps
 
 class ResizeActor extends Actor with ActorLogging {
-  import context.dispatcher
   import ResizeActor._
   implicit val timeout = Timeout(10 seconds)
 
   def receive = {
-    case ResizeImageRequest(data, size, format) =>
-      try {
-        val resized = resizeImage(data, size, format)
-        log.debug("Image resized successfully, replying with ResizeImageResponse([%d bytes])".format(resized.length))
-        sender ! ResizeImageResponse(resized)
-      } catch {
-        case e: UnsupportedImageFormatException =>
-          sender ! Status.Failure(e)
-        case e: Exception =>
-          sender ! Status.Failure(e)
-          throw e
-      }
-    case ResizeImageToFileRequest(source, target, size, format) =>
+    case ResizeImageRequest(source, target, size, format) =>
       try {
         resizeImage(source, target, size, format)
-        log.debug("Image resized successfully, replying with ResizeImageToFileResponse()")
-        sender ! ResizeImageToFileResponse(target.length())
+        log.debug("Image resized successfully, replying with ResizeImageResponse()")
+        sender ! ResizeImageResponse(target.length())
       } catch {
         case e: UnsupportedImageFormatException =>
           sender ! Status.Failure(e)
@@ -47,16 +28,10 @@ class ResizeActor extends Actor with ActorLogging {
           sender ! Status.Failure(e)
           throw e
       }
-  }
-
-  override def preStart() {
-    ImageIO.setUseCache(false)
   }
 }
 
 object ResizeActor {
-  case class ResizeImageRequest(data: ByteString, size: Int, format: ImageFormat)
-  case class ResizeImageResponse(data: ByteString)
-  case class ResizeImageToFileRequest(source: File, target: File, size: Int, format: ImageFormat)
-  case class ResizeImageToFileResponse(fileSize: Long)
+  case class ResizeImageRequest(source: File, target: File, size: Int, format: ImageFormat)
+  case class ResizeImageResponse(fileSize: Long)
 }

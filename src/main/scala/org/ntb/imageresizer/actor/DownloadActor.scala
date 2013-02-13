@@ -1,53 +1,28 @@
 package org.ntb.imageresizer.actor
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.{File, IOException}
 import java.net.URI
 import org.apache.http.HttpException
-import org.apache.http.client.HttpClient
 import org.ntb.imageresizer.io.Downloader
 import org.ntb.imageresizer.io.DefaultHttpClientProvider
-import org.ntb.imageresizer.util.Loans.using
 import akka.actor.Actor
-import akka.actor.Status
-import akka.actor.actorRef2Scala
-import akka.util.ByteString
 
-class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider {
-  import context.dispatcher
+class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider with ActorUtils {
   import DownloadActor._
 
   def receive = {
-    case DownloadRequest(uri) =>
-      try {
-        val data = download(uri)
-        sender ! DownloadResponse(data)
-      } catch {
-        case e: HttpException => sender ! Status.Failure(e)
-        case e: Exception =>
-          sender ! Status.Failure(e)
-          throw e
-      }
-    case DownloadToFileRequest(uri, target) =>
-      try {
-        using(new FileOutputStream(target)) { output =>
-          val fileSize = download(uri, output)
-          sender ! DownloadToFileResponse(fileSize)
-        }
-      } catch {
-        case e: HttpException => sender ! Status.Failure(e)
-        case e: IOException => sender ! Status.Failure(e)
-        case e: Exception =>
-          sender ! Status.Failure(e)
-          throw e
+    case DownloadRequest(uri, target) =>
+      actorTry(sender) {
+        val fileSize = download(uri, target)
+        sender ! DownloadResponse(fileSize)
+      } actorCatch {
+        case e: HttpException =>
+        case e: IOException =>
       }
   }
 }
 
 object DownloadActor {
-  case class DownloadRequest(uri: URI)
-  case class DownloadResponse(data: ByteString)
-  case class DownloadToFileRequest(uri: URI, target: File)
-  case class DownloadToFileResponse(fileSize: Long)
+  case class DownloadRequest(uri: URI, target: File)
+  case class DownloadResponse(fileSize: Long)
 }
