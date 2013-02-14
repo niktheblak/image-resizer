@@ -77,20 +77,14 @@ trait Downloader { self: HttpClientProvider ⇒
         f(None)
       } else {
         val entity = response.getEntity
-        using(entity.getContent) { input ⇒
-          f(Some(input))
-        }
+        using(entity.getContent) { input ⇒ f(Some(input)) }
       }
     }
   }
 
   def downloadIfModified[A](uri: URI, lastModified: Long, output: OutputStream): Option[Long] = {
-    val copyIfModified: Option[InputStream] ⇒ Option[Long] = result ⇒ result match {
-      case Some(input) ⇒
-        val length = ByteStreams.copy(input, output)
-        Some(length)
-      case None ⇒ None
-    }
+    val copyIfModified: Option[InputStream] ⇒ Option[Long] =
+      result ⇒ result map(ByteStreams.copy(_, output))
     downloadIfModified(uri, lastModified, copyIfModified)
   }
 

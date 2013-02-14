@@ -12,7 +12,6 @@ import akka.testkit.ImplicitSender
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.pattern.ask
-import akka.util.ByteString
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 import java.io.File
@@ -31,7 +30,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
     downloadActor ! DownloadRequest(uri, target)
     expectMsgPF(timeout) {
-      case DownloadResponse(size) =>
+      case DownloadResponse(size) ⇒
         size should equal(3)
         Files.toByteArray(target) should equal(testData)
     }
