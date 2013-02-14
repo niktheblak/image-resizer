@@ -13,8 +13,8 @@ import akka.util.ByteString
 object ByteStringIO {
   def read(file: File): ByteString = {
     require(file.exists())
-    using(new FileInputStream(file)) { input =>
-      using(new ByteStringOutputStream()) { output =>
+    using(new FileInputStream(file)) { input ⇒
+      using(new ByteStringOutputStream()) { output ⇒
         ByteStreams.copy(input, output)
         output.toByteString
       }
@@ -22,8 +22,8 @@ object ByteStringIO {
   }
 
   def write(file: File, content: ByteString) {
-    using(new ByteStringInputStream(content)) { input =>
-      using(new FileOutputStream(file)) { output =>
+    using(new ByteStringInputStream(content)) { input ⇒
+      using(new FileOutputStream(file)) { output ⇒
         ByteStreams.copy(input, output)
       }
     }

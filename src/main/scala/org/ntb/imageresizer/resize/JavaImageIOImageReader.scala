@@ -20,7 +20,7 @@ trait JavaImageIOImageReader {
   def read(input: URL): BufferedImage = checkImage(ImageIO.read(input))
   
   def read(imageData: ByteString): BufferedImage = {
-    using(new ByteStringInputStream(imageData)) { input =>
+    using(new ByteStringInputStream(imageData)) { input ⇒
       checkImage(ImageIO.read(input))
     }
   }

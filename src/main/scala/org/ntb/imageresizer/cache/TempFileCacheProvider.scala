@@ -1,6 +1,6 @@
 package org.ntb.imageresizer.cache
 
-import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
+import .isNullOrEmpty
 import org.ntb.imageresizer.util.FileUtils.deleteIfExpired
 import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import java.io.File
@@ -37,5 +37,5 @@ trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
     cacheDir
   }
   
-  override val cacheFileProvider: A => File = tempDirCacheFileProvider
+  override val cacheFileProvider: A ⇒ File = tempDirCacheFileProvider
 }

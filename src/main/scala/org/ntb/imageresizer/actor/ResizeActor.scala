@@ -16,15 +16,15 @@ class ResizeActor extends Actor with ActorLogging {
   implicit val timeout = Timeout(10 seconds)
 
   def receive = {
-    case ResizeImageRequest(source, target, size, format) =>
+    case ResizeImageRequest(source, target, size, format) ⇒
       try {
         resizeImage(source, target, size, format)
         log.debug("Image resized successfully, replying with ResizeImageResponse()")
         sender ! ResizeImageResponse(target.length())
       } catch {
-        case e: UnsupportedImageFormatException =>
+        case e: UnsupportedImageFormatException ⇒
           sender ! Status.Failure(e)
-        case e: Exception =>
+        case e: Exception ⇒
           sender ! Status.Failure(e)
           throw e
       }

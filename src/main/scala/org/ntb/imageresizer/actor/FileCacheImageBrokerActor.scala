@@ -7,7 +7,7 @@ import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import org.ntb.imageresizer.util.FileUtils.createTempFile
-import org.ntb.imageresizer.util.StringUtils.isNullOrEmpty
+import .isNullOrEmpty
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
@@ -38,7 +38,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def receive = {
-    case request @ GetImageRequest(uri, preferredSize, imageFormat) =>
+    case request @ GetImageRequest(uri, preferredSize, imageFormat) ⇒
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
       val source = uri.toString
       val file = cacheFileProvider((source, preferredSize, imageFormat))
@@ -52,12 +52,12 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
           Await.result(downloadAndResizeTask, timeout)
           sender ! GetImageResponse(file)
         } actorCatch  {
-          case e: TimeoutException =>
-          case e: UnsupportedImageFormatException =>
-          case e: HttpException =>
+          case e: TimeoutException ⇒
+          case e: UnsupportedImageFormatException ⇒
+          case e: HttpException ⇒
         }
       }
-    case GetLocalImageRequest(source, id, preferredSize, imageFormat) =>
+    case GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
       requireArgument(sender)(source.exists && source.canRead, "Source file must exist and be readable")
       requireArgument(sender)(!isNullOrEmpty(id), "Image ID must not be empty")
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
@@ -70,20 +70,20 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
           Await.result(resizeTask, timeout)
           sender ! GetImageResponse(file)
         } actorCatch  {
-          case e: TimeoutException =>
-          case e: UnsupportedImageFormatException =>
-          case e: HttpException =>
+          case e: TimeoutException ⇒
+          case e: UnsupportedImageFormatException ⇒
+          case e: HttpException ⇒
         }
         actorTry(sender) {
           Await.result(resizeTask, timeout)
           sender ! GetImageResponse(file)
         } actorCatch  {
-          case e: TimeoutException =>
-          case e: UnsupportedImageFormatException =>
-          case e: HttpException =>
+          case e: TimeoutException ⇒
+          case e: UnsupportedImageFormatException ⇒
+          case e: HttpException ⇒
         }
       }
-    case ClearCache() =>
+    case ClearCache() ⇒
       log.info("Clearing cache directory " + cacheDirectory().getAbsolutePath)
       clearCacheDirectory()
   }
@@ -91,11 +91,11 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
     val tempFile = createTempFile()
     val resizeTask = for (
-      data <- download(uri, tempFile);
-      resizedSize <- resize(tempFile, target, preferredSize, format)
+      data ← download(uri, tempFile);
+      resizedSize ← resize(tempFile, target, preferredSize, format)
     ) yield resizedSize
     resizeTask onComplete {
-      case _ => tempFile.delete()
+      case _ ⇒ tempFile.delete()
     }
     resizeTask
   }
@@ -103,13 +103,13 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   def download(uri: URI, target: File): Future[Long] = {
     val downloadTask = ask(downloadActor, DownloadRequest(uri, target))
     for {
-      downloadResponse <- downloadTask.mapTo[DownloadResponse]
+      downloadResponse ← downloadTask.mapTo[DownloadResponse]
     } yield downloadResponse.fileSize
   }
 
   def resize(source: File, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
     val resizeTask = ask(resizeActor, ResizeImageRequest(source, target, preferredSize, format)).mapTo[ResizeImageResponse]
-    for (response <- resizeTask) yield response.fileSize
+    for (response ← resizeTask) yield response.fileSize
   }
 }
 

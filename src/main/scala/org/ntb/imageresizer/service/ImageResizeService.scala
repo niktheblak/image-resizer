@@ -33,7 +33,7 @@ trait ImageResizeService extends HttpService {
     def apply(value: String) = {
       try Right(new URI(value))
       catch {
-        case e: MalformedURLException => Left(MalformedContent(e.getMessage(), e))
+        case e: MalformedURLException ⇒ Left(MalformedContent(e.getMessage(), e))
       }
     }
   }
@@ -41,45 +41,44 @@ trait ImageResizeService extends HttpService {
   implicit val String2ImageFormatConverter = new FromStringDeserializer[ImageFormat] {
     def apply(value: String) = {
       parseRequestedImageFormat(value) match {
-        case Some(format) => Right(format)
-        case None => Left(MalformedContent(""))
+        case Some(format) ⇒ Right(format)
+        case None ⇒ Left(MalformedContent(""))
       }
     }
   }
 
   val resizeRoute = path("resize") {
     (get & parameters('source.as[URI], 'size.as[Int], 'format.as[ImageFormat] ?)) {
-      (source, size, format) =>
+      (source, size, format) ⇒
         val imageFormat = format.getOrElse(JPEG)
         val mediaType = MediaTypes.forExtension(imageFormat.extension).get
         val request = GetImageRequest(source, size, imageFormat)
         val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
-        val result = resizeTask map { response =>
-            response.data.toByteArrayStream(chunkSize)
+        val result = resizeTask map { response ⇒
+          response.data.toByteArrayStream(chunkSize)
         }
         respondWithMediaType(mediaType) {
           complete(result)
         }
     } ~ (post & parameters('size.as[Int], 'format.as[ImageFormat] ?)) {
-      (size, format) =>
-        entity(as[Array[Byte]]) {
-          body =>
-            val imageFormat = format.getOrElse(JPEG)
-            val mediaType = MediaTypes.forExtension(imageFormat.extension).get
-            val id = md5Hex(body)
-            val tempFile = createTempFile()
-            Files.write(body, tempFile)
-            val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
-            val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
-            resizeTask onComplete {
-              case _ => tempFile.delete()
-            }
-            val result = resizeTask map { response =>
-                response.data.toByteArrayStream(chunkSize)
-            }
-            respondWithMediaType(mediaType) {
-              complete(result)
-            }
+      (size, format) ⇒
+        entity(as[Array[Byte]]) { body ⇒
+          val imageFormat = format.getOrElse(JPEG)
+          val mediaType = MediaTypes.forExtension(imageFormat.extension).get
+          val id = md5Hex(body)
+          val tempFile = createTempFile()
+          Files.write(body, tempFile)
+          val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
+          val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
+          resizeTask onComplete {
+            case _ ⇒ tempFile.delete()
+          }
+          val result = resizeTask map { response ⇒
+              response.data.toByteArrayStream(chunkSize)
+          }
+          respondWithMediaType(mediaType) {
+            complete(result)
+          }
         }
     }
   }

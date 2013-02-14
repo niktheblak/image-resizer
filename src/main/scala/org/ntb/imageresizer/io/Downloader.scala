@@ -17,18 +17,18 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.Date
 
-trait Downloader { self: HttpClientProvider =>
+trait Downloader { self: HttpClientProvider ⇒
   def download(uri: URI, output: OutputStream): Long = {
-    download(uri, input => ByteStreams.copy(input, output))
+    download(uri, input ⇒ ByteStreams.copy(input, output))
   }
 
   def download(uri: URI, target: File): Long = {
-    download(uri, input => using (new FileOutputStream(target)) { output =>
+    download(uri, input ⇒ using (new FileOutputStream(target)) { output ⇒
       ByteStreams.copy(input, output)
     })
   }
 
-  def download[A](uri: URI, f: InputStream => A): A = {
+  def download[A](uri: URI, f: InputStream ⇒ A): A = {
     try {
       val get = new HttpGet(uri)
       val response = httpClient.execute(get)
@@ -37,19 +37,19 @@ trait Downloader { self: HttpClientProvider =>
         throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine.getStatusCode, uri))
       }
       val entity = response.getEntity
-      using(entity.getContent) { input =>
+      using(entity.getContent) { input ⇒
         f(input)
       }
     } catch {
-      case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
+      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
   }
   
   def downloadIfModified(uri: URI, lastModified: Long): Option[ByteString] = {
-    downloadIfModified(uri, lastModified, input => ByteString(ByteStreams.toByteArray(input)))
+    downloadIfModified(uri, lastModified, input ⇒ ByteString(ByteStreams.toByteArray(input)))
   }
 
-  def downloadIfModified[A](uri: URI, lastModified: Long, f: InputStream => A): Option[A] = {
+  def downloadIfModified[A](uri: URI, lastModified: Long, f: InputStream ⇒ A): Option[A] = {
     try {
       val get = new HttpGet(uri)
       get.setHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified))
@@ -60,7 +60,7 @@ trait Downloader { self: HttpClientProvider =>
         None
       } else if (statusCode == SC_OK) {
         val entity = response.getEntity
-        using(entity.getContent) { input =>
+        using(entity.getContent) { input ⇒
           Some(f(input))
         }
       } else {
@@ -68,7 +68,7 @@ trait Downloader { self: HttpClientProvider =>
         throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine.getStatusCode, uri))
       }
     } catch {
-      case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
+      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
   }
 
@@ -79,8 +79,8 @@ trait Downloader { self: HttpClientProvider =>
       val lastModified = response.getFirstHeader(LAST_MODIFIED)
       fromLastModifiedHeader(lastModified.getValue)
     } catch {
-      case e: ParseException => throw new HttpException(e.getMessage, e)
-      case e: ClientProtocolException => throw new HttpException(e.getMessage, e)
+      case e: ParseException ⇒ throw new HttpException(e.getMessage, e)
+      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
   }
   

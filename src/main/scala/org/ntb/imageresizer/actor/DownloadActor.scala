@@ -11,13 +11,13 @@ class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider
   import DownloadActor._
 
   def receive = {
-    case DownloadRequest(uri, target) =>
+    case DownloadRequest(uri, target) ⇒
       actorTry(sender) {
         val fileSize = download(uri, target)
         sender ! DownloadResponse(fileSize)
       } actorCatch {
-        case e: HttpException =>
-        case e: IOException =>
+        case e: HttpException ⇒
+        case e: IOException ⇒
       }
   }
 }

@@ -5,7 +5,7 @@ import akka.actor.Status
 import scala.util.{ Try, Success, Failure }
 
 trait ActorUtils {
-  def requireArgument(sender: ActorRef)(condition: Boolean, message: => String = "") {
+  def requireArgument(sender: ActorRef)(condition: Boolean, message: ⇒ String = "") {
     if (!condition) {
       val e = new IllegalArgumentException("Invalid parameter: " + message)
       sender ! Status.Failure(e)
@@ -13,12 +13,12 @@ trait ActorUtils {
     }
   }
 
-  def actorTry[A](sender: ActorRef)(action: => A): ActorTry[A] = {
+  def actorTry[A](sender: ActorRef)(action: ⇒ A): ActorTry[A] = {
     try {
       val v = action
       ActorSuccess(v)
     } catch {
-      case t: Throwable => ActorFailure(sender, t)
+      case t: Throwable ⇒ ActorFailure(sender, t)
     }
   }
 

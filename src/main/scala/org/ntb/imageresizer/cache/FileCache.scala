@@ -6,7 +6,7 @@ import akka.util.ByteString
 import scala.concurrent.duration._
 import java.io.File
 
-class FileCache[A](cacheFileProvider: A => File, maxAge: Duration = Duration.Inf) extends Cache[A, ByteString] {
+class FileCache[A](cacheFileProvider: A ⇒ File, maxAge: Duration = Duration.Inf) extends Cache[A, ByteString] {
   def put(key: A, value: ByteString) {
     val file = cacheFileProvider(key)
     write(file, value)
@@ -22,7 +22,7 @@ class FileCache[A](cacheFileProvider: A => File, maxAge: Duration = Duration.Inf
     }
   }
 
-  def get(key: A, loader: () => ByteString): ByteString = {
+  def get(key: A, loader: () ⇒ ByteString): ByteString = {
     val file = cacheFileProvider(key)
     deleteIfExpired(file, maxAge)
     if (file.exists()) {

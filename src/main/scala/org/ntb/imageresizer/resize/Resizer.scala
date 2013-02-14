@@ -10,7 +10,7 @@ import java.net.URL
 
 object Resizer extends ImgScalrResizer with JavaImageIOImageReader {
   def resizeImage(input: File, target: File, size: Int, format: ImageFormat) {
-    using(new FileOutputStream(target)) { output =>
+    using(new FileOutputStream(target)) { output ⇒
       resizeImageFrom(read(input), output, size, format)
     }
   }

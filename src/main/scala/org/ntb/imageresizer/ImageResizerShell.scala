@@ -50,7 +50,7 @@ object ImageResizerShell extends App {
         handleCommand(tokens)
       }
     } catch {
-      case e: Exception =>
+      case e: Exception ⇒
         e.printStackTrace()
         exit()
     }
@@ -63,21 +63,21 @@ object ImageResizerShell extends App {
 
   def handleCommand(tokens: List[String]) {
     tokens match {
-      case "resize" :: path :: rest =>
+      case "resize" :: path :: rest ⇒
         try {
           val size = if (!rest.isEmpty) rest.head.toInt else 128
           handleResizeCommand(path, size)
         } catch {
-          case e: NumberFormatException => Console.err.println("Invalid argument for size: '%s'".format(rest.mkString(" ")))
-          case e: URISyntaxException => Console.err.println("Invalid URL: '%s'".format(path))
-          case e: UnsupportedImageFormatException => Console.err.println("Unsupported image format for " + path)
-          case e: HttpException => Console.err.println("Could not download '%s': %s".format(path, e.getMessage()))
+          case e: NumberFormatException ⇒ Console.err.println("Invalid argument for size: '%s'".format(rest.mkString(" ")))
+          case e: URISyntaxException ⇒ Console.err.println("Invalid URL: '%s'".format(path))
+          case e: UnsupportedImageFormatException ⇒ Console.err.println("Unsupported image format for " + path)
+          case e: HttpException ⇒ Console.err.println("Could not download '%s': %s".format(path, e.getMessage()))
         }
-      case "clear" :: Nil =>
+      case "clear" :: Nil ⇒
         imageBrokerActor ! ClearCache()
-      case "exit" :: Nil =>
+      case "exit" :: Nil ⇒
         exit()
-      case command @ _ =>
+      case command @ _ ⇒
         Console.err.println("Invalid command or arguments: '%s'".format(command.mkString(" ")))
     }
   }
