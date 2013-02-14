@@ -26,6 +26,8 @@ libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.2.1"
 
 libraryDependencies += "commons-codec" % "commons-codec" % "1.7"
 
+libraryDependencies += "joda-time" % "joda-time" % "2.1"
+
 libraryDependencies += "io.spray" % "spray-can" % "1.1-M7"
 
 libraryDependencies += "io.spray" % "spray-routing" % "1.1-M7"

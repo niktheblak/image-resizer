@@ -1,25 +1,29 @@
 package org.ntb.imageresizer.io
 
 import org.ntb.imageresizer.util.Loans.using
-import org.apache.http._
-import message.BasicHeader
+import org.apache.http.Header
+import org.apache.http.HttpException
+import org.apache.http.HttpResponse
 import org.apache.http.HttpHeaders._
 import org.apache.http.HttpStatus._
+import org.apache.http.StatusLine
 import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpHead
+import org.apache.http.message.BasicHeader
+import org.apache.http.util.EntityUtils
+import org.joda.time.format.DateTimeFormat
 import com.google.common.io.ByteStreams
 import java.io.{FileOutputStream, File, InputStream, OutputStream}
 import java.net.URI
 import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.util.Locale
-import java.util.TimeZone
-import java.util.Date
-import org.apache.http.util.EntityUtils
-import scala.Some
 
 trait Downloader { self: HttpClientProvider ⇒
+  val httpDateFormatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
+    .withZoneUTC()
+    .withLocale(Locale.US)
+
   def httpGetWithHeaders[A](headers: List[Header])(uri: URI)(f: HttpResponse ⇒ A): A = {
     try {
       val get = new HttpGet(uri)
@@ -103,19 +107,10 @@ trait Downloader { self: HttpClientProvider ⇒
   }
   
   def toLastModifiedHeader(lastModified: Long): String = {
-    val dateFormat = httpDateFormat
-    dateFormat.format(new Date(lastModified))
+    httpDateFormatter.print(lastModified)
   }
   
   def fromLastModifiedHeader(lastModifiedString: String): Long = {
-    val dateFormat = httpDateFormat
-    val lastModified = dateFormat.parse(lastModifiedString)
-    lastModified.getTime
-  }
-
-  def httpDateFormat: SimpleDateFormat = {
-    val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US)
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
-    dateFormat
+    httpDateFormatter.parseMillis(lastModifiedString)
   }
 }

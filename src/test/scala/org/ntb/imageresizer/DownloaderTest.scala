@@ -51,13 +51,27 @@ class DownloaderTest extends FlatSpec with ShouldMatchers {
   }
 
   it should "throw HttpException when HTTP server responds with an error code" in {
-    val httpClient = statusCodeHttpClient(404)
+    val httpClient = statusCodeHttpClient(SC_NOT_FOUND)
     val downloader = testDownloader(httpClient)
     val output = new ByteArrayOutputStream()
     evaluating {
       downloader.download(URI.create("http://localhost/logo.png"), output)
     } should produce [HttpException]
     verify(httpClient).execute(any[HttpGet])
+  }
+
+  it should "parse HTTP date header" in {
+    val httpClient = statusCodeHttpClient(SC_OK)
+    val downloader = testDownloader(httpClient)
+    val date = downloader.fromLastModifiedHeader("Thu, 14 Feb 2013 12:00:00 GMT")
+    date should equal (1360843200000L)
+  }
+
+  it should "produce correct HTTP date header" in {
+    val httpClient = statusCodeHttpClient(SC_OK)
+    val downloader = testDownloader(httpClient)
+    val header = downloader.toLastModifiedHeader(1360843200000L)
+    header should equal ("Thu, 14 Feb 2013 12:00:00 GMT")
   }
 }
 
