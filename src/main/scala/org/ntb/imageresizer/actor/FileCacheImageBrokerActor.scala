@@ -74,14 +74,6 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
           case e: UnsupportedImageFormatException ⇒
           case e: HttpException ⇒
         }
-        actorTry(sender) {
-          Await.result(resizeTask, timeout)
-          sender ! GetImageResponse(file)
-        } actorCatch  {
-          case e: TimeoutException ⇒
-          case e: UnsupportedImageFormatException ⇒
-          case e: HttpException ⇒
-        }
       }
     case ClearCache() ⇒
       log.info("Clearing cache directory " + cacheDirectory().getAbsolutePath)
