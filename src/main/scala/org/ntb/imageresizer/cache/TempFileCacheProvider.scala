@@ -1,6 +1,6 @@
 package org.ntb.imageresizer.cache
 
-import .isNullOrEmpty
+import com.google.common.base.Strings.isNullOrEmpty
 import org.ntb.imageresizer.util.FileUtils.deleteIfExpired
 import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import java.io.File

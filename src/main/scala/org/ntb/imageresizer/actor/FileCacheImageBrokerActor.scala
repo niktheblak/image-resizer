@@ -7,7 +7,7 @@ import org.ntb.imageresizer.cache.TempFileCacheProvider
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import org.ntb.imageresizer.util.FileUtils.createTempFile
-import .isNullOrEmpty
+import com.google.common.base.Strings.isNullOrEmpty
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef

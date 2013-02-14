@@ -1,14 +1,14 @@
 package org.ntb.imageresizer.io
 
 import org.ntb.imageresizer.util.Loans.using
-import org.apache.http.HttpException
+import org.apache.http._
+import message.BasicHeader
 import org.apache.http.HttpHeaders._
 import org.apache.http.HttpStatus._
 import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpHead
 import com.google.common.io.ByteStreams
-import akka.util.ByteString
 import java.io.{FileOutputStream, File, InputStream, OutputStream}
 import java.net.URI
 import java.text.ParseException
@@ -16,8 +16,23 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import java.util.Date
+import org.apache.http.util.EntityUtils
+import scala.Some
 
 trait Downloader { self: HttpClientProvider ⇒
+  def httpGetWithHeaders[A](headers: List[Header])(uri: URI)(f: HttpResponse ⇒ A): A = {
+    try {
+      val get = new HttpGet(uri)
+      headers foreach(get.setHeader(_))
+      val response = httpClient.execute(get)
+      f(response)
+    } catch {
+      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
+    }
+  }
+
+  def httpGet[A](uri: URI)(f: HttpResponse ⇒ A): A = httpGetWithHeaders(Nil)(uri)(f)
+
   def download(uri: URI, output: OutputStream): Long = {
     download(uri, input ⇒ ByteStreams.copy(input, output))
   }
@@ -29,47 +44,50 @@ trait Downloader { self: HttpClientProvider ⇒
   }
 
   def download[A](uri: URI, f: InputStream ⇒ A): A = {
-    try {
-      val get = new HttpGet(uri)
-      val response = httpClient.execute(get)
-      if (response.getStatusLine.getStatusCode != SC_OK) {
-        get.abort()
-        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine.getStatusCode, uri))
+    httpGet(uri) { response ⇒
+      val statusLine = response.getStatusLine
+      if (statusLine.getStatusCode != SC_OK) {
+        val msg = if (response.getEntity != null) EntityUtils.toString(response.getEntity()) else ""
+        throw new HttpException("Server responded with HTTP %d %s: %s".format(statusLine.getStatusCode, statusLine.getReasonPhrase, msg))
       }
-      val entity = response.getEntity
-      using(entity.getContent) { input ⇒
+      val entity = response.getEntity()
+      using(entity.getContent()) { input ⇒
         f(input)
       }
-    } catch {
-      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
-  }
-  
-  def downloadIfModified(uri: URI, lastModified: Long): Option[ByteString] = {
-    downloadIfModified(uri, lastModified, input ⇒ ByteString(ByteStreams.toByteArray(input)))
   }
 
-  def downloadIfModified[A](uri: URI, lastModified: Long, f: InputStream ⇒ A): Option[A] = {
-    try {
-      val get = new HttpGet(uri)
-      get.setHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified))
-      val response = httpClient.execute(get)
-      val statusCode = response.getStatusLine.getStatusCode
-      if (statusCode == SC_NOT_MODIFIED) {
-        get.abort()
-        None
-      } else if (statusCode == SC_OK) {
+  def download[A](uri: URI, f: (StatusLine, InputStream) ⇒ A): A = {
+    httpGet(uri) { response ⇒
+      val entity = response.getEntity
+      using(entity.getContent) { input ⇒
+        f(response.getStatusLine, input)
+      }
+    }
+  }
+
+  def downloadIfModified[A](uri: URI, lastModified: Long, f: Option[InputStream] ⇒ A): A = {
+    val headers = List(new BasicHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified)))
+    httpGetWithHeaders(headers)(uri) { response ⇒
+      if (response.getStatusLine.getStatusCode == SC_NOT_MODIFIED) {
+        f(None)
+      } else {
         val entity = response.getEntity
         using(entity.getContent) { input ⇒
-          Some(f(input))
+          f(Some(input))
         }
-      } else {
-        get.abort()
-        throw new HttpException("Server responded HTTP %d for HTTP GET %s".format(response.getStatusLine.getStatusCode, uri))
       }
-    } catch {
-      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
+  }
+
+  def downloadIfModified[A](uri: URI, lastModified: Long, output: OutputStream): Option[Long] = {
+    val copyIfModified: Option[InputStream] ⇒ Option[Long] = result ⇒ result match {
+      case Some(input) ⇒
+        val length = ByteStreams.copy(input, output)
+        Some(length)
+      case None ⇒ None
+    }
+    downloadIfModified(uri, lastModified, copyIfModified)
   }
 
   def lastModified(uri: URI): Long = {
@@ -96,8 +114,8 @@ trait Downloader { self: HttpClientProvider ⇒
   }
 
   def httpDateFormat: SimpleDateFormat = {
-    val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    val dateFormat = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US)
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
     dateFormat
   }
 }
