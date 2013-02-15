@@ -49,7 +49,7 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
     downloadProbe.expectMsgPF(timeout) {
       case DownloadRequest(uri, target) =>
         Files.write(testData, target)
-        downloadProbe.reply(DownloadResponse(target.length()))
+        downloadProbe.reply(DownloadResponse(target, target.length()))
     }
     resizeProbe.expectMsgPF(timeout) {
       case ResizeImageRequest(source, target, _, _) =>

@@ -30,8 +30,9 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
     downloadActor ! DownloadRequest(uri, target)
     expectMsgPF(timeout) {
-      case DownloadResponse(size) ⇒
+      case DownloadResponse(file, size) ⇒
         size should equal(3)
+        file should be theSameInstanceAs (target)
         Files.toByteArray(target) should equal(testData)
     }
   }

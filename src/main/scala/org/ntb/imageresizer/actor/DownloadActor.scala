@@ -14,7 +14,7 @@ class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider
     case DownloadRequest(uri, target) ⇒
       actorTry(sender) {
         val fileSize = download(uri, target)
-        sender ! DownloadResponse(fileSize)
+        sender ! DownloadResponse(target, fileSize)
       } actorCatch {
         case e: HttpException ⇒
         case e: IOException ⇒
@@ -24,5 +24,5 @@ class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider
 
 object DownloadActor {
   case class DownloadRequest(uri: URI, target: File)
-  case class DownloadResponse(fileSize: Long)
+  case class DownloadResponse(target: File, fileSize: Long)
 }

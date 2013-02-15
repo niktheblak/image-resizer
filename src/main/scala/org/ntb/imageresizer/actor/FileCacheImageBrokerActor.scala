@@ -105,20 +105,13 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
     val tempFile = createTempFile()
     val resizeTask = for (
-      data ← download(uri, tempFile);
-      resizedSize ← resize(tempFile, target, preferredSize, format)
+      downloadResponse ← ask(downloadActor, DownloadRequest(uri, target)).mapTo[DownloadResponse];
+      resizedSize ← resize(tempFile, downloadResponse.target, preferredSize, format)
     ) yield resizedSize
     resizeTask onComplete {
       case _ ⇒ tempFile.delete()
     }
     resizeTask
-  }
-
-  def download(uri: URI, target: File): Future[Long] = {
-    val downloadTask = ask(downloadActor, DownloadRequest(uri, target))
-    for {
-      downloadResponse ← downloadTask.mapTo[DownloadResponse]
-    } yield downloadResponse.fileSize
   }
 
   def resize(source: File, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
