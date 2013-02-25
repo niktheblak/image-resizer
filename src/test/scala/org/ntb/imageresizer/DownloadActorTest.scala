@@ -1,7 +1,8 @@
 package org.ntb.imageresizer
 
+import actor.file.DownloadActor
 import org.ntb.imageresizer.MockHttpClients._
-import org.ntb.imageresizer.actor.DownloadActor._
+import DownloadActor._
 import com.google.common.io.Files
 import org.apache.http.HttpException
 import org.scalatest.BeforeAndAfterAll

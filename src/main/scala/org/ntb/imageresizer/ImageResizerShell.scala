@@ -1,11 +1,9 @@
 package org.ntb.imageresizer
 
+import actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
 import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpException
-import org.ntb.imageresizer.actor.DownloadActor
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
-import org.ntb.imageresizer.actor.ResizeActor
+import FileCacheImageBrokerActor._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.ActorSystem
 import akka.actor.Props

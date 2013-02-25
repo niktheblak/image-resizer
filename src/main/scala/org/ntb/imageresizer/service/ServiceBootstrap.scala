@@ -1,10 +1,8 @@
 package org.ntb.imageresizer.service
 
-import org.ntb.imageresizer.actor.ResizeActor
-import org.ntb.imageresizer.actor.DownloadActor
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor
 import akka.actor.Props
 import akka.routing.SmallestMailboxRouter
+import org.ntb.imageresizer.actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
 import spray.can.server.SprayCanHttpServerApp
 import spray.io.IOServer.Unbind
 

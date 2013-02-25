@@ -1,6 +1,6 @@
 package org.ntb.imageresizer
 
-import actor.DownloadActor
+import actor.file.DownloadActor
 import io.HttpClientProvider
 import org.apache.http.client.HttpClient
 

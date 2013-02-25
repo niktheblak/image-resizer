@@ -1,22 +1,22 @@
 package org.ntb.imageresizer.service
 
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
-import org.ntb.imageresizer.imageformat._
-import org.ntb.imageresizer.util.FileUtils.createTempFile
-import com.google.common.io.Files
-import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import akka.actor.Actor
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+import com.google.common.io.Files
+import java.net.MalformedURLException
+import java.net.URI
+import language.postfixOps
+import org.apache.commons.codec.digest.DigestUtils.md5Hex
+import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
+import org.ntb.imageresizer.imageformat._
+import org.ntb.imageresizer.util.FileUtils.createTempFile
+import scala.concurrent.duration._
 import spray.http._
 import spray.httpx.unmarshalling._
 import spray.routing._
 import spray.util.pimpFile
-import scala.concurrent.duration._
-import java.net.MalformedURLException
-import java.net.URI
-import language.postfixOps
 
 class ImageResizeServiceActor(val imageBroker: ActorRef) extends Actor with HttpServiceActor with ImageResizeService {
   override val timeout = Timeout(30 seconds)

@@ -1,11 +1,11 @@
 package org.ntb.imageresizer
 
+import actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
 import org.ntb.imageresizer.MockHttpClients._
 import org.ntb.imageresizer.imageformat.ImageFormat
-import actor.DownloadActor._
-import actor.FileCacheImageBrokerActor
-import actor.FileCacheImageBrokerActor._
-import actor.ResizeActor._
+import DownloadActor._
+import FileCacheImageBrokerActor._
+import ResizeActor._
 import com.google.common.io.Files
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FlatSpec
