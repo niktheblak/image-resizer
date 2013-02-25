@@ -9,7 +9,6 @@ import org.ntb.imageresizer.io.DefaultHttpClientProvider
 import org.ntb.imageresizer.io.Downloader
 
 class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider with ActorUtils {
-
   import DownloadActor._
 
   def receive = {
