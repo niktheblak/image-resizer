@@ -10,7 +10,7 @@ trait DefaultHttpClientProvider extends HttpClientProvider {
   
   def createDefaultHttpClient(timeout: Int = defaultHttpTimeout): HttpClient = {
     val httpClient = new org.apache.http.impl.client.DefaultHttpClient()
-    val params = httpClient.getParams()
+    val params = httpClient.getParams
     HttpConnectionParams.setConnectionTimeout(params, timeout)
     HttpConnectionParams.setSoTimeout(params, timeout)
     httpClient

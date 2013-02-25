@@ -17,10 +17,10 @@ trait MockHttpClients extends MockitoSugar {
     val entity = mock[HttpEntity]
     val response = mock[HttpResponse]
     val httpClient = mock[HttpClient]
-    when(statusLine.getStatusCode()).thenReturn(statusCode)
-    when(entity.getContent()).thenReturn(new ByteArrayInputStream(data)).thenThrow(new RuntimeException("getContent already called"))
-    when(response.getStatusLine()).thenReturn(statusLine)
-    when(response.getEntity()).thenReturn(entity)
+    when(statusLine.getStatusCode).thenReturn(statusCode)
+    when(entity.getContent).thenReturn(new ByteArrayInputStream(data)).thenThrow(new RuntimeException("getContent already called"))
+    when(response.getStatusLine).thenReturn(statusLine)
+    when(response.getEntity).thenReturn(entity)
     when(httpClient.execute(any[HttpGet])).thenReturn(response)
     httpClient
   }
@@ -29,8 +29,8 @@ trait MockHttpClients extends MockitoSugar {
     val statusLine = mock[StatusLine]
     val response = mock[HttpResponse]
     val httpClient = mock[HttpClient]
-    when(statusLine.getStatusCode()).thenReturn(statusCode)
-    when(response.getStatusLine()).thenReturn(statusLine)
+    when(statusLine.getStatusCode).thenReturn(statusCode)
+    when(response.getStatusLine).thenReturn(statusLine)
     when(httpClient.execute(any[HttpGet])).thenReturn(response)
     httpClient
   }

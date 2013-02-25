@@ -63,7 +63,7 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
     system.stop(imageBrokerActor)
   }
 
-  override def afterAll {
+  override def afterAll() {
     system.shutdown()
   }
 }

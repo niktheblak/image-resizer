@@ -33,7 +33,7 @@ trait ImageResizeService extends HttpService {
     def apply(value: String) = {
       try Right(new URI(value))
       catch {
-        case e: MalformedURLException ⇒ Left(MalformedContent(e.getMessage(), e))
+        case e: MalformedURLException ⇒ Left(MalformedContent(e.getMessage, e))
       }
     }
   }

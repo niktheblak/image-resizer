@@ -24,11 +24,11 @@ trait Downloader extends HttpBasicDownloader { self: HttpClientProvider ⇒
     httpGet(uri) { response ⇒
       val statusLine = response.getStatusLine
       if (statusLine.getStatusCode != SC_OK) {
-        val msg = if (response.getEntity != null) EntityUtils.toString(response.getEntity()) else ""
+        val msg = if (response.getEntity != null) EntityUtils.toString(response.getEntity) else ""
         throw new HttpException("Server responded with HTTP %d %s: %s".format(statusLine.getStatusCode, statusLine.getReasonPhrase, msg))
       }
-      val entity = response.getEntity()
-      using(entity.getContent()) { input ⇒
+      val entity = response.getEntity
+      using(entity.getContent) { input ⇒
         f(input)
       }
     }

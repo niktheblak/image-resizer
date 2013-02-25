@@ -25,7 +25,7 @@ object ImageResizerShell extends App {
     }
   """)
   println("Starting ImageResizer shell")
-  val resizeNodes = math.max(Runtime.getRuntime().availableProcessors() - 1, 1)
+  val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
   println("Deploying " + resizeNodes + " resizers")
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
@@ -64,7 +64,7 @@ object ImageResizerShell extends App {
           case e: NumberFormatException ⇒ Console.err.println("Invalid argument for size: '%s'".format(rest.mkString(" ")))
           case e: URISyntaxException ⇒ Console.err.println("Invalid URL: '%s'".format(path))
           case e: UnsupportedImageFormatException ⇒ Console.err.println("Unsupported image format for " + path)
-          case e: HttpException ⇒ Console.err.println("Could not download '%s': %s".format(path, e.getMessage()))
+          case e: HttpException ⇒ Console.err.println("Could not download '%s': %s".format(path, e.getMessage))
         }
       case "clear" :: Nil ⇒
         imageBrokerActor ! ClearCache()
@@ -80,6 +80,6 @@ object ImageResizerShell extends App {
     println("Resizing image %s to %d pixels...".format(path, size))
     val resizeImageTask = ask(imageBrokerActor, GetImageRequest(uri, size)).mapTo[GetImageResponse]
     val response = Await.result(resizeImageTask, timeout.duration)
-    println("Received resized image data %d bytes to %s".format(response.data.length, response.data.getAbsolutePath()))
+    println("Received resized image data %d bytes to %s".format(response.data.length, response.data.getAbsolutePath))
   }
 }

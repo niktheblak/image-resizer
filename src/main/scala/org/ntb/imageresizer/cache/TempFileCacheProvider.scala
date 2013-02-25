@@ -17,7 +17,7 @@ trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
     require(key != null, "Argument key cannot be null")
     require(!isNullOrEmpty(key.toString), "toString() method of argument key must return a nonempty string")
     val dir = cacheDirectory()
-    val fileName = md5Hex(key.toString())
+    val fileName = md5Hex(key.toString)
     val file = new File(dir, fileName)
     deleteIfExpired(file, maxAge)
     file
@@ -32,7 +32,7 @@ trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
     val tmpdirProperty = System.getProperty("java.io.tmpdir")
     assert(tmpdirProperty != null, "Environment variable java.io.tmpdir is not set")
     val cacheDir = new File(tmpdirProperty, cachePath)
-    assert(!cacheDir.isFile(), "File with path %s already exists".format(cacheDir.getAbsolutePath()))
+    assert(!cacheDir.isFile, "File with path %s already exists".format(cacheDir.getAbsolutePath))
     if (!cacheDir.exists()) cacheDir.mkdir()
     cacheDir
   }

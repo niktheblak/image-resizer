@@ -48,7 +48,7 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     } should produce[HttpException]
   }
 
-  override def afterAll {
+  override def afterAll() {
     system.shutdown()
   }
 }

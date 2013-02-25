@@ -6,7 +6,7 @@ package object imageformat {
   abstract class ImageFormat {
     val extension: String
     val mimeType: String
-    override def toString() = extension
+    override def toString = extension
   }
 
   case object JPEG extends ImageFormat {
@@ -29,7 +29,7 @@ package object imageformat {
   val defaultImageFormat = JPEG
   
   def parseRequestedImageFormat(requestedFormat: String): Option[ImageFormat] = {
-    val format = requestedFormat.toLowerCase()
+    val format = requestedFormat.toLowerCase
     if (format == "jpg" || format == "jpeg") Some(JPEG)
     else if (format == "png") Some(PNG)
     else if (format == "gif") Some(GIF)
@@ -44,7 +44,7 @@ package object imageformat {
   }
   
   def parseImageFormatFromUri(uri: URI): Option[ImageFormat] = {
-    val fileName = if (uri.getPath() != null) uri.getPath().toLowerCase() else ""
+    val fileName = if (uri.getPath != null) uri.getPath.toLowerCase else ""
     if ((fileName endsWith "jpg") || (fileName endsWith "jpeg")) Some(JPEG)
     else if (fileName endsWith "png") Some(PNG)
     else if (fileName endsWith "gif") Some(GIF)

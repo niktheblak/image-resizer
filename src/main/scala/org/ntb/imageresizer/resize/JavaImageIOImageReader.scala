@@ -21,7 +21,7 @@ trait JavaImageIOImageReader {
   
   def checkImage(image: BufferedImage): BufferedImage = {
     if (image == null) {
-      throw new UnsupportedImageFormatException("Failed to decode image, format probably not supported by " + classOf[ImageIO].getCanonicalName())
+      throw new UnsupportedImageFormatException("Failed to decode image, format probably not supported by " + classOf[ImageIO].getCanonicalName)
     }
     image
   }

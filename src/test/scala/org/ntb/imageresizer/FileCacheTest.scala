@@ -73,5 +73,5 @@ object FileCacheTest {
   
   def filePathProvider(file: File)(key: String): File = file
   
-  def nonExistingFile: File = new File(UUID.randomUUID().toString())
+  def nonExistingFile: File = new File(UUID.randomUUID().toString)
 }
