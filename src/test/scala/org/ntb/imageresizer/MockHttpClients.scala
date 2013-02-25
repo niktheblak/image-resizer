@@ -11,7 +11,7 @@ import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito.when
 import org.mockito.Matchers.any
 
-object MockHttpClients extends MockitoSugar {
+trait MockHttpClients extends MockitoSugar {
   def successfulHttpClient(data: Array[Byte], statusCode: Int = 200): HttpClient = {
     val statusLine = mock[StatusLine]
     val entity = mock[HttpEntity]

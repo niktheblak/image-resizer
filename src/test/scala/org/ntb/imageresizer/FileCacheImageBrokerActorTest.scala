@@ -1,7 +1,6 @@
 package org.ntb.imageresizer
 
 import actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
-import org.ntb.imageresizer.MockHttpClients._
 import org.ntb.imageresizer.imageformat.ImageFormat
 import DownloadActor._
 import FileCacheImageBrokerActor._
@@ -10,10 +9,8 @@ import com.google.common.io.Files
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
-import akka.actor.{ Actor, Props, ActorSystem }
-import akka.pattern.ask
-import akka.testkit.{ TestActorRef, ImplicitSender, TestKit, TestProbe }
-import scala.concurrent.Await
+import akka.actor.{ Props, ActorSystem }
+import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import scala.concurrent.duration.FiniteDuration
 import java.io.File
 import java.net.URI

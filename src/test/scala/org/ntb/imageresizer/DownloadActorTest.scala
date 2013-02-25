@@ -1,7 +1,6 @@
 package org.ntb.imageresizer
 
 import actor.file.DownloadActor
-import org.ntb.imageresizer.MockHttpClients._
 import DownloadActor._
 import com.google.common.io.Files
 import org.apache.http.HttpException
@@ -19,7 +18,7 @@ import java.io.File
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpec with ShouldMatchers with BeforeAndAfterAll {
+class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpec with ShouldMatchers with BeforeAndAfterAll with MockHttpClients {
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
   val timeout = new FiniteDuration(2, TimeUnit.SECONDS)
 

@@ -26,9 +26,9 @@ trait ImgScalrResizer {
   def widthAndHeightResize(image: BufferedImage, width: Int, height: Int): BufferedImage =
     if (width > 0 && height > 0)
       Scalr.resize(image, Mode.FIT_EXACT, width, height)
-    else if (width < 0)
+    else if (width <= 0)
       Scalr.resize(image, Mode.FIT_TO_HEIGHT, 0, height)
-    else if (height < 0)
+    else if (height <= 0)
       Scalr.resize(image, Mode.FIT_TO_WIDTH, width, 0)
     else
       throw new IllegalArgumentException("Width or height must be above zero")
