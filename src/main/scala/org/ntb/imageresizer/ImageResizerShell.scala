@@ -1,10 +1,5 @@
 package org.ntb.imageresizer
 
-import org.ntb.imageresizer.actor.DownloadActor
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor
-import org.ntb.imageresizer.actor.FileCacheImageBrokerActor._
-import org.ntb.imageresizer.actor.ResizeActor
-import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.DownloadActor

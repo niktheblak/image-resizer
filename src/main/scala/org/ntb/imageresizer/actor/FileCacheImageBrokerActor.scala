@@ -106,7 +106,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
     val tempFile = createTempFile()
     val resizeTask = for (
       downloadResponse ← ask(downloadActor, DownloadRequest(uri, tempFile)).mapTo[DownloadResponse];
-      resizedSize ← resize(downloadResponse.target, target , preferredSize, format)
+      resizedSize ← resize(downloadResponse.target, target, preferredSize, format)
     ) yield resizedSize
     resizeTask onComplete {
       case _ ⇒ tempFile.delete()
