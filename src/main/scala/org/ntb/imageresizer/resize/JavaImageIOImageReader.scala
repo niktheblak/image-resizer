@@ -1,15 +1,10 @@
 package org.ntb.imageresizer.resize
 
-import org.ntb.imageresizer.io.ByteStringInputStream
-import org.ntb.imageresizer.util.Loans.using
-
 import akka.util.ByteString
-
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
 import java.net.URL
-
 import javax.imageio.ImageIO
 
 trait JavaImageIOImageReader {
@@ -20,9 +15,8 @@ trait JavaImageIOImageReader {
   def read(input: URL): BufferedImage = checkImage(ImageIO.read(input))
   
   def read(imageData: ByteString): BufferedImage = {
-    using(new ByteStringInputStream(imageData)) { input ⇒
-      checkImage(ImageIO.read(input))
-    }
+    val input = imageData.iterator.asInputStream
+    checkImage(ImageIO.read(input))
   }
   
   def checkImage(image: BufferedImage): BufferedImage = {

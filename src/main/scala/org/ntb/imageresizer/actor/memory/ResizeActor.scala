@@ -1,13 +1,11 @@
 package org.ntb.imageresizer.actor.memory
 
 import akka.actor.Actor
-import akka.util.ByteString
+import akka.util.{ByteStringBuilder, ByteString}
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.imageformat.ImageFormat
-import org.ntb.imageresizer.io.{ByteStringOutputStream, ByteStringInputStream}
 import org.ntb.imageresizer.resize.Resizer._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-import org.ntb.imageresizer.util.Loans.using
 
 class ResizeActor extends Actor with ActorUtils {
   import ResizeActor._
@@ -15,12 +13,10 @@ class ResizeActor extends Actor with ActorUtils {
   def receive = {
     case ResizeImageRequest(source, size, format) ⇒
       actorTry(sender) {
-        using (new ByteStringInputStream(source)) { input =>
-          using (new ByteStringOutputStream()) { output =>
-            resizeImage(input, output, size, format)
-            sender ! ResizeImageResponse(output.toByteString())
-          }
-        }
+        val input = source.iterator.asInputStream
+        val builder = new ByteStringBuilder
+        resizeImage(input, builder.asOutputStream, size, format)
+        sender ! ResizeImageResponse(builder.result())
       } actorCatch {
         case e: UnsupportedImageFormatException ⇒
       }

@@ -8,24 +8,22 @@ import org.ntb.imageresizer.util.Loans.using
 
 import com.google.common.io.ByteStreams
 
-import akka.util.ByteString
+import akka.util.{ByteStringBuilder, ByteString}
 
 object ByteStringIO {
   def read(file: File): ByteString = {
     require(file.exists())
+    val builder = new ByteStringBuilder
     using(new FileInputStream(file)) { input ⇒
-      using(new ByteStringOutputStream()) { output ⇒
-        ByteStreams.copy(input, output)
-        output.toByteString
-      }
+      ByteStreams.copy(input, builder.asOutputStream)
+      builder.result()
     }
   }
 
   def write(file: File, content: ByteString) {
-    using(new ByteStringInputStream(content)) { input ⇒
-      using(new FileOutputStream(file)) { output ⇒
-        ByteStreams.copy(input, output)
-      }
+    val input = content.iterator.asInputStream
+    using(new FileOutputStream(file)) { output ⇒
+      ByteStreams.copy(input, output)
     }
   }
 }

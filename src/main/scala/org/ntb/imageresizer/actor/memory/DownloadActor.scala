@@ -1,13 +1,12 @@
 package org.ntb.imageresizer.actor.memory
 
 import akka.actor.Actor
-import akka.util.ByteString
-import java.io.{ByteArrayOutputStream, IOException}
+import akka.util.{ByteStringBuilder, ByteString}
+import java.io.IOException
 import java.net.URI
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.io.{DefaultHttpClientProvider, Downloader}
-import org.ntb.imageresizer.util.Loans.using
 
 class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider with ActorUtils {
   import DownloadActor._
@@ -15,11 +14,9 @@ class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider
   def receive = {
     case DownloadRequest(uri) ⇒
       actorTry(sender) {
-        using(new ByteArrayOutputStream()) { output =>
-          download(uri, output)
-          val data = ByteString(output.toByteArray)
-          sender ! DownloadResponse(data)
-        }
+        val builder = new ByteStringBuilder
+        download(uri, builder.asOutputStream)
+        sender ! DownloadResponse(builder.result())
       } actorCatch {
         case e: HttpException ⇒
         case e: IOException ⇒
