@@ -5,21 +5,25 @@ import org.ntb.imageresizer.imageformat.ImageFormat
 import org.imgscalr.Scalr
 
 import java.awt.image.BufferedImage
-import java.io.OutputStream
+import java.io.{Closeable, OutputStream}
 
 import javax.imageio.ImageIO
+import java.awt.Color
 
 trait ImgScalrResizer {
   def resizeImageFrom(image: BufferedImage, output: OutputStream, size: Int, format: ImageFormat) {
+    usingImage(Scalr.resize(image, size)) { scaled ⇒
+      ImageIO.write(scaled, format.extension, output)
+    }
+  }
+
+  def usingImage[R](c: BufferedImage)(action: BufferedImage ⇒ R): R = {
     try {
-      val scaled = Scalr.resize(image, size)
-      try {
-        ImageIO.write(scaled, format.extension, output)
-      } finally {
-        scaled.flush()
-      }
+      action(c)
     } finally {
-      image.flush()
+      if (c != null) {
+        c.flush()
+      }
     }
   }
 }
