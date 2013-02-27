@@ -12,11 +12,11 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "spray repo" at "http://repo.spray.io"
  
-libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.1.0"
+libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.1.1"
 
 libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7"
 
-libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.1.0" % "test"
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.1.1" % "test"
 
 libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2"
 
