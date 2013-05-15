@@ -1,11 +1,10 @@
 import sbt._
 import Keys._
 import org.scalatra.sbt._
-import org.scalatra.sbt.PluginKeys._
 import com.mojolly.scalate.ScalatePlugin._
 import ScalateKeys._
 
-object ImageresizerBuild extends Build {
+object ImageResizerBuild extends Build {
   val Organization = "org.ntb.imageresizer"
   val Name = "image-resizer"
   val Version = "1.0.0-SNAPSHOT"
@@ -32,7 +31,6 @@ object ImageresizerBuild extends Build {
         "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar"))
       ),
       libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.1.1",
-      libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7",
       libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.1.1" % "test",
       libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2",
       libraryDependencies += "com.google.guava" % "guava" % "14.0.1",
@@ -40,8 +38,6 @@ object ImageresizerBuild extends Build {
       libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.2.1",
       libraryDependencies += "commons-codec" % "commons-codec" % "1.7",
       libraryDependencies += "joda-time" % "joda-time" % "2.1",
-      libraryDependencies += "io.spray" % "spray-can" % "1.1-M7",
-      libraryDependencies += "io.spray" % "spray-routing" % "1.1-M7",
       libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % "test",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       scalateTemplateConfig in Compile <<= (sourceDirectory in Compile){ base =>
