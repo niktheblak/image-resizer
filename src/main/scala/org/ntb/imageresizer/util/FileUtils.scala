@@ -1,8 +1,9 @@
 package org.ntb.imageresizer.util
 
 import java.net.URI
-import java.io.File
+import java.io.{FileInputStream, File}
 import concurrent.duration.Duration
+import Loans.using
 
 object FileUtils {
   def getFileExtension(uri: URI): Option[String] = {
@@ -14,6 +15,15 @@ object FileUtils {
     } else {
       None
     }
+  }
+
+  def read(file: File, amount: Int): Array[Byte] = {
+    val data = new Array[Byte](amount)
+    var bytesRead = 0
+    using (new FileInputStream(file)) { input =>
+      bytesRead = input.read(data)
+    }
+    data.slice(0, bytesRead)
   }
   
   def getFilePath(uri: URI): Option[String] = {
@@ -31,6 +41,12 @@ object FileUtils {
     val file = File.createTempFile("FileUtils", ".tmp")
     file.deleteOnExit()
     file
+  }
+
+  def tempDir: File = {
+    val tmpdir = System.getProperty("java.io.tmpdir")
+    assert(tmpdir != null, "System property java.io.tmpdir is not set")
+    new File(tmpdir)
   }
 
   def hasExpired(file: File, maxAge: Duration): Boolean = {

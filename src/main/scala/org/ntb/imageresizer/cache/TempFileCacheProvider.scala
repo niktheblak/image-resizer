@@ -5,6 +5,7 @@ import org.ntb.imageresizer.util.FileUtils.deleteIfExpired
 import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import java.io.File
 import concurrent.duration._
+import org.ntb.imageresizer.util.FileUtils
 
 trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
   import scala.language.postfixOps
@@ -29,9 +30,7 @@ trait TempFileCacheProvider[A] extends FileCacheProvider[A] {
   }
   
   def cacheDirectory(): File = {
-    val tmpdirProperty = System.getProperty("java.io.tmpdir")
-    assert(tmpdirProperty != null, "Environment variable java.io.tmpdir is not set")
-    val cacheDir = new File(tmpdirProperty, cachePath)
+    val cacheDir = new File(FileUtils.tempDir, cachePath)
     assert(!cacheDir.isFile, "File with path %s already exists".format(cacheDir.getAbsolutePath))
     if (!cacheDir.exists()) cacheDir.mkdir()
     cacheDir
