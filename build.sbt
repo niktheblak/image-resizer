@@ -2,9 +2,7 @@ name := "image-resizer"
  
 version := "1.0.0-SNAPSHOT"
  
-scalaVersion := "2.10.0"
-
-EclipseKeys.withSource := true
+scalaVersion := "2.10.1"
 
 scalacOptions += "-feature"
 
@@ -20,7 +18,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.1.1" % "test"
 
 libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2"
 
-libraryDependencies += "com.google.guava" % "guava" % "13.0.1"
+libraryDependencies += "com.google.guava" % "guava" % "14.0.1"
 
 libraryDependencies += "com.google.code.findbugs" % "jsr305" % "2.0.1"
 
