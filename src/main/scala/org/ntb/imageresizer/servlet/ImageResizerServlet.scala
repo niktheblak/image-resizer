@@ -26,7 +26,7 @@ class ImageResizerServlet(val actorSystem: ActorSystem, val imageBroker: ActorRe
     contentType_=(imageFormat.mimeType)
     val req = GetImageRequest(URI.create(source), size, imageFormat)
     val resizeTask = ask(imageBroker, req).mapTo[GetImageResponse]
-    new AsyncResult { def is =
+    new AsyncResult { val is =
       resizeTask.map { response ⇒
         Ok(response.data)
       }
@@ -43,7 +43,7 @@ class ImageResizerServlet(val actorSystem: ActorSystem, val imageBroker: ActorRe
     val id = Files.hash(tempFile, Hashing.goodFastHash(32)).toString
     val req = GetLocalImageRequest(tempFile, id, size, imageFormat)
     val resizeTask = ask(imageBroker, req).mapTo[GetImageResponse]
-    new AsyncResult { def is =
+    new AsyncResult { val is =
       resizeTask.map { response ⇒
         Ok(response.data)
       }

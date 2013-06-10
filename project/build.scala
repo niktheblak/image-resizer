@@ -9,7 +9,7 @@ object ImageResizerBuild extends Build {
   val Name = "image-resizer"
   val Version = "1.0.0-SNAPSHOT"
   val ScalaVersion = "2.10.1"
-  val ScalatraVersion = "2.2.0"
+  val ScalatraVersion = "2.2.1"
 
   lazy val project = Project (
     "image-resizer",
@@ -21,7 +21,6 @@ object ImageResizerBuild extends Build {
       scalaVersion := ScalaVersion,
       resolvers += Classpaths.typesafeReleases,
       resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
-      resolvers += "spray repo" at "http://repo.spray.io",
       libraryDependencies ++= Seq(
         "org.scalatra" %% "scalatra" % ScalatraVersion,
         "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
