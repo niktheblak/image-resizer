@@ -8,7 +8,7 @@ object ImageResizerBuild extends Build {
   val Organization = "org.ntb.imageresizer"
   val Name = "image-resizer"
   val Version = "1.0.0-SNAPSHOT"
-  val ScalaVersion = "2.10.1"
+  val ScalaVersion = "2.10.2"
   val ScalatraVersion = "2.2.1"
 
   lazy val project = Project (
