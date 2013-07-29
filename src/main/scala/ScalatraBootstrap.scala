@@ -9,7 +9,7 @@ class ScalatraBootstrap extends LifeCycle {
   val system = ActorSystem()
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(2)))
   val downloadActor = system.actorOf(Props[DownloadActor])
-  val imageBrokerActor = system.actorOf(Props(new FileCacheImageBrokerActor(downloadActor, resizeActor)))
+  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
 
   override def init(context: ServletContext) {
     context.mount(new ImageResizerServlet(system, imageBrokerActor), "/resize/*")
