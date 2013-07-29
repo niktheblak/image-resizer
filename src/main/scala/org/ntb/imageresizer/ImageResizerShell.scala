@@ -17,7 +17,7 @@ import java.net.URISyntaxException
 import language.postfixOps
 
 object ImageResizerShell extends App {
-  implicit val timeout = Timeout(10 seconds)
+  implicit val timeout: Timeout = 10 seconds
   val config = ConfigFactory.parseString("""
     akka {
       akka.loggers = ["akka.event.Logging$DefaultLogger"]
@@ -26,11 +26,12 @@ object ImageResizerShell extends App {
   """)
   println("Starting ImageResizer shell")
   val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
-  println("Deploying " + resizeNodes + " resizers")
+  println(s"Deploying $resizeNodes resize actors")
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
-  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
+  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor).withRouter(SmallestMailboxRouter(resizeNodes)))
+  println(s"Deploying $resizeNodes image broker actors")
   processCommands()
 
   def processCommands() {
@@ -77,9 +78,9 @@ object ImageResizerShell extends App {
 
   def handleResizeCommand(path: String, size: Int) {
     val uri = new URI(path)
-    println("Resizing image %s to %d pixels...".format(path, size))
+    println(s"Resizing image $path to $size pixels")
     val resizeImageTask = ask(imageBrokerActor, GetImageRequest(uri, size)).mapTo[GetImageResponse]
     val response = Await.result(resizeImageTask, timeout.duration)
-    println("Received resized image data %d bytes to %s".format(response.data.length, response.data.getAbsolutePath))
+    println(s"Received resized image data ${response.data.length} bytes to ${response.data.getAbsolutePath}")
   }
 }
