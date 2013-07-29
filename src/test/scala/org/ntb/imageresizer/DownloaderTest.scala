@@ -44,7 +44,7 @@ class DownloaderTest extends FlatSpec with ShouldMatchers with MockHttpClients {
     val downloader = new TestIfModifiedDownloader(httpClient)
     val output = mock[OutputStream]
     val result = downloader.downloadIfModified(uri, 1, output)
-    result should not be ('defined)
+    result should not be 'defined
   }
 
   it should "throw HttpException when HTTP server responds with an error code" in {

@@ -6,23 +6,22 @@ import DownloadActor._
 import FileCacheImageBrokerActor._
 import ResizeActor._
 import com.google.common.io.Files
-import org.scalatest.BeforeAndAfterAll
 import org.scalatest.FlatSpec
 import org.scalatest.matchers.ShouldMatchers
 import akka.actor.{ Props, ActorSystem }
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import java.io.File
 import java.net.URI
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import akka.actor.ActorRef
+import language.postfixOps
 
 class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpec with ShouldMatchers {
   import FileCacheImageBrokerActorTest._
 
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
-  val timeout = new FiniteDuration(5, TimeUnit.SECONDS)
+  val timeout = 2 seconds
 
   "FileCacheImageBrokerActor" should "serve existing file" in {
     val testFile = tempFile(testData)

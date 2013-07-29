@@ -13,14 +13,14 @@ import akka.testkit.TestActorRef
 import akka.testkit.TestKit
 import akka.pattern.ask
 import scala.concurrent.Await
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import java.io.File
 import java.net.URI
-import java.util.concurrent.TimeUnit
+import language.postfixOps
 
 class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpec with ShouldMatchers with BeforeAndAfterAll with MockHttpClients {
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
-  val timeout = new FiniteDuration(2, TimeUnit.SECONDS)
+  val timeout = 2 seconds
 
   "DownloadActor" should "download data to file for DownloadFileRequest" in {
     val uri = URI.create("http://localhost/logo.png")
@@ -30,9 +30,9 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with Implicit
     val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
     downloadActor ! DownloadRequest(uri, target)
     expectMsgPF(timeout) {
-      case DownloadResponse(file, size) ⇒
-        size should equal(3)
-        file should be theSameInstanceAs (target)
+      case DownloadResponse(file, fileSize) ⇒
+        fileSize should equal(3)
+        file should be theSameInstanceAs target
         Files.toByteArray(target) should equal(testData)
     }
   }

@@ -41,13 +41,13 @@ class FileUtilsTest extends WordSpec with ShouldMatchers with MockitoSugar {
     "return Nothing if extension is not found from a file path" in {
       val uri = URI.create("/path/logo")
       val path = FileUtils.getFileExtension(uri)
-      path should not be ('defined)
+      path should not be 'defined
     }
 
     "return Nothing if extension is not found from an HTTP URL" in {
       val uri = URI.create("http://www.server.com/picturedata?format=jpg")
       val path = FileUtils.getFileExtension(uri)
-      path should not be ('defined)
+      path should not be 'defined
     }
   }
 
@@ -73,7 +73,7 @@ class FileUtilsTest extends WordSpec with ShouldMatchers with MockitoSugar {
     "return Nothing if no path was found" in {
       val uri = URI.create("http://www.server.com/")
       val path = FileUtils.getFilePath(uri)
-      path should not be ('defined)
+      path should not be 'defined
     }
   }
 

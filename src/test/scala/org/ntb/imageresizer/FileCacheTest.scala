@@ -16,7 +16,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
   "put" should {
     "create a file with name given by cachePathProvider" in {
       val tempFile = createTempFile("testFile")
-      val fileCache = new FileCache(filePathProvider(tempFile)_)
+      val fileCache = new FileCache(filePathProvider(tempFile))
       fileCache.put("testFile", ByteString("abcd"))
       tempFile should be ('exists)
       Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("abcd")
@@ -24,7 +24,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
     
     "overwrite existing file with new content" in {
       val tempFile = createTempFile("testFile")
-      val fileCache = new FileCache(filePathProvider(tempFile)_)
+      val fileCache = new FileCache(filePathProvider(tempFile))
       fileCache.put("testFile", ByteString("abcd"))
       tempFile should be ('exists)
       fileCache.put("testFile", ByteString("efgh"))
@@ -35,7 +35,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
   "get(key)" should {
     "return the content of existing file" in {
       val tempFile = createTempFile("testFile")
-      val fileCache = new FileCache(filePathProvider(tempFile)_)
+      val fileCache = new FileCache(filePathProvider(tempFile))
       fileCache.put("testFile", ByteString("abcd"))
       val content = fileCache.get("testFile")
       content.value.utf8String should equal ("abcd")
@@ -43,9 +43,9 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
     
     "return None if file with specified key does not exist" in {
       val fileCache = new FileCache((key: String) => nonExistingFile)
-      new File("testFile") should not be ('exists)
+      new File("testFile") should not be 'exists
       val content = fileCache.get("testFile")
-      content should not be ('defined)
+      content should not be 'defined
     }
   }
   
@@ -54,8 +54,8 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
       val tmpdir = System.getProperty("java.io.tmpdir")
       val tempFile = nonExistingFile
       tempFile.deleteOnExit()
-      tempFile should not be ('exists)
-      val fileCache = new FileCache(filePathProvider(tempFile)_)
+      tempFile should not be 'exists
+      val fileCache = new FileCache(filePathProvider(tempFile))
       val content = fileCache.get("testFile", () => ByteString("abcd"))
       tempFile should be ('exists)
       content.utf8String should equal ("abcd")

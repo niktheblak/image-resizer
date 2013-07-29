@@ -9,7 +9,7 @@ trait HttpBasicDownloader { self: HttpClientProvider ⇒
   def httpGetWithHeaders[A](headers: List[Header])(uri: URI)(f: HttpResponse ⇒ A): A = {
     try {
       val get = new HttpGet(uri)
-      headers foreach(get.setHeader(_))
+      headers foreach get.setHeader
       val response = httpClient.execute(get)
       f(response)
     } catch {

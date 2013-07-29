@@ -61,17 +61,17 @@ object ImageResizerShell extends App {
           val size = if (!rest.isEmpty) rest.head.toInt else 128
           handleResizeCommand(path, size)
         } catch {
-          case e: NumberFormatException ⇒ Console.err.println("Invalid argument for size: '%s'".format(rest.mkString(" ")))
-          case e: URISyntaxException ⇒ Console.err.println("Invalid URL: '%s'".format(path))
-          case e: UnsupportedImageFormatException ⇒ Console.err.println("Unsupported image format for " + path)
-          case e: HttpException ⇒ Console.err.println("Could not download '%s': %s".format(path, e.getMessage))
+          case e: NumberFormatException ⇒ Console.err.println(s"Invalid argument for size: ${rest.mkString(" ")}")
+          case e: URISyntaxException ⇒ Console.err.println(s"Invalid URL: $path}")
+          case e: UnsupportedImageFormatException ⇒ Console.err.println(s"Unsupported image format for $path")
+          case e: HttpException ⇒ Console.err.println(s"Could not download $path: ${e.getMessage}")
         }
       case "clear" :: Nil ⇒
         imageBrokerActor ! ClearCache()
       case "exit" :: Nil ⇒
         exit()
       case command @ _ ⇒
-        Console.err.println("Invalid command or arguments: '%s'".format(command.mkString(" ")))
+        Console.err.println(s"Invalid command or arguments: ${command.mkString(" ")}")
     }
   }
 

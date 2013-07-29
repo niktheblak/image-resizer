@@ -48,7 +48,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
       val key = (source, preferredSize, imageFormat)
       val file = cacheFileProvider(key)
       if (workQueue.contains(key)) {
-        workQueue(key) onComplete(replyWithResizedImage(self, sender, key, file))
+        workQueue(key) onComplete replyWithResizedImage(self, sender, key, file)
       } else {
         if (file.exists()) {
           log.debug("Serving already cached image %s for request %s".format(file.getPath, request))
@@ -57,7 +57,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
           log.debug("Downloading and resizing image from request %s to %s".format(request, file.getPath))
           val downloadAndResizeTask = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
           workQueue.put(key, downloadAndResizeTask)
-          downloadAndResizeTask onComplete(replyWithResizedImage(self, sender, key, file))
+          downloadAndResizeTask onComplete replyWithResizedImage(self, sender, key, file)
         }
       }
     case GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
@@ -67,14 +67,14 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
       val key = (id, preferredSize, imageFormat)
       val file = cacheFileProvider(key)
       if (workQueue.contains(key)) {
-        workQueue(key) onComplete(replyWithResizedImage(self, sender, key, file))
+        workQueue(key) onComplete replyWithResizedImage(self, sender, key, file)
       } else {
         if (file.exists()) {
           sender ! GetImageResponse(file)
         } else {
           val resizeTask = resize(source, file, preferredSize, imageFormat)
           workQueue.put(key, resizeTask)
-          resizeTask onComplete(replyWithResizedImage(self, sender, key, file))
+          resizeTask onComplete replyWithResizedImage(self, sender, key, file)
         }
       }
     case ClearCache() ⇒
