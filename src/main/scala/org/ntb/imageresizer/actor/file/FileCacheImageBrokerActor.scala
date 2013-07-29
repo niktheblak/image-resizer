@@ -13,14 +13,14 @@ import language.postfixOps
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.actor.file.DownloadActor._
 import org.ntb.imageresizer.actor.file.ResizeActor._
-import org.ntb.imageresizer.cache.TempFileCacheProvider
+import org.ntb.imageresizer.cache.TempFileCache
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
 import util.{Try, Success, Failure}
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with ActorLogging
-    with TempFileCacheProvider[FileCacheImageBrokerActor.Key]
+    with TempFileCache[FileCacheImageBrokerActor.Key]
     with ActorUtils {
   import FileCacheImageBrokerActor._
   import context.dispatcher
@@ -30,8 +30,8 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   val timeout: FiniteDuration = 30 seconds
   implicit val akkaTimeout = Timeout(timeout)
   val workQueue = mutable.Map[FileCacheImageBrokerActor.Key, Future[Long]]()
-  
-  override def cachePath = "imagebroker"
+
+  override val cachePath = "imagebroker"
 
   override def preStart() {
     log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cacheDirectory()))

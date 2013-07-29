@@ -16,7 +16,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
   "put" should {
     "create a file with name given by cachePathProvider" in {
       val tempFile = createTempFile("testFile")
-      val fileCache = new FileCache(filePathProvider(tempFile))
+      val fileCache = new TestFileCache(filePathProvider(tempFile))
       fileCache.put("testFile", ByteString("abcd"))
       tempFile should be ('exists)
       Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("abcd")
@@ -24,7 +24,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
     
     "overwrite existing file with new content" in {
       val tempFile = createTempFile("testFile")
-      val fileCache = new FileCache(filePathProvider(tempFile))
+      val fileCache = new TestFileCache(filePathProvider(tempFile))
       fileCache.put("testFile", ByteString("abcd"))
       tempFile should be ('exists)
       fileCache.put("testFile", ByteString("efgh"))
@@ -35,14 +35,14 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
   "get(key)" should {
     "return the content of existing file" in {
       val tempFile = createTempFile("testFile")
-      val fileCache = new FileCache(filePathProvider(tempFile))
+      val fileCache = new TestFileCache(filePathProvider(tempFile))
       fileCache.put("testFile", ByteString("abcd"))
       val content = fileCache.get("testFile")
       content.value.utf8String should equal ("abcd")
     }
     
     "return None if file with specified key does not exist" in {
-      val fileCache = new FileCache((key: String) => nonExistingFile)
+      val fileCache = new TestFileCache((key: String) => nonExistingFile)
       new File("testFile") should not be 'exists
       val content = fileCache.get("testFile")
       content should not be 'defined
@@ -55,7 +55,7 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
       val tempFile = nonExistingFile
       tempFile.deleteOnExit()
       tempFile should not be 'exists
-      val fileCache = new FileCache(filePathProvider(tempFile))
+      val fileCache = new TestFileCache(filePathProvider(tempFile))
       val content = fileCache.get("testFile", () => ByteString("abcd"))
       tempFile should be ('exists)
       content.utf8String should equal ("abcd")
@@ -63,6 +63,8 @@ class FileCacheTest extends WordSpec with ShouldMatchers {
     }
   }
 }
+
+class TestFileCache(val cacheFileProvider: String ⇒ File) extends FileCache[String]
 
 object FileCacheTest {
   def createTempFile(nameFragment: String): File = {
