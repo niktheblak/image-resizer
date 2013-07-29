@@ -25,15 +25,15 @@ object ImageResizerBuild extends Build {
         "org.scalatra" %% "scalatra" % ScalatraVersion,
         "org.scalatra" %% "scalatra-scalate" % ScalatraVersion,
         "org.scalatra" %% "scalatra-specs2" % ScalatraVersion % "test",
-        "ch.qos.logback" % "logback-classic" % "1.0.6" % "runtime",
+        "ch.qos.logback" % "logback-classic" % "1.0.11" % "runtime",
         "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
-        "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar"))
+        "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar")),
+        "com.google.code.findbugs" % "jsr305" % "2.0.1" % "container;provided"
       ),
       libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.2.0",
       libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.2.0" % "test",
       libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2",
       libraryDependencies += "com.google.guava" % "guava" % "14.0.1",
-      libraryDependencies += "com.google.code.findbugs" % "jsr305" % "2.0.1",
       libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.2.1",
       libraryDependencies += "commons-codec" % "commons-codec" % "1.7",
       libraryDependencies += "joda-time" % "joda-time" % "2.1",
