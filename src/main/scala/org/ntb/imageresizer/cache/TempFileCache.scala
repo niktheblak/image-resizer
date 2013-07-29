@@ -9,9 +9,9 @@ import org.ntb.imageresizer.util.FileUtils._
 import org.ntb.imageresizer.util.FileUtils
 
 trait TempFileCache[A] extends FileCache[A] {
-  val cachePath: String
+  def cachePath: String
   override val cacheFileProvider: A ⇒ File = tempDirCacheFileProvider
-  lazy override val maxAge = 24 hours
+  override val maxAge = 24 hours
 
   def tempDirCacheFileProvider(key: A): File = {
     require(key != null, "Argument key cannot be null")

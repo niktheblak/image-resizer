@@ -9,7 +9,7 @@ import concurrent.{Await, Future}
 import java.io.{IOException, File}
 import java.net.URI
 import language.postfixOps
-import org.ntb.imageresizer.actor.ActorUtils
+import org.ntb.imageresizer.actor.{ActorNameCachePath, ActorUtils}
 import org.ntb.imageresizer.actor.file.DownloadActor._
 import org.ntb.imageresizer.actor.file.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCache
@@ -19,11 +19,12 @@ import org.ntb.imageresizer.util.FileUtils.createTempFile
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with ActorLogging
     with TempFileCache[FileCacheImageBrokerActor.Key]
+    with ActorNameCachePath
     with ActorUtils {
   import FileCacheImageBrokerActor._
   import context.dispatcher
 
-  override val cachePath = "imagebroker"
+  override val cacheRoot = "imagebroker"
   implicit val timeout: Timeout = 30 seconds
 
   override def preStart() {
