@@ -20,7 +20,7 @@ object ImageResizerShell extends App {
   implicit val timeout = Timeout(10 seconds)
   val config = ConfigFactory.parseString("""
     akka {
-      event-handlers = ["akka.event.Logging$DefaultLogger"]
+      akka.loggers = ["akka.event.Logging$DefaultLogger"]
       loglevel = "INFO"
     }
   """)
