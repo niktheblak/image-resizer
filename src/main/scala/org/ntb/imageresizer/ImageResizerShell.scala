@@ -30,8 +30,7 @@ object ImageResizerShell extends App {
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
-  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor).withRouter(SmallestMailboxRouter(resizeNodes)))
-  println(s"Deploying $resizeNodes image broker actors")
+  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
   processCommands()
 
   def processCommands() {

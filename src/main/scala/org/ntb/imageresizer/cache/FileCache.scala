@@ -8,7 +8,7 @@ import java.io.File
 
 trait FileCache[A] extends Cache[A, ByteString] {
   val cacheFileProvider: A ⇒ File
-  val maxAge: Duration
+  val maxAge: Duration = Duration.Inf
 
   def put(key: A, value: ByteString) {
     val file = cacheFileProvider(key)
