@@ -29,8 +29,8 @@ object ImageResizerBuild extends Build {
         "org.eclipse.jetty" % "jetty-webapp" % "8.1.8.v20121106" % "container",
         "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test" artifacts (Artifact("javax.servlet", "jar", "jar"))
       ),
-      libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.1.4",
-      libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.1.4" % "test",
+      libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.2.0",
+      libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.2.0" % "test",
       libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2",
       libraryDependencies += "com.google.guava" % "guava" % "14.0.1",
       libraryDependencies += "com.google.code.findbugs" % "jsr305" % "2.0.1",
