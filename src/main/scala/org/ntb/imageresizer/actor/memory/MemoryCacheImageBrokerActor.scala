@@ -12,6 +12,7 @@ import org.ntb.imageresizer.actor.memory.DownloadActor._
 import org.ntb.imageresizer.actor.memory.ResizeActor._
 import org.ntb.imageresizer.cache.GuavaMemoryCache
 import org.ntb.imageresizer.imageformat._
+import java.io.IOException
 
 class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with GuavaMemoryCache[MemoryCacheImageBrokerActor.Key, ByteString]
@@ -19,8 +20,7 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
   import MemoryCacheImageBrokerActor._
   import context.dispatcher
 
-  val timeout: FiniteDuration = 30 seconds
-  implicit val akkaTimeout = Timeout(timeout)
+  implicit val timeout: Timeout = 30 seconds
   override val maxCacheSize = 10L * 1024L * 1024L
 
   def receive = {
@@ -35,9 +35,13 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
             downloadResponse <- ask(downloadActor, DownloadRequest(uri)).mapTo[DownloadResponse];
             resizeResponse <- ask(resizeActor, ResizeImageRequest(downloadResponse.data, preferredSize, imageFormat)).mapTo[ResizeImageResponse]
           ) yield resizeResponse.data
-          val data = Await.result(downloadAndResizeTask, timeout)
-          put(key, data)
-          sender ! GetImageResponse(data)
+          actorTry(sender) {
+            val data = Await.result(downloadAndResizeTask, timeout.duration)
+            put(key, data)
+            sender ! GetImageResponse(data)
+          } actorCatch {
+            case e: IOException ⇒
+          }
       }
   }
 }

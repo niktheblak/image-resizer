@@ -3,11 +3,10 @@ package org.ntb.imageresizer.actor.file
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import collection.mutable
 import com.google.common.base.Strings.isNullOrEmpty
 import concurrent.duration._
 import concurrent.{Await, Future}
-import java.io.File
+import java.io.{IOException, File}
 import java.net.URI
 import language.postfixOps
 import org.ntb.imageresizer.actor.ActorUtils
@@ -16,7 +15,6 @@ import org.ntb.imageresizer.actor.file.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCache
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
-import util.{Try, Success, Failure}
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with ActorLogging
@@ -25,20 +23,11 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   import FileCacheImageBrokerActor._
   import context.dispatcher
 
-  protected case class RemoveFromWorkQueue(key: Key)
-
-  val timeout: FiniteDuration = 30 seconds
-  implicit val akkaTimeout = Timeout(timeout)
-  val workQueue = mutable.Map[FileCacheImageBrokerActor.Key, Future[Long]]()
-
   override val cachePath = "imagebroker"
+  implicit val timeout: Timeout = 30 seconds
 
   override def preStart() {
-    log.info("Starting FileCacheImageBrokerActor with cache directory %s".format(cacheDirectory()))
-  }
-
-  override def postStop() {
-    flushWorkQueue()
+    log.info(s"Starting FileCacheImageBrokerActor with cache directory ${cacheDirectory()}")
   }
 
   def receive = {
@@ -47,17 +36,18 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
       val source = uri.toString
       val key = (source, preferredSize, imageFormat)
       val file = cacheFileProvider(key)
-      if (workQueue.contains(key)) {
-        workQueue(key) onComplete replyWithResizedImage(self, sender, key, file)
+      if (file.exists()) {
+        log.debug(s"Serving already cached image ${file.getPath} for request $request")
+        sender ! GetImageResponse(file)
       } else {
-        if (file.exists()) {
-          log.debug("Serving already cached image %s for request %s".format(file.getPath, request))
+        log.debug(s"Downloading and resizing image from request $request to ${file.getPath}")
+        val downloadAndResizeTask = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
+        actorTry(sender) {
+          val resizedSize = Await.result(downloadAndResizeTask, timeout.duration)
+          log.debug(s"Download and resize complete, resized image size $resizedSize bytes")
           sender ! GetImageResponse(file)
-        } else {
-          log.debug("Downloading and resizing image from request %s to %s".format(request, file.getPath))
-          val downloadAndResizeTask = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
-          workQueue.put(key, downloadAndResizeTask)
-          downloadAndResizeTask onComplete replyWithResizedImage(self, sender, key, file)
+        } actorCatch {
+          case e: IOException ⇒
         }
       }
     case GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
@@ -66,41 +56,21 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
       val key = (id, preferredSize, imageFormat)
       val file = cacheFileProvider(key)
-      if (workQueue.contains(key)) {
-        workQueue(key) onComplete replyWithResizedImage(self, sender, key, file)
+      if (file.exists()) {
+        sender ! GetImageResponse(file)
       } else {
-        if (file.exists()) {
+        val resizeTask = resize(source, file, preferredSize, imageFormat)
+        actorTry(sender) {
+          val resizedSize = Await.result(resizeTask, timeout.duration)
+          log.debug(s"Local resize complete, resized image size $resizedSize bytes")
           sender ! GetImageResponse(file)
-        } else {
-          val resizeTask = resize(source, file, preferredSize, imageFormat)
-          workQueue.put(key, resizeTask)
-          resizeTask onComplete replyWithResizedImage(self, sender, key, file)
+        } actorCatch {
+          case e: IOException ⇒
         }
       }
     case ClearCache() ⇒
-      log.info("Clearing cache directory " + cacheDirectory().getAbsolutePath)
-      flushWorkQueue()
+      log.info(s"Clearing cache directory ${cacheDirectory().getAbsolutePath}")
       clearCacheDirectory()
-    case RemoveFromWorkQueue(key) ⇒
-      workQueue.remove(key)
-  }
-
-  def flushWorkQueue() {
-    if (!workQueue.isEmpty) {
-      val tasks = Future.sequence(workQueue.values)
-      Await.ready(tasks, timeout)
-      workQueue.clear()
-    }
-  }
-
-  def replyWithResizedImage[A](self: ActorRef, sender: ActorRef, key: Key, file: File): Try[Long] => Unit = {
-    case Success(t) ⇒
-      self ! RemoveFromWorkQueue(key)
-      sender ! GetImageResponse(file)
-    case Failure(t) ⇒
-      file.delete()
-      self ! RemoveFromWorkQueue(key)
-      sender ! Status.Failure(t)
   }
 
   def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
