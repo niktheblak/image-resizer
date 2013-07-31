@@ -8,6 +8,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "spray repo" at "http://repo.spray.io"
 
+resolvers += "spray nightlies" at "http://nightlies.spray.io"
+
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.2.0"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.2.0"
@@ -26,9 +28,9 @@ libraryDependencies += "commons-codec" % "commons-codec" % "1.7"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.1"
 
-libraryDependencies += "io.spray" % "spray-can" % "1.2-M8"
+libraryDependencies += "io.spray" % "spray-can" % "1.2-20130710"
 
-libraryDependencies += "io.spray" % "spray-routing" % "1.2-M8"
+libraryDependencies += "io.spray" % "spray-routing" % "1.2-20130710"
 
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % "test"
 
