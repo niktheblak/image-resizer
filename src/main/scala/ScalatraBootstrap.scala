@@ -20,13 +20,13 @@ class ScalatraBootstrap extends LifeCycle {
   val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
-  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
+  val imageBroker = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
 
   override def init(context: ServletContext) {
     val environment = System.getProperty("org.scalatra.environment")
     logger.info(s"Starting application in $environment mode")
     logger.info(s"Deploying $resizeNodes resize actors")
-    context.mount(new ImageResizerServlet(system, imageBrokerActor), "/resize/*")
+    context.mount(new ImageResizerServlet(system, imageBroker), "/resize/*")
   }
 
   override def destroy(context:ServletContext) {
