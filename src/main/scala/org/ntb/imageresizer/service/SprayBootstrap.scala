@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigFactory
 import java.util.concurrent.TimeUnit
 import language.postfixOps
 
-class SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
+object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
   val logger = LoggerFactory.getLogger(getClass)
   val config = ConfigFactory.parseString("""
     akka {
@@ -22,7 +22,9 @@ class SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
   implicit val timeout = Timeout(30, TimeUnit.SECONDS)
   implicit val system = ActorSystem("image-resizer", ConfigFactory.load(config))
   implicit val context = system.dispatcher
-  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(2)))
+  val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
+  println(s"Deploying $resizeNodes resize actors")
+  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
   val imageBroker = system.actorOf(Props(new FileCacheImageBrokerActor(downloadActor, resizeActor)))
 
