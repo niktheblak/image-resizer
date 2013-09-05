@@ -14,10 +14,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.net.URI
 import java.net.URISyntaxException
-import language.postfixOps
 
 object ImageResizerShell extends App {
-  implicit val timeout: Timeout = 10 seconds
+  implicit val timeout: Timeout = 10.seconds
   val config = ConfigFactory.parseString("""
     akka {
       akka.loggers = ["akka.event.Logging$DefaultLogger"]

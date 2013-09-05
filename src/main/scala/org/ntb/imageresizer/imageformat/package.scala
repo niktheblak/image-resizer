@@ -28,20 +28,22 @@ package object imageformat {
   
   val defaultImageFormat = JPEG
   
-  def parseRequestedImageFormat(requestedFormat: String): Option[ImageFormat] = {
-    val format = requestedFormat.toLowerCase
-    if (format == "jpg" || format == "jpeg") Some(JPEG)
-    else if (format == "png") Some(PNG)
-    else if (format == "gif") Some(GIF)
-    else None
-  }
+  def parseRequestedImageFormat(requestedFormat: String): Option[ImageFormat] =
+    requestedFormat.toLowerCase match {
+      case "jpg" ⇒ Some(JPEG)
+      case "jpeg" ⇒ Some(JPEG)
+      case "png" ⇒ Some(PNG)
+      case "gif" ⇒ Some(GIF)
+      case _ ⇒ None
+    }
   
-  def parseImageFormatFromMimeType(mimeType: String): Option[ImageFormat] = {
-    if (mimeType == "image/jpeg") Some(JPEG)
-    else if (mimeType == "image/png") Some(PNG)
-    else if (mimeType == "image/gif") Some(GIF)
-    else None
-  }
+  def parseImageFormatFromMimeType(mimeType: String): Option[ImageFormat] =
+    mimeType match {
+      case "image/jpeg" ⇒ Some(JPEG)
+      case "image/png" ⇒ Some(PNG)
+      case "image/gif" ⇒ Some(GIF)
+      case _ ⇒ None
+    }
   
   def parseImageFormatFromUri(uri: URI): Option[ImageFormat] = {
     val fileName = if (uri.getPath != null) uri.getPath.toLowerCase else ""

@@ -6,7 +6,6 @@ import akka.util.{Timeout, ByteString}
 import concurrent.Await
 import concurrent.duration._
 import java.net.URI
-import language.postfixOps
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.actor.memory.DownloadActor._
 import org.ntb.imageresizer.actor.memory.ResizeActor._
@@ -20,7 +19,7 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
   import MemoryCacheImageBrokerActor._
   import context.dispatcher
 
-  implicit val timeout: Timeout = 30 seconds
+  implicit val timeout: Timeout = 30.seconds
   override val maxCacheSize = 10L * 1024L * 1024L
 
   def receive = {

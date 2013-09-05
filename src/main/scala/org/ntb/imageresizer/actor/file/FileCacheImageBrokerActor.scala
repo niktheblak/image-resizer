@@ -8,7 +8,6 @@ import concurrent.duration._
 import concurrent.{Await, Future}
 import java.io.File
 import java.net.URI
-import language.postfixOps
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.actor.file.DownloadActor._
 import org.ntb.imageresizer.actor.file.ResizeActor._
@@ -25,10 +24,8 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   import FileCacheImageBrokerActor._
   import context.dispatcher
 
-  protected case class RemoveFromWorkQueue(key: Key)
-
   override val cachePath = "imagebroker"
-  implicit val timeout: Timeout = 30 seconds
+  implicit val timeout: Timeout = 30.seconds
   val workQueue = mutable.Map.empty[Key, Future[Long]]
 
   override def preStart() {
@@ -97,7 +94,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
     }
   }
 
-  def replyWithResizedImage[A](self: ActorRef, sender: ActorRef, key: Key, file: File): Try[Long] => Unit = {
+  def replyWithResizedImage[A](self: ActorRef, sender: ActorRef, key: Key, file: File): Try[Long] ⇒ Unit = {
     case Success(t) ⇒
       self ! RemoveFromWorkQueue(key)
       sender ! GetImageResponse(file)
@@ -131,4 +128,5 @@ object FileCacheImageBrokerActor {
   case class GetLocalImageRequest(source: File, id: String, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: File)
   case class ClearCache()
+  private case class RemoveFromWorkQueue(key: Key)
 }

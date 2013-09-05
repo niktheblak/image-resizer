@@ -11,7 +11,6 @@ import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
-import scala.concurrent.duration._
 import spray.http._
 import spray.httpx.unmarshalling._
 import spray.routing._
@@ -37,7 +36,7 @@ trait ImageResizeService extends HttpService {
     def apply(value: String) = {
       parseRequestedImageFormat(value) match {
         case Some(format) ⇒ Right(format)
-        case None ⇒ Left(MalformedContent(""))
+        case None ⇒ Left(MalformedContent(s"Unsupported image format: $value"))
       }
     }
   }
