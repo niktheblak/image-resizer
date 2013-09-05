@@ -20,11 +20,11 @@ libraryDependencies += "com.google.guava" % "guava" % "14.0.1"
 
 libraryDependencies += "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided"
 
-libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.2.1"
+libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.2.5"
 
 libraryDependencies += "commons-codec" % "commons-codec" % "1.7"
 
-libraryDependencies += "joda-time" % "joda-time" % "2.1"
+libraryDependencies += "joda-time" % "joda-time" % "2.3"
 
 libraryDependencies += "io.spray" % "spray-can" % "1.2-M8"
 
