@@ -5,7 +5,7 @@ import DownloadActor._
 import com.google.common.io.Files
 import org.apache.http.HttpException
 import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FlatSpec
+import org.scalatest.FlatSpecLike
 import org.scalatest.matchers.ShouldMatchers
 import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
@@ -16,11 +16,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.io.File
 import java.net.URI
-import language.postfixOps
 
-class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpec with ShouldMatchers with BeforeAndAfterAll with MockHttpClients {
+class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpecLike with ShouldMatchers with BeforeAndAfterAll with MockHttpClients {
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
-  val timeout = 2 seconds
+  val timeout = 2.seconds
 
   "DownloadActor" should "download data to file for DownloadFileRequest" in {
     val uri = URI.create("http://localhost/logo.png")

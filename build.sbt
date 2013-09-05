@@ -32,4 +32,4 @@ libraryDependencies += "io.spray" % "spray-routing" % "1.2-M8"
 
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % "test"
 
-libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.2-RC1" % "test"
