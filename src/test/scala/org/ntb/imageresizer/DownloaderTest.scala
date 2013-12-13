@@ -11,9 +11,9 @@ import org.mockito.Mockito.verify
 import org.mockito.Matchers.any
 import io.{IfModifiedDownloader, Downloader, HttpClientProvider}
 import org.scalatest.FlatSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 
-class DownloaderTest extends FlatSpec with ShouldMatchers with MockHttpClients {
+class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
   import DownloaderTest._
 
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)

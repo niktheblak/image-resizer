@@ -3,14 +3,14 @@ package org.ntb.imageresizer
 import org.ntb.imageresizer.util.FileUtils
 import org.scalatest.OptionValues._
 import org.scalatest.WordSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 import java.net.URI
 import java.io.File
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import scala.concurrent.duration._
 
-class FileUtilsTest extends WordSpec with ShouldMatchers with MockitoSugar {
+class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
   import scala.language.postfixOps
 
   "getFileExtension" should {

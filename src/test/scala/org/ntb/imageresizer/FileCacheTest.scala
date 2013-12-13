@@ -4,13 +4,13 @@ import java.io.File
 import java.nio.charset.Charset
 import org.ntb.imageresizer.cache.FileCache
 import org.scalatest.WordSpec
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 import org.scalatest.OptionValues._
 import com.google.common.io.Files
 import akka.util.ByteString
 import java.util.UUID
 
-class FileCacheTest extends WordSpec with ShouldMatchers {
+class FileCacheTest extends WordSpec with Matchers {
   import FileCacheTest._
   
   "put" should {

@@ -7,7 +7,7 @@ import FileCacheImageBrokerActor._
 import ResizeActor._
 import com.google.common.io.Files
 import org.scalatest.FlatSpecLike
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 import akka.actor.{ Props, ActorSystem }
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import scala.concurrent.duration._
@@ -16,7 +16,7 @@ import java.net.URI
 import java.util.UUID
 import akka.actor.ActorRef
 
-class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpecLike with ShouldMatchers {
+class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpecLike with Matchers {
   import FileCacheImageBrokerActorTest._
 
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
