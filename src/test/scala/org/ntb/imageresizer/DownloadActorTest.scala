@@ -16,10 +16,16 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.io.File
 import java.net.URI
+import scala.language.postfixOps
 
-class DownloadActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpecLike with Matchers with BeforeAndAfterAll with MockHttpClients {
+class DownloadActorTest extends TestKit(ActorSystem("TestSystem"))
+    with ImplicitSender
+    with FlatSpecLike
+    with Matchers
+    with BeforeAndAfterAll
+    with MockHttpClients {
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
-  val timeout = 2.seconds
+  val timeout = 2 seconds
 
   "DownloadActor" should "download data to file for DownloadFileRequest" in {
     val uri = URI.create("http://localhost/logo.png")

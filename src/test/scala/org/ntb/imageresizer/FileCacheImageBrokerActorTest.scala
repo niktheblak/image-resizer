@@ -26,7 +26,8 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
     val testFile = tempFile(testData)
     val downloadActor = TestProbe()
     val resizeActor = TestProbe()
-    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadActor.ref, resizeActor.ref, _ ⇒ testFile)))
+    val testFileProvider: Key ⇒ File = k ⇒ testFile
+    val imageBrokerActor = system.actorOf(Props(classOf[TestFileCacheImageBrokerActor], downloadActor.ref, resizeActor.ref, testFileProvider))
     imageBrokerActor ! GetImageRequest(new URI("http://localhost/file1.png"), 200)
     expectMsgPF(timeout) {
       case GetImageResponse(data) ⇒ data.getAbsolutePath should equal(testFile.getAbsolutePath)
@@ -39,7 +40,8 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
     val testFile = nonExistingFile()
     val downloadProbe = TestProbe()
     val resizeProbe = TestProbe()
-    val imageBrokerActor = system.actorOf(Props(new TestFileCacheImageBrokerActor(downloadProbe.ref, resizeProbe.ref, _ ⇒ testFile)))
+    val testFileProvider: Key ⇒ File = k ⇒ testFile
+    val imageBrokerActor = system.actorOf(Props(classOf[TestFileCacheImageBrokerActor], downloadProbe.ref, resizeProbe.ref, testFileProvider))
     imageBrokerActor ! GetImageRequest(new URI("http://localhost/file2.png"), 200)
     downloadProbe.expectMsgPF(timeout) {
       case DownloadRequest(uri, target) ⇒
@@ -80,7 +82,8 @@ object FileCacheImageBrokerActorTest {
     tempFile
   }
 
-  class TestFileCacheImageBrokerActor(downloader: ActorRef, resizer: ActorRef, provider: Key ⇒ File) extends FileCacheImageBrokerActor(downloader, resizer) {
+  class TestFileCacheImageBrokerActor(downloader: ActorRef, resizer: ActorRef, provider: Key ⇒ File)
+      extends FileCacheImageBrokerActor(downloader, resizer) {
     override val cacheFileProvider = provider
   }
 }

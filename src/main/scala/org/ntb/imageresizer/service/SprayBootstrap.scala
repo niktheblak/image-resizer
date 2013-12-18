@@ -26,7 +26,7 @@ object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService 
   println(s"Deploying $resizeNodes resize actors")
   val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
-  val imageBroker = system.actorOf(Props(new FileCacheImageBrokerActor(downloadActor, resizeActor)))
+  val imageBroker = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
 
   startServer(interface = "localhost", port = 8080)(resizeRoute)
 }
