@@ -8,7 +8,7 @@ import org.apache.http.HttpStatus._
 import org.apache.http.client.methods.HttpGet
 import org.mockito.Mockito.verify
 import org.mockito.Matchers.any
-import io.{IfModifiedDownloader, Downloader}
+import org.ntb.imageresizer.io.{HttpClientProvider, IfModifiedDownloader, Downloader}
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.apache.http.impl.client.CloseableHttpClient
@@ -73,11 +73,11 @@ class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
 }
 
 object DownloaderTest {
-  class TestDownloader(backingHttpClient: CloseableHttpClient) extends Downloader with IfModifiedDownloader {
+  class TestDownloader(backingHttpClient: CloseableHttpClient) extends HttpClientProvider with Downloader with IfModifiedDownloader {
     override val httpClient = backingHttpClient
   }
 
-  class TestIfModifiedDownloader(backingHttpClient: CloseableHttpClient) extends IfModifiedDownloader {
+  class TestIfModifiedDownloader(backingHttpClient: CloseableHttpClient) extends HttpClientProvider with IfModifiedDownloader {
     override val httpClient = backingHttpClient
   }
 }

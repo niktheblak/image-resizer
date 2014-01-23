@@ -9,7 +9,7 @@ import com.google.common.io.ByteStreams
 import java.io.{FileOutputStream, File, InputStream, OutputStream}
 import java.net.URI
 
-trait Downloader extends HttpBasicDownloader {
+trait Downloader extends HttpBasicDownloader { self: HttpClientProvider ⇒
   def download(uri: URI, output: OutputStream): Long = {
     download(uri, input ⇒ ByteStreams.copy(input, output))
   }

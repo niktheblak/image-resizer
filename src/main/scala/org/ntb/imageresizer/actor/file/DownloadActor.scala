@@ -5,13 +5,12 @@ import java.io.{File, IOException}
 import java.net.URI
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.ActorUtils
-import org.ntb.imageresizer.io.DefaultHttpClientProvider
-import org.ntb.imageresizer.io.Downloader
+import org.ntb.imageresizer.io.{HttpClientProvider, HttpClients, Downloader}
 
-class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider with ActorUtils {
+class DownloadActor extends Actor with HttpClientProvider with Downloader with ActorUtils {
   import DownloadActor._
 
-  override val httpClient = createHttpClient()
+  override val httpClient = HttpClients.createHttpClient()
 
   override def postStop() {
     httpClient.close()

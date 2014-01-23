@@ -3,7 +3,7 @@ package org.ntb.imageresizer.io
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClientBuilder}
 import org.apache.http.config.SocketConfig
 
-trait DefaultHttpClientProvider {
+object HttpClients {
   val defaultHttpTimeout = 10000
 
   def createHttpClient(timeout: Int = defaultHttpTimeout): CloseableHttpClient = {
