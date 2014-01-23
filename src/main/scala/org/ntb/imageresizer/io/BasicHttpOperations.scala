@@ -5,7 +5,7 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.{HttpResponse, Header}
 import org.ntb.imageresizer.util.Loans.using
 
-trait HttpBasicDownloader { self: HttpClientProvider ⇒
+trait BasicHttpOperations { self: HttpClientProvider ⇒
   def httpGetWithHeaders[A](headers: Seq[Header])(uri: URI)(f: HttpResponse ⇒ A): A = {
     val get = new HttpGet(uri)
     headers foreach get.setHeader
