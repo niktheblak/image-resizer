@@ -1,25 +1,25 @@
 package org.ntb.imageresizer.cache
 
-import scala.language.postfixOps
-import scala.concurrent.duration._
-import java.io.File
 import com.google.common.base.Strings._
-import org.apache.commons.codec.digest.DigestUtils._
-import org.ntb.imageresizer.util.FileUtils._
+import com.google.common.hash.Hashing
+import java.io.File
 import org.ntb.imageresizer.util.FileUtils
+import scala.concurrent.duration._
 
 trait TempFileCache[A] extends FileCache[A] {
   def cachePath: String
   override val cacheFileProvider: A ⇒ File = tempDirCacheFileProvider
-  override val maxAge = 24 hours
+  override val maxAge = 24.hours
+  val hashFunction = Hashing.md5()
 
   def tempDirCacheFileProvider(key: A): File = {
     require(key != null, "Argument key cannot be null")
-    require(!isNullOrEmpty(key.toString), "toString() method of argument key must return a nonempty string")
+    val keyString = key.toString
+    require(!isNullOrEmpty(keyString), "toString() method of argument key must return a nonempty string")
     val dir = cacheDirectory()
-    val fileName = md5Hex(key.toString)
+    val fileName = hashFunction.hashUnencodedChars(keyString).toString
     val file = new File(dir, fileName)
-    deleteIfExpired(file, maxAge)
+    FileUtils.deleteIfExpired(file, maxAge)
     file
   }
 
