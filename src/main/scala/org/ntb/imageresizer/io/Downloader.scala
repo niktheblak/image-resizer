@@ -25,7 +25,7 @@ trait Downloader extends HttpBasicDownloader { self: HttpClientProvider ⇒
       val statusLine = response.getStatusLine
       if (statusLine.getStatusCode != SC_OK) {
         val msg = if (response.getEntity != null) EntityUtils.toString(response.getEntity) else ""
-        throw new HttpException("Server responded with HTTP %d %s: %s".format(statusLine.getStatusCode, statusLine.getReasonPhrase, msg))
+        throw new HttpException(s"Server responded with HTTP ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}: $msg")
       }
       val entity = response.getEntity
       using(entity.getContent) { input ⇒

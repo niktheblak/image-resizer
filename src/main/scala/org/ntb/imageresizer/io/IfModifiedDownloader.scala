@@ -8,7 +8,6 @@ import java.util.Locale
 import org.apache.http.HttpException
 import org.apache.http.HttpHeaders._
 import org.apache.http.HttpStatus._
-import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.methods.HttpHead
 import org.apache.http.message.BasicHeader
 import org.joda.time.format.DateTimeFormat
@@ -20,7 +19,7 @@ trait IfModifiedDownloader extends HttpBasicDownloader { self: HttpClientProvide
     .withLocale(Locale.US)
 
   def downloadIfModified[A](uri: URI, lastModified: Long, f: Option[InputStream] ⇒ A): A = {
-    val headers = List(new BasicHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified)))
+    val headers = Seq(new BasicHeader(IF_MODIFIED_SINCE, toLastModifiedHeader(lastModified)))
     httpGetWithHeaders(headers)(uri) { response ⇒
       if (response.getStatusLine.getStatusCode == SC_NOT_MODIFIED) {
         f(None)
@@ -40,12 +39,12 @@ trait IfModifiedDownloader extends HttpBasicDownloader { self: HttpClientProvide
   def lastModified(uri: URI): Long = {
     try {
       val head = new HttpHead(uri)
-      val response = httpClient.execute(head)
-      val lastModified = response.getFirstHeader(LAST_MODIFIED)
-      fromLastModifiedHeader(lastModified.getValue)
+      using (httpClient.execute(head)) { response =>
+        val lastModified = response.getFirstHeader(LAST_MODIFIED)
+        fromLastModifiedHeader(lastModified.getValue)
+      }
     } catch {
       case e: ParseException ⇒ throw new HttpException(e.getMessage, e)
-      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
   }
 
