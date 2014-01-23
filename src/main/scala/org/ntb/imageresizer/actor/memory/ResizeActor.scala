@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.actor.memory
 
 import akka.actor.Actor
-import akka.util.{ByteStringBuilder, ByteString}
+import akka.util.{ ByteStringBuilder, ByteString }
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize.Resizer._

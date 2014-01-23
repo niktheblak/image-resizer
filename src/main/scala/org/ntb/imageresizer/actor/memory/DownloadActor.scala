@@ -1,12 +1,12 @@
 package org.ntb.imageresizer.actor.memory
 
 import akka.actor.Actor
-import akka.util.{ByteStringBuilder, ByteString}
+import akka.util.{ ByteStringBuilder, ByteString }
 import java.io.IOException
 import java.net.URI
 import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.ActorUtils
-import org.ntb.imageresizer.io.{HttpClientProvider, HttpClients, Downloader}
+import org.ntb.imageresizer.io.{ HttpClientProvider, HttpClients, Downloader }
 import org.apache.http.impl.client.CloseableHttpClient
 
 class DownloadActor extends Actor with HttpClientProvider with Downloader with ActorUtils {

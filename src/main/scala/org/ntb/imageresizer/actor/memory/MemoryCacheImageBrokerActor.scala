@@ -1,8 +1,8 @@
 package org.ntb.imageresizer.actor.memory
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{ ActorRef, Actor }
 import akka.pattern.ask
-import akka.util.{Timeout, ByteString}
+import akka.util.{ Timeout, ByteString }
 import concurrent.Await
 import concurrent.duration._
 import java.net.URI
@@ -31,8 +31,8 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
         case Some(data) ⇒ sender ! GetImageResponse(data)
         case None ⇒
           val downloadAndResizeTask = for (
-            downloadResponse <- ask(downloadActor, DownloadRequest(uri)).mapTo[DownloadResponse];
-            resizeResponse <- ask(resizeActor, ResizeImageRequest(downloadResponse.data, preferredSize, imageFormat)).mapTo[ResizeImageResponse]
+            downloadResponse ← ask(downloadActor, DownloadRequest(uri)).mapTo[DownloadResponse];
+            resizeResponse ← ask(resizeActor, ResizeImageRequest(downloadResponse.data, preferredSize, imageFormat)).mapTo[ResizeImageResponse]
           ) yield resizeResponse.data
           actorTry(sender) {
             val data = Await.result(downloadAndResizeTask, timeout.duration)

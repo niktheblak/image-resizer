@@ -2,7 +2,7 @@ package org.ntb.imageresizer.io
 
 import java.net.URI
 import org.apache.http.client.methods.HttpGet
-import org.apache.http.{HttpResponse, Header}
+import org.apache.http.{ HttpResponse, Header }
 import org.ntb.imageresizer.util.Loans.using
 
 trait BasicHttpOperations { self: HttpClientProvider ⇒

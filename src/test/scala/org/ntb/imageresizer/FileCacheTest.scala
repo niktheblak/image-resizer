@@ -12,7 +12,7 @@ import java.util.UUID
 
 class FileCacheTest extends WordSpec with Matchers {
   import FileCacheTest._
-  
+
   "put" should {
     "create a file with name given by cachePathProvider" in {
       val tempFile = createTempFile("testFile")
@@ -21,7 +21,7 @@ class FileCacheTest extends WordSpec with Matchers {
       tempFile should be ('exists)
       Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("abcd")
     }
-    
+
     "overwrite existing file with new content" in {
       val tempFile = createTempFile("testFile")
       val fileCache = new TestFileCache(filePathProvider(tempFile))
@@ -31,7 +31,7 @@ class FileCacheTest extends WordSpec with Matchers {
       Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("efgh")
     }
   }
-  
+
   "get(key)" should {
     "return the content of existing file" in {
       val tempFile = createTempFile("testFile")
@@ -40,15 +40,15 @@ class FileCacheTest extends WordSpec with Matchers {
       val content = fileCache.get("testFile")
       content.value.utf8String should equal ("abcd")
     }
-    
+
     "return None if file with specified key does not exist" in {
-      val fileCache = new TestFileCache((key: String) => nonExistingFile)
+      val fileCache = new TestFileCache((key: String) ⇒ nonExistingFile)
       new File("testFile") should not be 'exists
       val content = fileCache.get("testFile")
       content should not be 'defined
     }
   }
-  
+
   "get(key, loader)" should {
     "create a file with content given by loader" in {
       val tmpdir = System.getProperty("java.io.tmpdir")
@@ -56,7 +56,7 @@ class FileCacheTest extends WordSpec with Matchers {
       tempFile.deleteOnExit()
       tempFile should not be 'exists
       val fileCache = new TestFileCache(filePathProvider(tempFile))
-      val content = fileCache.get("testFile", () => ByteString("abcd"))
+      val content = fileCache.get("testFile", () ⇒ ByteString("abcd"))
       tempFile should be ('exists)
       content.utf8String should equal ("abcd")
       Files.toString(tempFile, Charset.forName("UTF-8")) should equal ("abcd")
@@ -69,11 +69,11 @@ class TestFileCache(val cacheFileProvider: String ⇒ File) extends FileCache[St
 object FileCacheTest {
   def createTempFile(nameFragment: String): File = {
     val tempFile = File.createTempFile("FileCacheTest-" + nameFragment, ".tmp")
-    tempFile.deleteOnExit()    
+    tempFile.deleteOnExit()
     tempFile
   }
-  
+
   def filePathProvider(file: File)(key: String): File = file
-  
+
   def nonExistingFile: File = new File(UUID.randomUUID().toString)
 }

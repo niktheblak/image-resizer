@@ -1,6 +1,6 @@
 package org.ntb.imageresizer
 
-import actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
+import actor.file.{ ResizeActor, FileCacheImageBrokerActor, DownloadActor }
 import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpException
 import FileCacheImageBrokerActor._

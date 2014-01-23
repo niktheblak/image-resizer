@@ -2,7 +2,7 @@ package org.ntb.imageresizer
 
 import java.io.ByteArrayInputStream
 
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet}
+import org.apache.http.client.methods.{ CloseableHttpResponse, HttpGet }
 import org.apache.http.HttpEntity
 import org.apache.http.StatusLine
 import org.scalatest.mock.MockitoSugar

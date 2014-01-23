@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.util
 
 import java.net.URI
-import java.io.{FileInputStream, File}
+import java.io.{ FileInputStream, File }
 import concurrent.duration.Duration
 import Loans.using
 
@@ -20,12 +20,12 @@ object FileUtils {
   def read(file: File, amount: Int): Array[Byte] = {
     val data = new Array[Byte](amount)
     var bytesRead = 0
-    using (new FileInputStream(file)) { input =>
+    using (new FileInputStream(file)) { input ⇒
       bytesRead = input.read(data)
     }
     data.slice(0, bytesRead)
   }
-  
+
   def getFilePath(uri: URI): Option[String] = {
     val path = uri.getPath
     val index = path.lastIndexOf('/')
@@ -36,7 +36,7 @@ object FileUtils {
       None
     }
   }
-  
+
   def createTempFile(): File = {
     val file = File.createTempFile("FileUtils", ".tmp")
     file.deleteOnExit()

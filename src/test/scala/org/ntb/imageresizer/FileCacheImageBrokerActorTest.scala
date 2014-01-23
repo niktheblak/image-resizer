@@ -1,6 +1,6 @@
 package org.ntb.imageresizer
 
-import actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
+import actor.file.{ ResizeActor, FileCacheImageBrokerActor, DownloadActor }
 import DownloadActor._
 import FileCacheImageBrokerActor._
 import ResizeActor._

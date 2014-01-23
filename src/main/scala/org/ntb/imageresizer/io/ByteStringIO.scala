@@ -8,7 +8,7 @@ import org.ntb.imageresizer.util.Loans.using
 
 import com.google.common.io.ByteStreams
 
-import akka.util.{ByteStringBuilder, ByteString}
+import akka.util.{ ByteStringBuilder, ByteString }
 
 object ByteStringIO {
   def read(file: File): ByteString = {

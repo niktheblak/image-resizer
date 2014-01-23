@@ -1,9 +1,9 @@
 package org.ntb.imageresizer.service
 
 import akka.util.Timeout
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ Props, ActorSystem }
 import akka.routing.SmallestMailboxRouter
-import org.ntb.imageresizer.actor.file.{FileCacheImageBrokerActor, DownloadActor, ResizeActor}
+import org.ntb.imageresizer.actor.file.{ FileCacheImageBrokerActor, DownloadActor, ResizeActor }
 import spray.routing.SimpleRoutingApp
 import org.slf4j.LoggerFactory
 import com.typesafe.config.ConfigFactory

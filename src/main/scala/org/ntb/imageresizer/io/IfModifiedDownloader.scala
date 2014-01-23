@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.io
 
 import com.google.common.io.ByteStreams
-import java.io.{OutputStream, InputStream}
+import java.io.{ OutputStream, InputStream }
 import java.net.URI
 import java.text.ParseException
 import java.util.Locale
@@ -32,14 +32,14 @@ trait IfModifiedDownloader extends BasicHttpOperations { self: HttpClientProvide
 
   def downloadIfModified[A](uri: URI, lastModified: Long, output: OutputStream): Option[Long] = {
     val copyIfModified: Option[InputStream] ⇒ Option[Long] =
-      result ⇒ result map(ByteStreams.copy(_, output))
+      result ⇒ result map (ByteStreams.copy(_, output))
     downloadIfModified(uri, lastModified, copyIfModified)
   }
 
   def lastModified(uri: URI): Long = {
     try {
       val head = new HttpHead(uri)
-      using (httpClient.execute(head)) { response =>
+      using (httpClient.execute(head)) { response ⇒
         val lastModified = response.getFirstHeader(LAST_MODIFIED)
         fromLastModifiedHeader(lastModified.getValue)
       }

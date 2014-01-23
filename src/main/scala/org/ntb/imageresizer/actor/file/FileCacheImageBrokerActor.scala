@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.base.Strings.isNullOrEmpty
 import concurrent.duration._
-import concurrent.{Await, Future}
+import concurrent.{ Await, Future }
 import java.io.File
 import java.net.URI
 import org.ntb.imageresizer.actor.ActorUtils
@@ -15,7 +15,7 @@ import org.ntb.imageresizer.cache.TempFileCache
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with ActorLogging

@@ -1,6 +1,6 @@
 package org.ntb.imageresizer.resize
 
-import java.io.{File, FileOutputStream, InputStream, OutputStream}
+import java.io.{ File, FileOutputStream, InputStream, OutputStream }
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.util.Loans.using
 

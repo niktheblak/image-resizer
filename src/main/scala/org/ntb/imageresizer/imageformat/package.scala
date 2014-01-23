@@ -13,7 +13,7 @@ package object imageformat {
     val extension = "jpg"
     val mimeType = "image/jpeg"
   }
-  
+
   case object PNG extends ImageFormat {
     val extension = "png"
     val mimeType = "image/png"
@@ -23,11 +23,11 @@ package object imageformat {
     val extension = "gif"
     val mimeType = "image/gif"
   }
-  
+
   val supportedImageFormats = Seq(JPEG, PNG, GIF)
-  
+
   val defaultImageFormat = JPEG
-  
+
   def parseRequestedImageFormat(requestedFormat: String): Option[ImageFormat] =
     requestedFormat.toLowerCase match {
       case "jpg" ⇒ Some(JPEG)
@@ -36,7 +36,7 @@ package object imageformat {
       case "gif" ⇒ Some(GIF)
       case _ ⇒ None
     }
-  
+
   def parseImageFormatFromMimeType(mimeType: String): Option[ImageFormat] =
     mimeType match {
       case "image/jpeg" ⇒ Some(JPEG)
@@ -44,7 +44,7 @@ package object imageformat {
       case "image/gif" ⇒ Some(GIF)
       case _ ⇒ None
     }
-  
+
   def parseImageFormatFromUri(uri: URI): Option[ImageFormat] = {
     val fileName = if (uri.getPath != null) uri.getPath.toLowerCase else ""
     if ((fileName endsWith "jpg") || (fileName endsWith "jpeg")) Some(JPEG)

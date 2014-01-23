@@ -6,7 +6,7 @@ import org.apache.http.HttpStatus._
 import org.apache.http.StatusLine
 import org.apache.http.util.EntityUtils
 import com.google.common.io.ByteStreams
-import java.io.{FileOutputStream, File, InputStream, OutputStream}
+import java.io.{ FileOutputStream, File, InputStream, OutputStream }
 import java.net.URI
 
 trait Downloader extends BasicHttpOperations { self: HttpClientProvider ⇒

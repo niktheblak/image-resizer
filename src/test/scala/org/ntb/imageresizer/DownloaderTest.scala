@@ -8,7 +8,7 @@ import org.apache.http.HttpStatus._
 import org.apache.http.client.methods.HttpGet
 import org.mockito.Mockito.verify
 import org.mockito.Matchers.any
-import org.ntb.imageresizer.io.{HttpClientProvider, IfModifiedDownloader, Downloader}
+import org.ntb.imageresizer.io.{ HttpClientProvider, IfModifiedDownloader, Downloader }
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import org.apache.http.impl.client.CloseableHttpClient
@@ -53,7 +53,7 @@ class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
     val output = new ByteArrayOutputStream()
     evaluating {
       downloader.download(URI.create("http://localhost/logo.png"), output)
-    } should produce [HttpException]
+    } should produce[HttpException]
     verify(httpClient).execute(any[HttpGet])
   }
 
