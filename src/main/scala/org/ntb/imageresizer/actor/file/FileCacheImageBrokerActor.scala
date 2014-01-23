@@ -40,7 +40,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
     case request @ GetImageRequest(uri, preferredSize, imageFormat) ⇒
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
       val source = uri.toString
-      val key = (source, preferredSize, imageFormat)
+      val key = Key(source, preferredSize, imageFormat)
       val file = cacheFileProvider(key)
       workQueue.get(key) match {
         case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
@@ -59,7 +59,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
       requireArgument(sender)(source.exists && source.canRead, "Source file must exist and be readable")
       requireArgument(sender)(!isNullOrEmpty(id), "Image ID must not be empty")
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
-      val key = (id, preferredSize, imageFormat)
+      val key = Key(id, preferredSize, imageFormat)
       val file = cacheFileProvider(key)
       workQueue.get(key) match {
         case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
@@ -123,7 +123,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 }
 
 object FileCacheImageBrokerActor {
-  type Key = (String, Int, ImageFormat)
+  case class Key(url: String, size: Int, format: ImageFormat)
   case class GetImageRequest(uri: URI, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetLocalImageRequest(source: File, id: String, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: File)

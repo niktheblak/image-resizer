@@ -1,7 +1,6 @@
 package org.ntb.imageresizer
 
 import actor.file.{ResizeActor, FileCacheImageBrokerActor, DownloadActor}
-import org.ntb.imageresizer.imageformat.ImageFormat
 import DownloadActor._
 import FileCacheImageBrokerActor._
 import ResizeActor._
@@ -65,8 +64,6 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
 }
 
 object FileCacheImageBrokerActorTest {
-  type Key = (String, Int, ImageFormat)
-
   def nonExistingFile(): File = {
     val file = new File(UUID.randomUUID().toString)
     file.deleteOnExit()
