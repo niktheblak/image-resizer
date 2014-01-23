@@ -14,7 +14,7 @@ import org.apache.http.message.BasicHeader
 import org.joda.time.format.DateTimeFormat
 import org.ntb.imageresizer.util.Loans._
 
-trait IfModifiedDownloader extends HttpBasicDownloader { self: HttpClientProvider ⇒
+trait IfModifiedDownloader extends HttpBasicDownloader {
   val httpDateFormatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
     .withZoneUTC()
     .withLocale(Locale.US)

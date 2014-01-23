@@ -3,9 +3,11 @@ package org.ntb.imageresizer.io
 import org.apache.http.{HttpException, HttpResponse, Header}
 import java.net.URI
 import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.ClientProtocolException
+import org.apache.http.client.{HttpClient, ClientProtocolException}
 
-trait HttpBasicDownloader { self: HttpClientProvider ⇒
+trait HttpBasicDownloader {
+  val httpClient: HttpClient
+
   def httpGetWithHeaders[A](headers: List[Header])(uri: URI)(f: HttpResponse ⇒ A): A = {
     try {
       val get = new HttpGet(uri)

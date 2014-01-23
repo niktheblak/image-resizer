@@ -11,6 +11,12 @@ import org.ntb.imageresizer.io.{DefaultHttpClientProvider, Downloader}
 class DownloadActor extends Actor with Downloader with DefaultHttpClientProvider with ActorUtils {
   import DownloadActor._
 
+  override val httpClient = createHttpClient()
+
+  override def postStop() {
+    httpClient.close()
+  }
+
   def receive = {
     case DownloadRequest(uri) ⇒
       actorTry(sender) {

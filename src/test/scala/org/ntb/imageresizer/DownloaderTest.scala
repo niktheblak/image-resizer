@@ -5,13 +5,13 @@ import java.io.OutputStream
 import java.net.URI
 import org.apache.http.HttpException
 import org.apache.http.HttpStatus._
-import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpGet
 import org.mockito.Mockito.verify
 import org.mockito.Matchers.any
-import io.{IfModifiedDownloader, Downloader, HttpClientProvider}
+import io.{IfModifiedDownloader, Downloader}
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import org.apache.http.impl.client.CloseableHttpClient
 
 class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
   import DownloaderTest._
@@ -73,11 +73,11 @@ class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
 }
 
 object DownloaderTest {
-  class TestDownloader(backingHttpClient: HttpClient) extends Downloader with IfModifiedDownloader with HttpClientProvider {
+  class TestDownloader(backingHttpClient: CloseableHttpClient) extends Downloader with IfModifiedDownloader {
     override val httpClient = backingHttpClient
   }
 
-  class TestIfModifiedDownloader(backingHttpClient: HttpClient) extends IfModifiedDownloader with HttpClientProvider {
+  class TestIfModifiedDownloader(backingHttpClient: CloseableHttpClient) extends IfModifiedDownloader {
     override val httpClient = backingHttpClient
   }
 }

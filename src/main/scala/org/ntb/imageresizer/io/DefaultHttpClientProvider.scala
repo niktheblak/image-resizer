@@ -1,18 +1,13 @@
 package org.ntb.imageresizer.io
 
-import org.apache.http.client.HttpClient
-import org.apache.http.params.HttpConnectionParams
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClientBuilder}
+import org.apache.http.config.SocketConfig
 
-trait DefaultHttpClientProvider extends HttpClientProvider {
-  override val httpClient: HttpClient = createDefaultHttpClient()
-  
+trait DefaultHttpClientProvider {
   val defaultHttpTimeout = 10000
-  
-  def createDefaultHttpClient(timeout: Int = defaultHttpTimeout): HttpClient = {
-    val httpClient = new org.apache.http.impl.client.DefaultHttpClient()
-    val params = httpClient.getParams
-    HttpConnectionParams.setConnectionTimeout(params, timeout)
-    HttpConnectionParams.setSoTimeout(params, timeout)
-    httpClient
+
+  def createHttpClient(timeout: Int = defaultHttpTimeout): CloseableHttpClient = {
+    val socketConfig = SocketConfig.custom().setSoTimeout(defaultHttpTimeout).build()
+    HttpClientBuilder.create().setDefaultSocketConfig(socketConfig).build()
   }
 }

@@ -1,9 +1,8 @@
 package org.ntb.imageresizer
 
 import actor.file.DownloadActor
-import io.HttpClientProvider
-import org.apache.http.client.HttpClient
+import org.apache.http.impl.client.CloseableHttpClient
 
-class TestDownloadActor(backingHttpClient: HttpClient) extends DownloadActor with HttpClientProvider {
+class TestDownloadActor(backingHttpClient: CloseableHttpClient) extends DownloadActor {
   override val httpClient = backingHttpClient
 }
