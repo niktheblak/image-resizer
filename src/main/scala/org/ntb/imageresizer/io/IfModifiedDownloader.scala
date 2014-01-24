@@ -12,6 +12,7 @@ import org.apache.http.client.methods.HttpHead
 import org.apache.http.message.BasicHeader
 import org.joda.time.format.DateTimeFormat
 import org.ntb.imageresizer.util.Loans._
+import org.apache.http.client.ClientProtocolException
 
 trait IfModifiedDownloader extends BasicHttpOperations { self: HttpClientProvider ⇒
   val httpDateFormatter = DateTimeFormat.forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
@@ -25,7 +26,9 @@ trait IfModifiedDownloader extends BasicHttpOperations { self: HttpClientProvide
         f(None)
       } else {
         val entity = response.getEntity
-        using(entity.getContent) { input ⇒ f(Some(input)) }
+        using (entity.getContent) {
+          input ⇒ f(Some(input))
+        }
       }
     }
   }
@@ -45,6 +48,7 @@ trait IfModifiedDownloader extends BasicHttpOperations { self: HttpClientProvide
       }
     } catch {
       case e: ParseException ⇒ throw new HttpException(e.getMessage, e)
+      case e: ClientProtocolException ⇒ throw new HttpException(e.getMessage, e)
     }
   }
 
