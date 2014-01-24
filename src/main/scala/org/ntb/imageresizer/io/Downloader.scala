@@ -10,31 +10,33 @@ import java.io.{ FileOutputStream, File, InputStream, OutputStream }
 import java.net.URI
 
 trait Downloader extends BasicHttpOperations { self: HttpClientProvider ⇒
-  def download(uri: URI, output: OutputStream): Long = {
-    download(uri, input ⇒ ByteStreams.copy(input, output))
-  }
-
-  def download(uri: URI, target: File): Long = {
-    download(uri, input ⇒ using (new FileOutputStream(target)) { output ⇒
+  def download(uri: URI, output: OutputStream): Long =
+    downloadWith(uri) { input ⇒
       ByteStreams.copy(input, output)
-    })
-  }
+    }
 
-  def download[A](uri: URI, f: InputStream ⇒ A): A = {
+  def download(uri: URI, target: File): Long =
+    downloadWith(uri) { input ⇒
+      using (new FileOutputStream(target)) { output ⇒
+        ByteStreams.copy(input, output)
+      }
+    }
+
+  def downloadWith[A](uri: URI)(f: InputStream ⇒ A): A = {
     httpGet(uri) { response ⇒
       val statusLine = response.getStatusLine
+      val entity = response.getEntity
       if (statusLine.getStatusCode != SC_OK) {
-        val msg = if (response.getEntity != null) EntityUtils.toString(response.getEntity) else ""
+        val msg = if (entity != null) EntityUtils.toString(entity) else ""
         throw new HttpException(s"Server responded with HTTP ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}: $msg")
       }
-      val entity = response.getEntity
       using(entity.getContent) { input ⇒
         f(input)
       }
     }
   }
 
-  def download[A](uri: URI, f: (StatusLine, InputStream) ⇒ A): A = {
+  def downloadWithStatus[A](uri: URI)(f: (StatusLine, InputStream) ⇒ A): A = {
     httpGet(uri) { response ⇒
       val entity = response.getEntity
       using(entity.getContent) { input ⇒

@@ -39,45 +39,53 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   def receive = {
     case request @ GetImageRequest(uri, preferredSize, imageFormat) ⇒
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
-      val source = uri.toString
-      val key = Key(source, preferredSize, imageFormat)
-      val file = cacheFileProvider(key)
-      workQueue.get(key) match {
-        case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
-        case None ⇒
-          if (file.exists()) {
-            log.debug(s"Serving already cached image ${file.getPath} for request $request")
-            sender ! GetImageResponse(file)
-          } else {
-            log.debug(s"Downloading and resizing image from request $request to ${file.getPath}")
-            val task = downloadAndResizeToFile(uri, file, preferredSize, imageFormat)
-            workQueue.put(key, task)
-            task onComplete replyWithResizedImage(self, sender, key, file)
-          }
-      }
-    case GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
+      handleGetImageRequest(self, sender, request)
+    case request @ GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
       requireArgument(sender)(source.exists && source.canRead, "Source file must exist and be readable")
       requireArgument(sender)(!isNullOrEmpty(id), "Image ID must not be empty")
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
-      val key = Key(id, preferredSize, imageFormat)
-      val file = cacheFileProvider(key)
-      workQueue.get(key) match {
-        case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
-        case None ⇒
-          if (file.exists()) {
-            sender ! GetImageResponse(file)
-          } else {
-            val task = resize(source, file, preferredSize, imageFormat)
-            workQueue.put(key, task)
-            task onComplete replyWithResizedImage(self, sender, key, file)
-          }
-      }
+      handleGetLocalImageRequest(self, sender, request)
     case ClearCache() ⇒
       log.info(s"Clearing cache directory ${cacheDirectory().getAbsolutePath}")
       flushWorkQueue()
       clearCacheDirectory()
     case RemoveFromWorkQueue(key) ⇒
       workQueue.remove(key)
+  }
+
+  def handleGetImageRequest(self: ActorRef, sender: ActorRef, request: GetImageRequest) {
+    val source = request.uri.toString
+    val key = Key(source, request.size, request.format)
+    val file = cacheFileProvider(key)
+    workQueue.get(key) match {
+      case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
+      case None ⇒
+        if (file.exists()) {
+          log.debug(s"Serving already cached image ${file.getPath} for request $request")
+          sender ! GetImageResponse(file)
+        } else {
+          log.debug(s"Downloading and resizing image from request $request to ${file.getPath}")
+          val task = downloadAndResizeToFile(request.uri, file, request.size, request.format)
+          workQueue.put(key, task)
+          task onComplete replyWithResizedImage(self, sender, key, file)
+        }
+    }
+  }
+
+  def handleGetLocalImageRequest(self: ActorRef, sender: ActorRef, request: GetLocalImageRequest) {
+    val key = Key(request.id, request.size, request.format)
+    val file = cacheFileProvider(key)
+    workQueue.get(key) match {
+      case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
+      case None ⇒
+        if (file.exists()) {
+          sender ! GetImageResponse(file)
+        } else {
+          val task = resize(request.source, file, request.size, request.format)
+          workQueue.put(key, task)
+          task onComplete replyWithResizedImage(self, sender, key, file)
+        }
+    }
   }
 
   def flushWorkQueue() {
@@ -123,8 +131,8 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 }
 
 object FileCacheImageBrokerActor {
-  case class GetImageRequest(uri: URI, preferredSize: Int, format: ImageFormat = JPEG)
-  case class GetLocalImageRequest(source: File, id: String, preferredSize: Int, format: ImageFormat = JPEG)
+  case class GetImageRequest(uri: URI, size: Int, format: ImageFormat = JPEG)
+  case class GetLocalImageRequest(source: File, id: String, size: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: File)
   case class ClearCache()
   private case class RemoveFromWorkQueue(key: Key)
