@@ -6,7 +6,7 @@ import akka.util.{ Timeout, ByteString }
 import concurrent.Await
 import concurrent.duration._
 import java.net.URI
-import org.ntb.imageresizer.actor.ActorUtils
+import org.ntb.imageresizer.actor.{ Key, ActorUtils }
 import org.ntb.imageresizer.actor.memory.DownloadActor._
 import org.ntb.imageresizer.actor.memory.ResizeActor._
 import org.ntb.imageresizer.cache.GuavaMemoryCache
@@ -14,7 +14,7 @@ import org.ntb.imageresizer.imageformat._
 import java.io.IOException
 
 class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
-    with GuavaMemoryCache[MemoryCacheImageBrokerActor.Key, ByteString]
+    with GuavaMemoryCache[Key, ByteString]
     with ActorUtils {
   import MemoryCacheImageBrokerActor._
   import context.dispatcher
@@ -26,7 +26,7 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
     case GetImageRequest(uri, preferredSize, imageFormat) ⇒
       requireArgument(sender)(preferredSize > 0, "Size must be positive")
       val source = uri.toString
-      val key = (source, preferredSize, imageFormat)
+      val key = Key(source, preferredSize, imageFormat)
       get(key) match {
         case Some(data) ⇒ sender ! GetImageResponse(data)
         case None ⇒
@@ -46,7 +46,6 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
 }
 
 object MemoryCacheImageBrokerActor {
-  type Key = (String, Int, ImageFormat)
   case class GetImageRequest(uri: URI, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: ByteString)
 }

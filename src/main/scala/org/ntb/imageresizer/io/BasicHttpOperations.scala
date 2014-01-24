@@ -2,7 +2,7 @@ package org.ntb.imageresizer.io
 
 import java.net.URI
 import org.apache.http.client.methods.HttpGet
-import org.apache.http.{HttpException, HttpResponse, Header}
+import org.apache.http.{ HttpException, HttpResponse, Header }
 import org.ntb.imageresizer.util.Loans.using
 import org.apache.http.client.ClientProtocolException
 

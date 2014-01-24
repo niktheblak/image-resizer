@@ -1,22 +1,23 @@
 package org.ntb.imageresizer
 
 import actor.file.{ ResizeActor, FileCacheImageBrokerActor, DownloadActor }
-import DownloadActor._
-import FileCacheImageBrokerActor._
-import ResizeActor._
-import com.google.common.io.Files
-import org.scalatest.FlatSpecLike
-import org.scalatest.Matchers
+import akka.actor.ActorRef
 import akka.actor.{ Props, ActorSystem }
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
-import scala.concurrent.duration._
+import com.google.common.io.Files
 import java.io.File
 import java.net.URI
 import java.util.UUID
-import akka.actor.ActorRef
+import org.ntb.imageresizer.actor.Key
+import org.scalatest.FlatSpecLike
+import org.scalatest.Matchers
+import scala.concurrent.duration._
 
 class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpecLike with Matchers {
+  import DownloadActor._
+  import FileCacheImageBrokerActor._
   import FileCacheImageBrokerActorTest._
+  import ResizeActor._
 
   val testData: Array[Byte] = Array(1.toByte, 2.toByte, 3.toByte)
   val timeout = 2.seconds

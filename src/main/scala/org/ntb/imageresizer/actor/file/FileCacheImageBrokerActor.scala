@@ -8,7 +8,7 @@ import concurrent.duration._
 import concurrent.{ Await, Future }
 import java.io.File
 import java.net.URI
-import org.ntb.imageresizer.actor.ActorUtils
+import org.ntb.imageresizer.actor.{ Key, ActorUtils }
 import org.ntb.imageresizer.actor.file.DownloadActor._
 import org.ntb.imageresizer.actor.file.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCache
@@ -19,7 +19,7 @@ import scala.util.{ Failure, Success, Try }
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with ActorLogging
-    with TempFileCache[FileCacheImageBrokerActor.Key]
+    with TempFileCache[Key]
     with ActorUtils {
   import FileCacheImageBrokerActor._
   import context.dispatcher
@@ -123,7 +123,6 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 }
 
 object FileCacheImageBrokerActor {
-  case class Key(url: String, size: Int, format: ImageFormat)
   case class GetImageRequest(uri: URI, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetLocalImageRequest(source: File, id: String, preferredSize: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: File)
