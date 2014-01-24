@@ -1,14 +1,17 @@
 package org.ntb.imageresizer.cache
 
-import java.util.concurrent.Callable
 import com.google.common.cache.{ Cache ⇒ GCache, CacheBuilder }
+import java.io.IOException
+import java.util.concurrent.Callable
 import org.apache.http.HttpException
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
-import java.io.IOException
 
 trait GuavaMemoryCache[A <: Object, B <: Object] extends MemoryCache[A, B] {
   val maxCacheSize: Long
-  lazy val guavaCache: GCache[A, B] = CacheBuilder.newBuilder().maximumSize(maxCacheSize).build()
+
+  lazy val guavaCache: GCache[A, B] = CacheBuilder.newBuilder()
+    .maximumSize(maxCacheSize)
+    .build()
 
   override def put(key: A, value: B) {
     guavaCache.put(key, value)

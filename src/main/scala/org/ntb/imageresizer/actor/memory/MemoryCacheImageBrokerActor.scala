@@ -20,7 +20,9 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
   import context.dispatcher
 
   implicit val timeout: Timeout = 30.seconds
-  override val maxCacheSize = 10L * 1024L * 1024L
+
+  // Keep a maximum of 1000 images in memory; this will most likely consume over 1 GB of memory
+  override val maxCacheSize = 1000L
 
   def receive = {
     case GetImageRequest(uri, preferredSize, imageFormat) ⇒
