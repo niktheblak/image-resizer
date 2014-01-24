@@ -1,14 +1,13 @@
-package org.ntb.imageresizer
+package org.ntb.imageresizer.cache
 
+import akka.util.ByteString
+import com.google.common.io.Files
 import java.io.File
 import java.nio.charset.Charset
-import org.ntb.imageresizer.cache.FileCache
-import org.scalatest.WordSpec
+import java.util.UUID
 import org.scalatest.Matchers
 import org.scalatest.OptionValues._
-import com.google.common.io.Files
-import akka.util.ByteString
-import java.util.UUID
+import org.scalatest.WordSpec
 
 class FileCacheTest extends WordSpec with Matchers {
   import FileCacheTest._

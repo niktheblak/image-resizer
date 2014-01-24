@@ -1,6 +1,5 @@
-package org.ntb.imageresizer
+package org.ntb.imageresizer.actor.file
 
-import actor.file.DownloadActor
 import org.apache.http.impl.client.CloseableHttpClient
 
 class TestDownloadActor(backingHttpClient: CloseableHttpClient) extends DownloadActor {

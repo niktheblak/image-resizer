@@ -1,6 +1,5 @@
-package org.ntb.imageresizer
+package org.ntb.imageresizer.actor.file
 
-import actor.file.{ ResizeActor, FileCacheImageBrokerActor, DownloadActor }
 import akka.actor.ActorRef
 import akka.actor.{ Props, ActorSystem }
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }

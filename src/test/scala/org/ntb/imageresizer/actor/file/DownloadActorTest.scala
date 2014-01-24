@@ -1,21 +1,21 @@
-package org.ntb.imageresizer
+package org.ntb.imageresizer.actor.file
 
-import actor.file.DownloadActor
 import DownloadActor._
-import com.google.common.io.Files
-import org.apache.http.HttpException
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FlatSpecLike
-import org.scalatest.Matchers
 import akka.actor.ActorSystem
+import akka.pattern.ask
 import akka.testkit.ImplicitSender
 import akka.testkit.TestActorRef
 import akka.testkit.TestKit
-import akka.pattern.ask
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import com.google.common.io.Files
 import java.io.File
 import java.net.URI
+import org.apache.http.HttpException
+import org.ntb.imageresizer.MockHttpClients
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.FlatSpecLike
+import org.scalatest.Matchers
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class DownloadActorTest extends TestKit(ActorSystem("TestSystem"))
