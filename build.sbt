@@ -1,5 +1,7 @@
 import scalariform.formatter.preferences._
 
+import AssemblyKeys._
+
 name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
@@ -39,3 +41,7 @@ scalariformSettings
 ScalariformKeys.preferences := ScalariformKeys.preferences.value
   .setPreference(RewriteArrowSymbols, true)
   .setPreference(PreserveSpaceBeforeArguments, true)
+
+assemblySettings
+
+mainClass in assembly := Some("org.ntb.imageresizer.service.SprayBootstrap")
