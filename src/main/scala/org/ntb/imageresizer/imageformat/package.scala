@@ -1,6 +1,7 @@
 package org.ntb.imageresizer
 
 import java.net.URI
+import org.ntb.imageresizer.util.FileUtils.getFileExtension
 
 package object imageformat {
   abstract class ImageFormat {
@@ -46,10 +47,11 @@ package object imageformat {
     }
 
   def parseImageFormatFromUri(uri: URI): Option[ImageFormat] = {
-    val fileName = if (uri.getPath != null) uri.getPath.toLowerCase else ""
-    if ((fileName endsWith "jpg") || (fileName endsWith "jpeg")) Some(JPEG)
-    else if (fileName endsWith "png") Some(PNG)
-    else if (fileName endsWith "gif") Some(GIF)
-    else None
+    for (ext <- getFileExtension(uri)) yield ext match {
+      case "jpg" => JPEG
+      case "jpeg" => JPEG
+      case "png" => PNG
+      case "gif" => GIF
+    }
   }
 }

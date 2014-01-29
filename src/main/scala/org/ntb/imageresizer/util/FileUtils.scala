@@ -1,37 +1,16 @@
 package org.ntb.imageresizer.util
 
 import java.net.URI
-import java.io.{ FileInputStream, File }
-import concurrent.duration.Duration
-import Loans.using
+import java.io.File
+import scala.concurrent.duration.Duration
 
 object FileUtils {
   def getFileExtension(uri: URI): Option[String] = {
     val path = uri.getPath
     val index = path.lastIndexOf('.')
     if (index != -1 && index < path.length() - 1) {
-      val format = path.substring(index + 1).trim().toLowerCase
-      Some(format)
-    } else {
-      None
-    }
-  }
-
-  def read(file: File, amount: Int): Array[Byte] = {
-    val data = new Array[Byte](amount)
-    var bytesRead = 0
-    using (new FileInputStream(file)) { input ⇒
-      bytesRead = input.read(data)
-    }
-    data.slice(0, bytesRead)
-  }
-
-  def getFilePath(uri: URI): Option[String] = {
-    val path = uri.getPath
-    val index = path.lastIndexOf('/')
-    if (index != -1 && index < path.length() - 1) {
-      val filePath = path.substring(index + 1).trim()
-      Some(filePath)
+      val extension = path.substring(index + 1).trim().toLowerCase
+      Some(extension)
     } else {
       None
     }
