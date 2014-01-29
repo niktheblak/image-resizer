@@ -1,12 +1,13 @@
 package org.ntb.imageresizer.util
 
-import java.net.URI
+import com.google.common.base.Strings
 import java.io.File
+import java.net.URI
 import scala.concurrent.duration.Duration
 
 object FileUtils {
   def getFileExtension(uri: URI): Option[String] = {
-    val path = uri.getPath
+    val path = Strings.nullToEmpty(uri.getPath)
     val index = path.lastIndexOf('.')
     if (index != -1 && index < path.length() - 1) {
       val extension = path.substring(index + 1).trim().toLowerCase
