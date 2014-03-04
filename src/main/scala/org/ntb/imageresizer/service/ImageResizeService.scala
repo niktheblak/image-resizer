@@ -12,6 +12,7 @@ import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
 import spray.http._
+import spray.http.HttpHeaders._
 import spray.httpx.unmarshalling._
 import spray.routing._
 import spray.util.pimpFile
@@ -71,7 +72,10 @@ trait ImageResizeService extends HttpService {
             response.data.toByteArrayStream(chunkSize)
           }
           respondWithMediaType(mediaType) {
-            complete(result)
+            val loc = s"/resize?source=$id&size=$size&format=$imageFormat"
+            respondWithHeader(Location(loc)) {
+              complete(result)
+            }
           }
         }
     }
