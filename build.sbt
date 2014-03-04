@@ -20,7 +20,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.2.3" % "test"
 
 libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2"
 
-libraryDependencies += "com.google.guava" % "guava" % "15.0"
+libraryDependencies += "com.google.guava" % "guava" % "16.0.1"
 
 libraryDependencies += "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided"
 
