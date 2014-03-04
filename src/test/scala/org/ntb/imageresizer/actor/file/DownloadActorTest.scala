@@ -48,9 +48,9 @@ class DownloadActorTest extends TestKit(ActorSystem("TestSystem"))
     val downloadActor = TestActorRef(new TestDownloadActor(httpClient))
     val file = mock[File]
     val downloadTask = ask(downloadActor, DownloadRequest(uri, file))(timeout)
-    evaluating {
+    an[HttpException] should be thrownBy {
       Await.result(downloadTask, timeout)
-    } should produce[HttpException]
+    }
   }
 
   override def afterAll() {

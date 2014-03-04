@@ -51,9 +51,9 @@ class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
     val httpClient = statusCodeHttpClient(SC_NOT_FOUND)
     val downloader = new TestDownloader(httpClient)
     val output = new ByteArrayOutputStream()
-    evaluating {
+    an[HttpException] should be thrownBy {
       downloader.download(URI.create("http://localhost/logo.png"), output)
-    } should produce[HttpException]
+    }
     verify(httpClient).execute(any[HttpGet])
   }
 
