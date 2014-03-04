@@ -46,12 +46,9 @@ package object imageformat {
       case _ ⇒ None
     }
 
-  def parseImageFormatFromUri(uri: URI): Option[ImageFormat] = {
-    for (ext <- getFileExtension(uri)) yield ext match {
-      case "jpg" => JPEG
-      case "jpeg" => JPEG
-      case "png" => PNG
-      case "gif" => GIF
-    }
-  }
+  def parseImageFormatFromUri(uri: URI): Option[ImageFormat] =
+    for {
+      ext ← getFileExtension(uri)
+      format ← parseRequestedImageFormat(ext)
+    } yield format
 }
