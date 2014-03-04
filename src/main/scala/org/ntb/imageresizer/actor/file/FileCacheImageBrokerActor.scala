@@ -54,8 +54,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def handleGetImageRequest(self: ActorRef, sender: ActorRef, request: GetImageRequest) {
-    val source = request.uri.toString
-    val key = Key(source, request.size, request.format)
+    val key = Key(request.uri, request.size, request.format)
     val file = cacheFileProvider(key)
     workQueue.get(key) match {
       case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
@@ -73,7 +72,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def handleGetLocalImageRequest(self: ActorRef, sender: ActorRef, request: GetLocalImageRequest) {
-    val key = Key(request.id, request.size, request.format)
+    val key = Key(toUri(request.id), request.size, request.format)
     val file = cacheFileProvider(key)
     workQueue.get(key) match {
       case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
@@ -128,6 +127,8 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
     val resizeTask = ask(resizeActor, ResizeImageRequest(source, target, preferredSize, format)).mapTo[ResizeImageResponse]
     for (response ← resizeTask) yield response.fileSize
   }
+
+  def toUri(id: String): URI = new URI(id)
 }
 
 object FileCacheImageBrokerActor {
