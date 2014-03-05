@@ -73,11 +73,12 @@ class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
 }
 
 object DownloaderTest {
-  class TestDownloader(backingHttpClient: CloseableHttpClient) extends HttpClientProvider with Downloader with IfModifiedDownloader {
-    override val httpClient = backingHttpClient
-  }
+  class TestDownloader(override val httpClient: CloseableHttpClient)
+    extends HttpClientProvider
+    with Downloader
+    with IfModifiedDownloader
 
-  class TestIfModifiedDownloader(backingHttpClient: CloseableHttpClient) extends HttpClientProvider with IfModifiedDownloader {
-    override val httpClient = backingHttpClient
-  }
+  class TestIfModifiedDownloader(override val httpClient: CloseableHttpClient)
+    extends HttpClientProvider
+    with IfModifiedDownloader
 }

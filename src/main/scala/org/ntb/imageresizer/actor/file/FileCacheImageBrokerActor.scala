@@ -125,7 +125,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 
   def resize(source: File, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
     val resizeTask = ask(resizeActor, ResizeImageRequest(source, target, preferredSize, format)).mapTo[ResizeImageResponse]
-    for (response ← resizeTask) yield response.fileSize
+    resizeTask map (_.fileSize)
   }
 
   def toUri(id: String): URI = new URI(id)

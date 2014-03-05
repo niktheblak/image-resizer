@@ -2,14 +2,12 @@ package org.ntb.imageresizer.actor.file
 
 import akka.actor.Actor
 import java.io.File
-import language.postfixOps
 import org.ntb.imageresizer.actor.ActorUtils
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize.Resizer._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 
 class ResizeActor extends Actor with ActorUtils {
-
   import ResizeActor._
 
   def receive = {

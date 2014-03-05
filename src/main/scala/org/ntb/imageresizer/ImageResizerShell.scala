@@ -69,7 +69,7 @@ object ImageResizerShell extends App {
         imageBrokerActor ! ClearCache()
       case "exit" :: Nil ⇒
         exit()
-      case command @ _ ⇒
+      case command ⇒
         Console.err.println(s"Invalid command or arguments: ${command.mkString(" ")}")
     }
   }

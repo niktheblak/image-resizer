@@ -8,12 +8,10 @@ import org.scalatest.mock.MockitoSugar
 import scala.concurrent.duration._
 
 class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
-  import scala.language.postfixOps
-
   "hasExpired" should {
     "return true if file has been expired" in {
-      val expireTime = currentTimeMinus(2 minutes)
-      val maxAge = 1 minutes
+      val expireTime = currentTimeMinus(2.minutes)
+      val maxAge = 1.minutes
       val file = mock[File]
       when(file.lastModified()).thenReturn(expireTime)
       val expired = FileUtils.hasExpired(file, maxAge)
@@ -21,7 +19,7 @@ class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
     }
 
     "return false when file expiration cannot be determined" in {
-      val maxAge = 1 minutes
+      val maxAge = 1.minutes
       val file = mock[File]
       when(file.lastModified()).thenReturn(-1)
       val expired = FileUtils.hasExpired(file, maxAge)
@@ -31,8 +29,8 @@ class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
 
   "deleteIfExpired" should {
     "delete the file if it has been expired" in {
-      val expireTime = currentTimeMinus(2 minutes)
-      val maxAge = 1 minutes
+      val expireTime = currentTimeMinus(2.minutes)
+      val maxAge = 1.minutes
       val file = mock[File]
       when(file.lastModified()).thenReturn(expireTime)
       FileUtils.deleteIfExpired(file, maxAge)
@@ -40,8 +38,8 @@ class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
     }
 
     "not delete the file if it has not been expired" in {
-      val expireTime = currentTimeMinus(1 minutes)
-      val maxAge = 2 minutes
+      val expireTime = currentTimeMinus(1.minutes)
+      val maxAge = 2.minutes
       val file = mock[File]
       when(file.lastModified()).thenReturn(expireTime)
       FileUtils.deleteIfExpired(file, maxAge)

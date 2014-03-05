@@ -50,7 +50,6 @@ class FileCacheTest extends WordSpec with Matchers {
 
   "get(key, loader)" should {
     "create a file with content given by loader" in {
-      val tmpdir = System.getProperty("java.io.tmpdir")
       val tempFile = nonExistingFile
       tempFile.deleteOnExit()
       tempFile should not be 'exists
