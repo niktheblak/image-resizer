@@ -29,9 +29,15 @@ trait TempFileCache[A] extends FileCache[A] {
   }
 
   def cacheDirectory(): File = {
-    val cacheDir = new File(FileUtils.tempDir, cachePath)
+    val cacheDir = new File(tempDir, cachePath)
     assert(!cacheDir.isFile, "File with path %s already exists".format(cacheDir.getAbsolutePath))
     if (!cacheDir.exists()) cacheDir.mkdir()
     cacheDir
+  }
+
+  def tempDir: File = {
+    val tmpdir = System.getProperty("java.io.tmpdir")
+    assert(tmpdir != null, "System property java.io.tmpdir is not set")
+    new File(tmpdir)
   }
 }

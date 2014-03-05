@@ -1,7 +1,7 @@
 package org.ntb.imageresizer
 
 import java.net.URI
-import org.ntb.imageresizer.util.FileUtils.getFileExtension
+import com.google.common.base.Strings
 
 package object imageformat {
   abstract class ImageFormat {
@@ -51,4 +51,15 @@ package object imageformat {
       ext ← getFileExtension(uri)
       format ← parseRequestedImageFormat(ext)
     } yield format
+
+  def getFileExtension(uri: URI): Option[String] = {
+    val path = Strings.nullToEmpty(uri.getPath)
+    val index = path.lastIndexOf('.')
+    if (index != -1 && index < path.length() - 1) {
+      val extension = path.substring(index + 1).trim().toLowerCase
+      Some(extension)
+    } else {
+      None
+    }
+  }
 }
