@@ -6,24 +6,24 @@ import akka.util.Timeout
 import com.google.common.io.Files
 import java.net.MalformedURLException
 import java.net.URI
-import language.postfixOps
 import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
+import org.ntb.imageresizer.util.DefaultHasher
 import spray.http._
 import spray.http.HttpHeaders._
 import spray.httpx.unmarshalling._
 import spray.routing._
 import spray.util.pimpFile
 import scala.concurrent.ExecutionContext
-import com.google.common.hash.Hashing
 
-trait ImageResizeService extends HttpService {
+trait ImageResizeService extends HttpService with DefaultHasher {
+  import language.postfixOps
+
   implicit val context: ExecutionContext
   implicit val timeout: Timeout
   val chunkSize = 0xFFFF
   val imageBroker: ActorRef
-  val hashFunction = Hashing.md5()
 
   implicit val String2URIConverter = new FromStringDeserializer[URI] {
     def apply(value: String) = {
@@ -61,7 +61,7 @@ trait ImageResizeService extends HttpService {
         entity(as[Array[Byte]]) { body ⇒
           val imageFormat = format.getOrElse(JPEG)
           val mediaType = MediaTypes.forExtension(imageFormat.extension).get
-          val id = hashFunction.hashBytes(body).toString
+          val id = hashBytes(body)
           val tempFile = createTempFile()
           Files.write(body, tempFile)
           val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
