@@ -2,7 +2,8 @@ package org.ntb.imageresizer.cache
 
 import com.google.common.base.Strings._
 import java.io.File
-import org.ntb.imageresizer.util.{ DefaultHasher, FileUtils }
+import org.ntb.imageresizer.util.DefaultHasher
+import org.ntb.imageresizer.util.FileUtils._
 import scala.concurrent.duration._
 
 trait TempFileCache[A] extends FileCache[A] with DefaultHasher {
@@ -17,18 +18,18 @@ trait TempFileCache[A] extends FileCache[A] with DefaultHasher {
     val dir = cacheDirectory()
     val fileName = hashString(keyString).toString
     val file = new File(dir, fileName)
-    FileUtils.deleteIfExpired(file, maxAge)
+    deleteIfExpired(file, maxAge)
     file
   }
 
   def clearCacheDirectory() {
     val dir = cacheDirectory()
-    dir.listFiles().foreach(_.delete())
+    listFiles(dir).foreach(_.delete())
   }
 
   def cacheDirectory(): File = {
     val cacheDir = new File(tempDir, cachePath)
-    assert(!cacheDir.isFile, "File with path %s already exists".format(cacheDir.getAbsolutePath))
+    assert(!cacheDir.isFile, s"File with path ${cacheDir.getAbsolutePath} already exists")
     if (!cacheDir.exists()) cacheDir.mkdir()
     cacheDir
   }

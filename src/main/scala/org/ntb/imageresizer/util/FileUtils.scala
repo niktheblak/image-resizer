@@ -22,4 +22,10 @@ object FileUtils {
       file.delete()
     }
   }
+
+  def listFiles(dir: File): Seq[File] = {
+    val files = dir.listFiles()
+    if (files != null) files.toSeq
+    else Seq.empty
+  }
 }
