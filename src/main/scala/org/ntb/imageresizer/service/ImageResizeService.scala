@@ -7,7 +7,6 @@ import com.google.common.io.Files
 import java.net.MalformedURLException
 import java.net.URI
 import language.postfixOps
-import org.apache.commons.codec.digest.DigestUtils.md5Hex
 import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
@@ -17,12 +16,14 @@ import spray.httpx.unmarshalling._
 import spray.routing._
 import spray.util.pimpFile
 import scala.concurrent.ExecutionContext
+import com.google.common.hash.Hashing
 
 trait ImageResizeService extends HttpService {
   implicit val context: ExecutionContext
   implicit val timeout: Timeout
   val chunkSize = 0xFFFF
   val imageBroker: ActorRef
+  val hashFunction = Hashing.md5()
 
   implicit val String2URIConverter = new FromStringDeserializer[URI] {
     def apply(value: String) = {
@@ -60,7 +61,7 @@ trait ImageResizeService extends HttpService {
         entity(as[Array[Byte]]) { body ⇒
           val imageFormat = format.getOrElse(JPEG)
           val mediaType = MediaTypes.forExtension(imageFormat.extension).get
-          val id = md5Hex(body)
+          val id = hashFunction.hashBytes(body).toString
           val tempFile = createTempFile()
           Files.write(body, tempFile)
           val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
