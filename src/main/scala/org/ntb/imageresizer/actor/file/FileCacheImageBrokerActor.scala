@@ -3,12 +3,11 @@ package org.ntb.imageresizer.actor.file
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.google.common.base.Strings.isNullOrEmpty
 import concurrent.duration._
 import concurrent.{ Await, Future }
 import java.io.File
 import java.net.URI
-import org.ntb.imageresizer.actor.{ Key, ActorUtils }
+import org.ntb.imageresizer.actor.Key
 import org.ntb.imageresizer.actor.file.DownloadActor._
 import org.ntb.imageresizer.actor.file.ResizeActor._
 import org.ntb.imageresizer.cache.TempFileCache
@@ -19,31 +18,27 @@ import scala.util.{ Failure, Success, Try }
 
 class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) extends Actor
     with ActorLogging
-    with TempFileCache[Key]
-    with ActorUtils {
+    with TempFileCache[Key] {
   import FileCacheImageBrokerActor._
   import context.dispatcher
 
   override val cachePath = "imagebroker"
-  implicit val timeout: Timeout = 30.seconds
-  val workQueue = mutable.Map.empty[Key, Future[Long]]
+  private implicit val timeout: Timeout = 30.seconds
+  private val workQueue = mutable.Map.empty[Key, Future[Long]]
 
   override def preStart() {
-    log.info(s"Starting FileCacheImageBrokerActor with cache directory ${cacheDirectory()}")
+    log.info(s"Starting ${getClass.getSimpleName} with cache directory ${cacheDirectory()}")
   }
 
   override def postStop() {
+    log.info(s"Stopping ${getClass.getSimpleName}")
     flushWorkQueue()
   }
 
   def receive = {
     case request @ GetImageRequest(uri, preferredSize, imageFormat) ⇒
-      requireArgument(sender)(preferredSize > 0, "Size must be positive")
       handleGetImageRequest(self, sender, request)
     case request @ GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
-      requireArgument(sender)(source.exists && source.canRead, "Source file must exist and be readable")
-      requireArgument(sender)(!isNullOrEmpty(id), "Image ID must not be empty")
-      requireArgument(sender)(preferredSize > 0, "Size must be positive")
       handleGetLocalImageRequest(self, sender, request)
     case ClearCache() ⇒
       log.info(s"Clearing cache directory ${cacheDirectory().getAbsolutePath}")
@@ -132,9 +127,19 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 }
 
 object FileCacheImageBrokerActor {
-  case class GetImageRequest(uri: URI, size: Int, format: ImageFormat = JPEG)
-  case class GetLocalImageRequest(source: File, id: String, size: Int, format: ImageFormat = JPEG)
+  case class GetImageRequest(uri: URI, size: Int, format: ImageFormat = JPEG) {
+    require(size > 0, "Size must be positive")
+  }
+
+  case class GetLocalImageRequest(source: File, id: String, size: Int, format: ImageFormat = JPEG) {
+    require(source.exists && source.canRead, "Source file must exist and be readable")
+    require(!id.isEmpty, "Image ID must not be empty")
+    require(size > 0, "Size must be positive")
+  }
+
   case class GetImageResponse(data: File)
+
   case class ClearCache()
+
   private case class RemoveFromWorkQueue(key: Key)
 }
