@@ -12,11 +12,11 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 resolvers += "spray repo" at "http://repo.spray.io"
 
-libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.2.3"
+libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.2.4"
 
-libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.2.3"
+libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.2.4"
 
-libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.2.3" % "test"
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.2.4" % "test"
 
 libraryDependencies += "org.imgscalr" % "imgscalr-lib" % "4.2"
 
@@ -28,9 +28,9 @@ libraryDependencies += "org.apache.httpcomponents" % "httpclient" % "4.3.1"
 
 libraryDependencies += "joda-time" % "joda-time" % "2.3"
 
-libraryDependencies += "io.spray" % "spray-can" % "1.2.0"
+libraryDependencies += "io.spray" % "spray-can" % "1.2.1"
 
-libraryDependencies += "io.spray" % "spray-routing" % "1.2.0"
+libraryDependencies += "io.spray" % "spray-routing" % "1.2.1"
 
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5" % "test"
 
