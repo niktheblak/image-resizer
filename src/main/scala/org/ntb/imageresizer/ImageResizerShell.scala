@@ -8,7 +8,7 @@ import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.pattern.ask
-import akka.routing.SmallestMailboxRouter
+import akka.routing.SmallestMailboxPool
 import akka.util.Timeout
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -27,7 +27,7 @@ object ImageResizerShell extends App {
   val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
   println(s"Deploying $resizeNodes resize actors")
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
-  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
+  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxPool(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
   val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
   processCommands()

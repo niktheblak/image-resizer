@@ -2,13 +2,12 @@ package org.ntb.imageresizer.service
 
 import akka.util.Timeout
 import akka.actor.{ Props, ActorSystem }
-import akka.routing.SmallestMailboxRouter
+import akka.routing.SmallestMailboxPool
 import org.ntb.imageresizer.actor.file.{ FileCacheImageBrokerActor, DownloadActor, ResizeActor }
 import spray.routing.SimpleRoutingApp
 import org.slf4j.LoggerFactory
 import com.typesafe.config.ConfigFactory
 import java.util.concurrent.TimeUnit
-import language.postfixOps
 
 object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
   val logger = LoggerFactory.getLogger(getClass)
@@ -24,7 +23,7 @@ object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService 
   implicit val context = system.dispatcher
   val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
   println(s"Deploying $resizeNodes resize actors")
-  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxRouter(resizeNodes)))
+  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxPool(resizeNodes)))
   val downloadActor = system.actorOf(Props[DownloadActor])
   val imageBroker = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
 
