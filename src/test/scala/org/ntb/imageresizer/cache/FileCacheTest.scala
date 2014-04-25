@@ -62,7 +62,9 @@ class FileCacheTest extends WordSpec with Matchers {
   }
 }
 
-class TestFileCache(val cacheFileProvider: String ⇒ File) extends FileCache[String]
+class TestFileCache(provider: String ⇒ File) extends FileCache[String] {
+  override def getCacheFile(key: String): File = provider(key)
+}
 
 object FileCacheTest {
   def createTempFile(nameFragment: String): File = {

@@ -7,16 +7,17 @@ import scala.concurrent.duration._
 import java.io.File
 
 trait FileCache[A] extends Cache[A, ByteString] {
-  val cacheFileProvider: A ⇒ File
   val maxAge: Duration = Duration.Inf
 
+  def getCacheFile(key: A): File
+
   def put(key: A, value: ByteString) {
-    val file = cacheFileProvider(key)
+    val file = getCacheFile(key)
     write(file, value)
   }
 
   def get(key: A): Option[ByteString] = {
-    val file = cacheFileProvider(key)
+    val file = getCacheFile(key)
     deleteIfExpired(file, maxAge)
     if (file.exists()) {
       Some(read(file))
@@ -26,7 +27,7 @@ trait FileCache[A] extends Cache[A, ByteString] {
   }
 
   def get(key: A, loader: () ⇒ ByteString): ByteString = {
-    val file = cacheFileProvider(key)
+    val file = getCacheFile(key)
     deleteIfExpired(file, maxAge)
     if (file.exists()) {
       read(file)

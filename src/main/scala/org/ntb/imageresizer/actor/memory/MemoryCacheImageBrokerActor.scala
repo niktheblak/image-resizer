@@ -26,16 +26,16 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
 
   def receive = {
     case GetImageRequest(uri, preferredSize, imageFormat) ⇒
-      requireArgument(sender)(preferredSize > 0, "Size must be positive")
+      requireArgument(sender())(preferredSize > 0, "Size must be positive")
       val key = Key(uri, preferredSize, imageFormat)
       get(key) match {
         case Some(data) ⇒ sender ! GetImageResponse(data)
         case None ⇒
-          val downloadAndResizeTask = for (
+          val downloadAndResizeTask = for {
             downloadResponse ← ask(downloadActor, DownloadRequest(uri)).mapTo[DownloadResponse];
             resizeResponse ← ask(resizeActor, ResizeImageRequest(downloadResponse.data, preferredSize, imageFormat)).mapTo[ResizeImageResponse]
-          ) yield resizeResponse.data
-          actorTry(sender) {
+          } yield resizeResponse.data
+          actorTry(sender()) {
             val data = Await.result(downloadAndResizeTask, timeout.duration)
             put(key, data)
             sender ! GetImageResponse(data)

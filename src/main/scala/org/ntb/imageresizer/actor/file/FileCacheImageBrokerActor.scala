@@ -36,10 +36,10 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def receive = {
-    case request @ GetImageRequest(uri, preferredSize, imageFormat) ⇒
-      handleGetImageRequest(self, sender, request)
-    case request @ GetLocalImageRequest(source, id, preferredSize, imageFormat) ⇒
-      handleGetLocalImageRequest(self, sender, request)
+    case request: GetImageRequest ⇒
+      handleGetImageRequest(self, sender(), request)
+    case request: GetLocalImageRequest ⇒
+      handleGetLocalImageRequest(self, sender(), request)
     case ClearCache() ⇒
       log.info(s"Clearing cache directory ${cacheDirectory().getAbsolutePath}")
       flushWorkQueue()
@@ -50,7 +50,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 
   def handleGetImageRequest(self: ActorRef, sender: ActorRef, request: GetImageRequest) {
     val key = Key(request.uri, request.size, request.format)
-    val file = cacheFileProvider(key)
+    val file = getCacheFile(key)
     workQueue.get(key) match {
       case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
       case None ⇒
@@ -68,7 +68,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 
   def handleGetLocalImageRequest(self: ActorRef, sender: ActorRef, request: GetLocalImageRequest) {
     val key = Key(toUri(request.id), request.size, request.format)
-    val file = cacheFileProvider(key)
+    val file = getCacheFile(key)
     workQueue.get(key) match {
       case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
       case None ⇒
@@ -108,10 +108,11 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
 
   def downloadAndResizeToFile(uri: URI, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
     val tempFile = createTempFile()
-    val resizeTask = for (
-      downloadResponse ← ask(downloadActor, DownloadRequest(uri, tempFile)).mapTo[DownloadResponse];
+    val request = DownloadRequest(uri, tempFile)
+    val resizeTask = for {
+      downloadResponse ← ask(downloadActor, request).mapTo[DownloadResponse];
       resizedSize ← resize(downloadResponse.target, target, preferredSize, format)
-    ) yield resizedSize
+    } yield resizedSize
     resizeTask onComplete {
       case _ ⇒ tempFile.delete()
     }
@@ -119,7 +120,8 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def resize(source: File, target: File, preferredSize: Int, format: ImageFormat): Future[Long] = {
-    val resizeTask = ask(resizeActor, ResizeImageRequest(source, target, preferredSize, format)).mapTo[ResizeImageResponse]
+    val request = ResizeImageRequest(source, target, preferredSize, format)
+    val resizeTask = ask(resizeActor, request).mapTo[ResizeImageResponse]
     resizeTask map (_.fileSize)
   }
 

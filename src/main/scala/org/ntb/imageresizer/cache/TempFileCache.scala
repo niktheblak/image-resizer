@@ -8,15 +8,14 @@ import scala.concurrent.duration._
 
 trait TempFileCache[A] extends FileCache[A] with DefaultHasher {
   def cachePath: String
-  override val cacheFileProvider: A ⇒ File = tempDirCacheFileProvider
+
   override val maxAge = 24.hours
 
-  def tempDirCacheFileProvider(key: A): File = {
-    require(key != null, "Argument key cannot be null")
+  override def getCacheFile(key: A): File = {
     val keyString = key.toString
     require(!isNullOrEmpty(keyString), "toString() method of argument key must return a nonempty string")
     val dir = cacheDirectory()
-    val fileName = hashString(keyString).toString
+    val fileName = hashString(keyString)
     val file = new File(dir, fileName)
     deleteIfExpired(file, maxAge)
     file
@@ -24,7 +23,7 @@ trait TempFileCache[A] extends FileCache[A] with DefaultHasher {
 
   def clearCacheDirectory() {
     val dir = cacheDirectory()
-    listFiles(dir).foreach(_.delete())
+    listFiles(dir) foreach (_.delete())
   }
 
   def cacheDirectory(): File = {
@@ -35,8 +34,8 @@ trait TempFileCache[A] extends FileCache[A] with DefaultHasher {
   }
 
   def tempDir: File = {
-    val tmpdir = System.getProperty("java.io.tmpdir")
-    assert(tmpdir != null, "System property java.io.tmpdir is not set")
-    new File(tmpdir)
+    val systemTempDir = System.getProperty("java.io.tmpdir")
+    assert(systemTempDir != null, "System property java.io.tmpdir is not set")
+    new File(systemTempDir)
   }
 }
