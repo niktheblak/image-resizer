@@ -15,7 +15,7 @@ object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService 
     akka {
       akka.loggers = ["akka.event.slf4j.Slf4jLogger"]
       stdout-loglevel = "OFF"
-      loglevel = "DEBUG"
+      loglevel = "INFO"
     }
   """)
   implicit val timeout = Timeout(30, TimeUnit.SECONDS)

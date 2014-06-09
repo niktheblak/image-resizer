@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
 	"com.typesafe.akka" %% "akka-actor" % "2.3.2",
 	"com.typesafe.akka" %% "akka-slf4j" % "2.3.2",
 	"com.typesafe.akka" %% "akka-testkit" % "2.3.2" % "test",
+  "org.slf4j" % "slf4j-simple" % "1.7.5",
 	"org.imgscalr" % "imgscalr-lib" % "4.2",
 	"com.google.guava" % "guava" % "17.0",
 	"com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided",
