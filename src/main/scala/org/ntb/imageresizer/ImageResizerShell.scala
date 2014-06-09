@@ -19,17 +19,15 @@ object ImageResizerShell extends App {
   implicit val timeout: Timeout = 10.seconds
   val config = ConfigFactory.parseString("""
     akka {
-      akka.loggers = ["akka.event.Logging$DefaultLogger"]
+      stdout-loglevel = "OFF"
       loglevel = "INFO"
     }
   """)
   println("Starting ImageResizer shell")
-  val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
-  println(s"Deploying $resizeNodes resize actors")
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
-  val resizeActor = system.actorOf(Props[ResizeActor].withRouter(SmallestMailboxPool(resizeNodes)))
-  val downloadActor = system.actorOf(Props[DownloadActor])
-  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor))
+  val resizeActor = system.actorOf(Props[ResizeActor], "resizer")
+  val downloadActor = system.actorOf(Props[DownloadActor], "downloader")
+  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor), "imagebroker")
   processCommands()
 
   def processCommands() {
