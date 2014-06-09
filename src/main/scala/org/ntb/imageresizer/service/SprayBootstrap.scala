@@ -4,13 +4,11 @@ import akka.util.Timeout
 import akka.actor.{ Props, ActorSystem }
 import org.ntb.imageresizer.actor.file.{ FileCacheImageBrokerActor, DownloadActor, ResizeActor }
 import spray.routing.SimpleRoutingApp
-import org.slf4j.LoggerFactory
 import com.typesafe.config.ConfigFactory
 import java.util.concurrent.TimeUnit
 import akka.routing.BalancingPool
 
 object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
-  val logger = LoggerFactory.getLogger(getClass)
   val config = ConfigFactory.parseString("""
     akka {
       akka.loggers = ["akka.event.slf4j.Slf4jLogger"]
@@ -21,8 +19,9 @@ object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService 
   implicit val timeout = Timeout(30, TimeUnit.SECONDS)
   implicit val system = ActorSystem("image-resizer", ConfigFactory.load(config))
   implicit val context = system.dispatcher
+  val log = akka.event.Logging(system, "SprayBootstrap")
   val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
-  println(s"Deploying $resizeNodes resize actors")
+  log.info("Deploying {} resize actors", resizeNodes)
   val resizeActor = system.actorOf(BalancingPool(resizeNodes).props(Props[ResizeActor]), "resizer")
   val downloadActor = system.actorOf(Props[DownloadActor], "downloader")
   val imageBroker = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor), "imagebroker")
