@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.actor.{ Props, ActorSystem }
 import akka.testkit.{ ImplicitSender, TestKit, TestProbe }
 import com.google.common.io.Files
+import com.typesafe.config.ConfigFactory
 import java.io.File
 import java.net.URI
 import java.util.UUID
@@ -12,7 +13,11 @@ import org.scalatest.FlatSpecLike
 import org.scalatest.Matchers
 import scala.concurrent.duration._
 
-class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) with ImplicitSender with FlatSpecLike with Matchers {
+class FileCacheImageBrokerActorTest
+    extends TestKit(ActorSystem("TestSystem", FileCacheImageBrokerActorTest.disableLoggingConfig))
+    with ImplicitSender
+    with FlatSpecLike
+    with Matchers {
   import DownloadActor._
   import FileCacheImageBrokerActor._
   import FileCacheImageBrokerActorTest._
@@ -62,6 +67,13 @@ class FileCacheImageBrokerActorTest extends TestKit(ActorSystem("TestSystem")) w
 }
 
 object FileCacheImageBrokerActorTest {
+  val disableLoggingConfig = ConfigFactory.parseString("""
+    akka {
+      stdout-loglevel = "OFF"
+      loglevel = "OFF"
+    }
+    """)
+
   def nonExistingFile(): File = {
     val file = new File(UUID.randomUUID().toString)
     file.deleteOnExit()
