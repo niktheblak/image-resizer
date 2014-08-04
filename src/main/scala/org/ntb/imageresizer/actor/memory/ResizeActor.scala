@@ -12,7 +12,7 @@ class ResizeActor extends Actor with ActorUtils {
 
   def receive = {
     case ResizeImageRequest(source, size, format) ⇒
-      actorTry(sender) {
+      actorTry(sender()) {
         val input = source.iterator.asInputStream
         val builder = new ByteStringBuilder
         resizeImage(input, builder.asOutputStream, size, format)

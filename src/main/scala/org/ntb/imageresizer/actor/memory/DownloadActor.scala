@@ -29,7 +29,7 @@ class DownloadActor extends Actor with HttpClientProvider with Downloader with A
 
   def receive = {
     case DownloadRequest(uri) ⇒
-      actorTry(sender) {
+      actorTry(sender()) {
         val builder = new ByteStringBuilder
         download(uri, builder.asOutputStream)
         sender ! DownloadResponse(builder.result())

@@ -12,7 +12,7 @@ class ResizeActor extends Actor with ActorUtils {
 
   def receive = {
     case ResizeImageRequest(source, target, size, format) ⇒
-      actorTry(sender) {
+      actorTry(sender()) {
         resizeImage(source, target, size, format)
         sender ! ResizeImageResponse(target.length())
       } actorCatch {

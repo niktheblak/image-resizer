@@ -18,7 +18,7 @@ class DownloadActor extends Actor with HttpClientProvider with Downloader with A
 
   def receive = {
     case DownloadRequest(uri, target) ⇒
-      actorTry(sender) {
+      actorTry(sender()) {
         val fileSize = download(uri, target)
         sender ! DownloadResponse(target, fileSize)
       } actorCatch {

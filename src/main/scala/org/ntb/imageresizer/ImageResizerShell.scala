@@ -8,10 +8,10 @@ import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.pattern.ask
-import akka.routing.SmallestMailboxPool
 import akka.util.Timeout
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.io.StdIn
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -35,7 +35,7 @@ object ImageResizerShell extends App {
       while (true) {
         Console.print("> ")
         Console.flush()
-        val command = Console.readLine()
+        val command = StdIn.readLine()
         val tokens = command.split(' ').toList
         handleCommand(tokens)
       }
