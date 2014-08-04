@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
   "io.spray" % "spray-can" % "1.3.1",
   "io.spray" % "spray-routing" % "1.3.1",
   "org.mockito" % "mockito-all" % "1.9.5" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.0" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 )
 
 scalariformSettings
