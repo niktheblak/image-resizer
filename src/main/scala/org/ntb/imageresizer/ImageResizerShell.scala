@@ -11,7 +11,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.io.StdIn
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -35,7 +34,7 @@ object ImageResizerShell extends App {
       while (true) {
         Console.print("> ")
         Console.flush()
-        val command = StdIn.readLine()
+        val command = Console.readLine()
         val tokens = command.split(' ').toList
         handleCommand(tokens)
       }
@@ -55,7 +54,7 @@ object ImageResizerShell extends App {
     tokens match {
       case "resize" :: path :: rest ⇒
         try {
-          val size = if (!rest.isEmpty) rest.head.toInt else 128
+          val size = if (rest.nonEmpty) rest.head.toInt else 128
           handleResizeCommand(path, size)
         } catch {
           case e: NumberFormatException ⇒ Console.err.println(s"Invalid argument for size: ${rest.mkString(" ")}")

@@ -6,12 +6,11 @@ name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.10.4"
 
 resolvers += "spray repo" at "http://repo.spray.io"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang.modules" %% "scala-xml" % "1.0.1",
   "com.typesafe.akka" %% "akka-actor" % "2.3.2",
   "com.typesafe.akka" %% "akka-slf4j" % "2.3.2",
   "com.typesafe.akka" %% "akka-testkit" % "2.3.2" % "test",
