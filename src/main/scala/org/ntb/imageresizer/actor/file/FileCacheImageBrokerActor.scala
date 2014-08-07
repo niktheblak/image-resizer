@@ -49,7 +49,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def handleGetImageRequest(self: ActorRef, sender: ActorRef, request: GetImageRequest) {
-    val key = Key(request.uri, request.size, request.format)
+    val key = Key(request.source.toString, request.size, request.format)
     val file = getCacheFile(key)
     workQueue.get(key) match {
       case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
@@ -59,7 +59,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
           sender ! GetImageResponse(file)
         } else {
           log.debug(s"Downloading and resizing image from request $request to ${file.getPath}")
-          val task = downloadAndResizeToFile(request.uri, file, request.size, request.format)
+          val task = downloadAndResizeToFile(request.source, file, request.size, request.format)
           workQueue.put(key, task)
           task onComplete replyWithResizedImage(self, sender, key, file)
         }
@@ -67,7 +67,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def handleGetLocalImageRequest(self: ActorRef, sender: ActorRef, request: GetLocalImageRequest) {
-    val key = Key(toUri(request.id), request.size, request.format)
+    val key = Key(request.id, request.size, request.format)
     val file = getCacheFile(key)
     workQueue.get(key) match {
       case Some(task) ⇒ task onComplete replyWithResizedImage(self, sender, key, file)
@@ -83,7 +83,7 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
   }
 
   def flushWorkQueue() {
-    if (!workQueue.isEmpty) {
+    if (workQueue.nonEmpty) {
       log.info(s"Flushing work queue with ${workQueue.size} tasks")
       val tasks = Future.sequence(workQueue.values)
       try {
@@ -124,12 +124,10 @@ class FileCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef) 
     val resizeTask = ask(resizeActor, request).mapTo[ResizeImageResponse]
     resizeTask map (_.fileSize)
   }
-
-  def toUri(id: String): URI = new URI(id)
 }
 
 object FileCacheImageBrokerActor {
-  case class GetImageRequest(uri: URI, size: Int, format: ImageFormat = JPEG) {
+  case class GetImageRequest(source: URI, size: Int, format: ImageFormat = JPEG) {
     require(size > 0, "Size must be positive")
   }
 

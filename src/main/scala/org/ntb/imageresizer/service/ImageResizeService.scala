@@ -4,8 +4,7 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.io.Files
-import java.net.MalformedURLException
-import java.net.{ URI, URL }
+import java.net.{ URISyntaxException, URI }
 import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
@@ -27,9 +26,9 @@ trait ImageResizeService extends HttpService with DefaultHasher {
 
   implicit val String2URIConverter = new FromStringDeserializer[URI] {
     def apply(value: String) = {
-      try Right(new URL(value).toURI)
+      try Right(new URI(value))
       catch {
-        case e: MalformedURLException ⇒ Left(MalformedContent(e.getMessage, e))
+        case e: URISyntaxException ⇒ Left(MalformedContent(e.getMessage, e))
       }
     }
   }

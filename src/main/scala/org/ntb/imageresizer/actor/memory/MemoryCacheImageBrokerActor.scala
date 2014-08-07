@@ -27,7 +27,7 @@ class MemoryCacheImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef
   def receive = {
     case GetImageRequest(uri, preferredSize, imageFormat) ⇒
       requireArgument(sender())(preferredSize > 0, "Size must be positive")
-      val key = Key(uri, preferredSize, imageFormat)
+      val key = Key(uri.toString, preferredSize, imageFormat)
       get(key) match {
         case Some(data) ⇒ sender ! GetImageResponse(data)
         case None ⇒
