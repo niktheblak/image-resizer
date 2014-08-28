@@ -6,7 +6,7 @@ import org.ntb.imageresizer.util.Loans
 
 import scala.collection.mutable
 
-trait IndexStore extends FlatFileImageStore {
+trait IndexStore extends FormatEncoder {
   def saveIndex(index: mutable.Map[ImageKey, FilePosition], file: File) {
     Loans.using(new DataOutputStream(new FileOutputStream(file))) { output ⇒
       output.writeInt(index.size)

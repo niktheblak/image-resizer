@@ -7,8 +7,6 @@ import java.util.concurrent.TimeUnit
 import akka.actor._
 import akka.pattern.{ ask, pipe }
 import akka.util.{ ByteString, Timeout }
-import com.google.common.hash.Hashing
-import com.google.common.io.BaseEncoding
 import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
 import org.ntb.imageresizer.storage._
 
@@ -20,6 +18,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     extends Actor
     with ActorLogging
     with IndexStore
+    with KeyEncoder
     with TempDirectoryIndexFile
     with TempDirectoryStorageFile {
   import DownloadActor._
@@ -29,19 +28,17 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 
   val index = mutable.Map.empty[ImageKey, FilePosition]
   val tasks = mutable.Map.empty[ImageKey, Future[(ByteString, Long, Long)]]
-  val hashFunction = Hashing.goodFastHash(128)
-  val encoding = BaseEncoding.base64Url().omitPadding()
-  val imageDataLoader = context.actorOf(Props[ImageDataActor])
+  val imageDataActor = context.actorOf(Props[ImageDataActor])
   implicit val executionContext = context.dispatcher
   implicit val akkaTimeout = Timeout(30, TimeUnit.SECONDS)
 
   override def receive = {
     case GetImageRequest(source, size, format) ⇒
-      val imageKey = ImageKey(getKey(source, size, format), size, format)
+      val imageKey = ImageKey(encodeKey(source, size, format), size, format)
       index.get(imageKey) match {
         case Some(pos) ⇒
           log.debug("Serving cached image {}", imageKey)
-          val dataResponse = ask(imageDataLoader, LoadImageRequest(pos.storage, pos.offset)).mapTo[LoadImageResponse]
+          val dataResponse = ask(imageDataActor, LoadImageRequest(pos.storage, pos.offset)).mapTo[LoadImageResponse]
           pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
         case None ⇒
           val senderRef = sender()
@@ -60,7 +57,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
               val task = for (
                 downloaded ← ask(downloadActor, DownloadRequest(new URI(source))).mapTo[DownloadResponse];
                 resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
-                stored ← ask(imageDataLoader, StoreImageRequest(storage, imageKey, resized.data)).mapTo[StoreImageResponse]
+                stored ← ask(imageDataActor, StoreImageRequest(storage, imageKey, resized.data)).mapTo[StoreImageResponse]
               ) yield (resized.data, stored.offset, stored.size)
               tasks.put(imageKey, task)
               task onComplete {
@@ -94,6 +91,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     if (tasks.nonEmpty) {
       log.info("Awaiting for {} remaining tasks...", tasks.size)
       flushTasks()
+      tasks.clear()
     }
     if (index.nonEmpty) {
       log.info("Saving index ({} items) to {}", index.size, indexFile)
@@ -105,7 +103,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   def storageId: String =
     self.path.name
 
-  private def flushTasks() {
+  def flushTasks() {
     val remainingTasks = Future.sequence(tasks.values)
     try {
       Await.result(remainingTasks, akkaTimeout.duration)
@@ -114,18 +112,9 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
         log.error("Error while shutting down", e)
     }
   }
-
-  private def getKey(source: String, size: Int, format: ImageFormat): String = {
-    val hasher = hashFunction.newHasher()
-    hasher.putUnencodedChars(source)
-    hasher.putInt(size)
-    hasher.putByte(formatToByte(format))
-    val hash = hasher.hash()
-    encoding.encode(hash.asBytes())
-  }
 }
 
-object ImageBrokerActor extends FlatFileImageStore {
+object ImageBrokerActor {
   case class GetImageRequest(source: String, size: Int, format: ImageFormat = JPEG) {
     require(size > 0, "Size must be positive")
   }

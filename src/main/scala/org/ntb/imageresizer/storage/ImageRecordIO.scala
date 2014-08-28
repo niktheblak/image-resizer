@@ -4,9 +4,8 @@ import java.io.{ DataInput, RandomAccessFile }
 import java.util
 
 import akka.util.ByteString
-import org.ntb.imageresizer.imageformat.{ GIF, PNG, JPEG, ImageFormat }
 
-trait ImageRecordIO {
+trait ImageRecordIO extends FormatEncoder {
   val header = "IMGX".getBytes("US-ASCII")
 
   def writeImageRecord(image: ImageRecord, output: RandomAccessFile) {
@@ -34,25 +33,11 @@ trait ImageRecordIO {
     ImageRecord(key, size, format, flags, ByteString(data))
   }
 
-  private def writePadding(output: RandomAccessFile) {
+  def writePadding(output: RandomAccessFile) {
     val position = output.getFilePointer
     if (position % 8 != 0) {
       val paddingLength = 8 - (position % 8).toInt
       for (i ← 0 until paddingLength) output.writeByte(0)
     }
-  }
-
-  def formatToByte(format: ImageFormat): Byte = format match {
-    case JPEG ⇒ 0.toByte
-    case PNG ⇒ 1.toByte
-    case GIF ⇒ 2.toByte
-    case _ ⇒ throw new IllegalArgumentException("Invalid format: " + format)
-  }
-
-  def byteToFormat(b: Byte): ImageFormat = b match {
-    case 0 ⇒ JPEG
-    case 1 ⇒ PNG
-    case 2 ⇒ GIF
-    case n ⇒ throw new IllegalArgumentException("Invalid format byte: " + n)
   }
 }
