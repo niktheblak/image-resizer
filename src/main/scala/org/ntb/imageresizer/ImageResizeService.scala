@@ -1,22 +1,24 @@
-package org.ntb.imageresizer.service
+package org.ntb.imageresizer
+
+import java.net.{ URI, URISyntaxException }
 
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.io.Files
-import java.net.{ URISyntaxException, URI }
 import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
-import org.ntb.imageresizer.util.FileUtils.createTempFile
 import org.ntb.imageresizer.util.DefaultHasher
-import spray.http._
+import org.ntb.imageresizer.util.FileUtils.createTempFile
 import spray.http.HttpHeaders._
+import spray.http._
 import spray.httpx.unmarshalling._
 import spray.routing._
+
 import scala.concurrent.ExecutionContext
 
 trait ImageResizeService extends HttpService with DefaultHasher {
-  import language.postfixOps
+  import scala.language.postfixOps
 
   implicit val context: ExecutionContext
   implicit val timeout: Timeout

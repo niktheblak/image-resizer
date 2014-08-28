@@ -4,7 +4,7 @@ import java.io.{ IOException, File }
 
 import akka.actor.{ Status, Actor }
 import akka.util.ByteString
-import org.ntb.imageresizer.cache.FlatFileImageStore
+import org.ntb.imageresizer.storage.FlatFileImageStore
 
 class ImageDataLoaderActor extends Actor with FlatFileImageStore {
   import ImageDataLoaderActor._

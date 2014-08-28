@@ -1,4 +1,4 @@
-package org.ntb.imageresizer.cache
+package org.ntb.imageresizer.storage
 
 import java.io.File
 

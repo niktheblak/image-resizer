@@ -1,4 +1,4 @@
-package org.ntb.imageresizer.cache
+package org.ntb.imageresizer.storage
 
 import java.io.{ DataInput, RandomAccessFile, File }
 import java.nio.ByteOrder
@@ -8,7 +8,7 @@ import akka.util.ByteString
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.Loans
 
-private[cache] case class ImageRecord(key: String, size: Int, format: ImageFormat, flags: Int, data: ByteString)
+private[storage] case class ImageRecord(key: String, size: Int, format: ImageFormat, flags: Int, data: ByteString)
 
 trait FlatFileImageStore {
   implicit val byteOrder = ByteOrder.LITTLE_ENDIAN

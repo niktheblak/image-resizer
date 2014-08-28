@@ -1,15 +1,14 @@
-package org.ntb.imageresizer.service
+package org.ntb.imageresizer
 
+import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
 
-import akka.util.Timeout
-import akka.actor.{ Props, ActorSystem }
-import org.ntb.imageresizer.actor.ImageBrokerActor
-import org.ntb.imageresizer.actor.memory.{ DownloadActor, ResizeActor }
-import spray.routing.SimpleRoutingApp
-import com.typesafe.config.ConfigFactory
-import java.util.concurrent.TimeUnit
+import akka.actor.{ ActorSystem, Props }
 import akka.routing.BalancingPool
+import akka.util.Timeout
+import com.typesafe.config.ConfigFactory
+import org.ntb.imageresizer.actor.{ DownloadActor, ImageBrokerActor, ResizeActor }
+import spray.routing.SimpleRoutingApp
 
 object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
   val config = ConfigFactory.parseString("""

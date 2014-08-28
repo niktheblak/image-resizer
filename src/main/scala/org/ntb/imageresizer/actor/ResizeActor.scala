@@ -1,14 +1,13 @@
-package org.ntb.imageresizer.actor.memory
+package org.ntb.imageresizer.actor
 
 import akka.actor.Actor
-import akka.util.{ ByteStringBuilder, ByteString }
-import org.ntb.imageresizer.actor.ActorUtils
+import akka.util.{ ByteString, ByteStringBuilder }
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.resize.Resizer._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 
 class ResizeActor extends Actor with ActorUtils {
-  import ResizeActor._
+  import org.ntb.imageresizer.actor.ResizeActor._
 
   def receive = {
     case ResizeImageRequest(source, size, format) ⇒

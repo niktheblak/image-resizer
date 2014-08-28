@@ -1,9 +1,8 @@
 package org.ntb.imageresizer
 
-import actor.file.{ ResizeActor, FileCacheImageBrokerActor, DownloadActor }
+import actor.{ ResizeActor, ImageBrokerActor, DownloadActor }
 import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpException
-import FileCacheImageBrokerActor._
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -15,6 +14,8 @@ import java.net.URI
 import java.net.URISyntaxException
 
 object ImageResizerShell extends App {
+  import ImageBrokerActor._
+
   implicit val timeout: Timeout = 10.seconds
   val config = ConfigFactory.parseString("""
     akka {
@@ -26,7 +27,7 @@ object ImageResizerShell extends App {
   val system = ActorSystem("ImageResizer", ConfigFactory.load(config))
   val resizeActor = system.actorOf(Props[ResizeActor], "resizer")
   val downloadActor = system.actorOf(Props[DownloadActor], "downloader")
-  val imageBrokerActor = system.actorOf(Props(classOf[FileCacheImageBrokerActor], downloadActor, resizeActor), "imagebroker")
+  val imageBrokerActor = system.actorOf(Props(classOf[ImageBrokerActor], downloadActor, resizeActor), "imagebroker")
   processCommands()
 
   def processCommands() {
@@ -62,8 +63,6 @@ object ImageResizerShell extends App {
           case e: UnsupportedImageFormatException ⇒ Console.err.println(s"Unsupported image format for $path")
           case e: HttpException ⇒ Console.err.println(s"Could not download $path: ${e.getMessage}")
         }
-      case "clear" :: Nil ⇒
-        imageBrokerActor ! ClearCache()
       case "exit" :: Nil ⇒
         exit()
       case command ⇒
@@ -76,6 +75,6 @@ object ImageResizerShell extends App {
     println(s"Resizing image $path to $size pixels")
     val resizeImageTask = ask(imageBrokerActor, GetImageRequest(uri, size)).mapTo[GetImageResponse]
     val response = Await.result(resizeImageTask, timeout.duration)
-    println(s"Received resized image data ${response.data.length} bytes to ${response.data.getAbsolutePath}")
+    println(s"Received resized image data ${response.data.length} bytes")
   }
 }

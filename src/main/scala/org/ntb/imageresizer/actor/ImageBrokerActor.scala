@@ -9,8 +9,7 @@ import akka.pattern.{ ask, pipe }
 import akka.util.{ Timeout, ByteString }
 import com.google.common.hash.Hashing
 import com.google.common.io.BaseEncoding
-import org.ntb.imageresizer.actor.memory.{ ResizeActor, DownloadActor }
-import org.ntb.imageresizer.cache.{ TempDirectoryStorageFile, TempDirectoryIndexFile, FlatFileImageStore }
+import org.ntb.imageresizer.storage.{ TempDirectoryStorageFile, TempDirectoryIndexFile, FlatFileImageStore }
 import org.ntb.imageresizer.imageformat.{ JPEG, ImageFormat }
 import org.ntb.imageresizer.util.Loans
 
