@@ -37,7 +37,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 
   override def receive = {
     case GetImageRequest(source, size, format) ⇒
-      val imageKey = ImageKey(getKey(source.toString, size, format), size, format)
+      val imageKey = ImageKey(getKey(source, size, format), size, format)
       index.get(imageKey) match {
         case Some(pos) ⇒
           log.debug("Serving cached image {}", imageKey)
@@ -58,7 +58,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
               log.debug("Loading image {} from source {}", imageKey, source)
               val storage = storageFile
               val task = for (
-                downloaded ← ask(downloadActor, DownloadRequest(source)).mapTo[DownloadResponse];
+                downloaded ← ask(downloadActor, DownloadRequest(new URI(source))).mapTo[DownloadResponse];
                 resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
                 stored ← ask(imageDataLoader, StoreImageRequest(storage, imageKey, resized.data)).mapTo[StoreImageResponse]
               ) yield (resized.data, stored.offset, stored.size)
@@ -126,7 +126,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 }
 
 object ImageBrokerActor extends FlatFileImageStore {
-  case class GetImageRequest(source: URI, size: Int, format: ImageFormat = JPEG) {
+  case class GetImageRequest(source: String, size: Int, format: ImageFormat = JPEG) {
     require(size > 0, "Size must be positive")
   }
 

@@ -10,8 +10,6 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import java.net.URI
-import java.net.URISyntaxException
 
 object ImageResizerShell extends App {
   import ImageBrokerActor._
@@ -59,7 +57,6 @@ object ImageResizerShell extends App {
           handleResizeCommand(path, size)
         } catch {
           case e: NumberFormatException ⇒ Console.err.println(s"Invalid argument for size: ${rest.mkString(" ")}")
-          case e: URISyntaxException ⇒ Console.err.println(s"Invalid URL: $path}")
           case e: UnsupportedImageFormatException ⇒ Console.err.println(s"Unsupported image format for $path")
           case e: HttpException ⇒ Console.err.println(s"Could not download $path: ${e.getMessage}")
         }
@@ -71,9 +68,8 @@ object ImageResizerShell extends App {
   }
 
   def handleResizeCommand(path: String, size: Int) {
-    val uri = new URI(path)
     println(s"Resizing image $path to $size pixels")
-    val resizeImageTask = ask(imageBrokerActor, GetImageRequest(uri, size)).mapTo[GetImageResponse]
+    val resizeImageTask = ask(imageBrokerActor, GetImageRequest(path, size)).mapTo[GetImageResponse]
     val response = Await.result(resizeImageTask, timeout.duration)
     println(s"Received resized image data ${response.data.length} bytes")
   }

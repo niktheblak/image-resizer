@@ -1,14 +1,10 @@
 package org.ntb.imageresizer
 
-import java.net.{ URI, URISyntaxException }
-
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.io.Files
-import org.ntb.imageresizer.actor.ImageBrokerActor
-import ImageBrokerActor._
-import org.ntb.imageresizer.actor.ImageBrokerActor
+import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.DefaultHasher
 import org.ntb.imageresizer.util.FileUtils.createTempFile
@@ -26,15 +22,6 @@ trait ImageResizeService extends HttpService with DefaultHasher {
   implicit val timeout: Timeout
   val imageBroker: ActorRef
 
-  implicit val String2URIConverter = new FromStringDeserializer[URI] {
-    def apply(value: String) = {
-      try Right(new URI(value))
-      catch {
-        case e: URISyntaxException ⇒ Left(MalformedContent(e.getMessage, e))
-      }
-    }
-  }
-
   implicit val String2ImageFormatConverter = new FromStringDeserializer[ImageFormat] {
     def apply(value: String) = {
       parseRequestedImageFormat(value) match {
@@ -45,7 +32,7 @@ trait ImageResizeService extends HttpService with DefaultHasher {
   }
 
   val resizeRoute = path("resize") {
-    (get & parameters('source.as[URI], 'size.as[Int], 'format.as[ImageFormat] ?)) {
+    (get & parameters('source.as[String], 'size.as[Int], 'format.as[ImageFormat] ?)) {
       (source, size, format) ⇒
         val imageFormat = format.getOrElse(JPEG)
         val mediaType = MediaTypes.forExtension(imageFormat.extension).get
