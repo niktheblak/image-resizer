@@ -6,7 +6,9 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.io.Files
-import org.ntb.imageresizer.actor.ImageBrokerActor._
+import org.ntb.imageresizer.actor.ImageBrokerActor
+import ImageBrokerActor._
+import org.ntb.imageresizer.actor.ImageBrokerActor
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.DefaultHasher
 import org.ntb.imageresizer.util.FileUtils.createTempFile

@@ -10,8 +10,7 @@ import akka.util.{ ByteString, Timeout }
 import com.google.common.hash.Hashing
 import com.google.common.io.BaseEncoding
 import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
-import org.ntb.imageresizer.storage.{ FlatFileImageStore, TempDirectoryIndexFile, TempDirectoryStorageFile }
-import org.ntb.imageresizer.util.Loans
+import org.ntb.imageresizer.storage._
 
 import scala.collection.mutable
 import scala.concurrent.{ Await, Future }
@@ -20,12 +19,13 @@ import scala.util.{ Failure, Success }
 class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     extends Actor
     with ActorLogging
+    with IndexStore
     with TempDirectoryIndexFile
     with TempDirectoryStorageFile {
-  import org.ntb.imageresizer.actor.DownloadActor._
-  import org.ntb.imageresizer.actor.ImageBrokerActor._
-  import org.ntb.imageresizer.actor.ImageDataActor._
-  import org.ntb.imageresizer.actor.ResizeActor._
+  import DownloadActor._
+  import ImageBrokerActor._
+  import ImageDataActor._
+  import ResizeActor._
 
   val index = mutable.Map.empty[ImageKey, FilePosition]
   val tasks = mutable.Map.empty[ImageKey, Future[(ByteString, Long, Long)]]
@@ -81,14 +81,14 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   }
 
   override def preStart() {
-    loadIndex()
+    loadIndex(index, indexFile)
   }
 
   override def postStop() {
     if (tasks.nonEmpty) {
       flushTasks()
     }
-    saveIndex()
+    saveIndex(index, indexFile)
     index.clear()
   }
 
@@ -112,39 +112,6 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     val hash = hasher.hash()
     encoding.encode(hash.asBytes())
   }
-
-  private def saveIndex() {
-    val file = indexFile
-    Loans.using(new DataOutputStream(new FileOutputStream(file))) { output ⇒
-      output.writeInt(index.size)
-      index foreach {
-        case (k, v) ⇒
-          output.writeUTF(k.key)
-          output.writeInt(k.size)
-          output.writeByte(formatToByte(k.format))
-          output.writeUTF(v.storage.getPath)
-          output.writeLong(v.offset)
-      }
-    }
-  }
-
-  private def loadIndex() {
-    index.clear()
-    val file = indexFile
-    if (file.exists() && file.length() > 0) {
-      Loans.using(new DataInputStream(new FileInputStream(file))) { input ⇒
-        val n = input.readInt()
-        for (i ← 0 until n) {
-          val key = input.readUTF()
-          val size = input.readInt()
-          val format = byteToFormat(input.readByte())
-          val path = input.readUTF()
-          val offset = input.readLong()
-          index.put(ImageKey(key, size, format), FilePosition(new File(path), offset))
-        }
-      }
-    }
-  }
 }
 
 object ImageBrokerActor extends FlatFileImageStore {
@@ -159,14 +126,6 @@ object ImageBrokerActor extends FlatFileImageStore {
   }
 
   case class GetImageResponse(data: ByteString)
-
-  private[actor] case class ImageKey(key: String, size: Int, format: ImageFormat) {
-    override def toString: String = {
-      s"Image(Key: $key, size: $size, format: $format)"
-    }
-  }
-
-  private[actor] case class FilePosition(storage: File, offset: Long)
 
   private[actor] case class TaskComplete(key: ImageKey, position: FilePosition)
 }

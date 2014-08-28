@@ -1,6 +1,6 @@
 package org.ntb.imageresizer
 
-import actor.{ ResizeActor, ImageBrokerActor, DownloadActor }
+import org.ntb.imageresizer.actor.{ ImageBrokerActor, ResizeActor, DownloadActor }
 import com.typesafe.config.ConfigFactory
 import org.apache.http.HttpException
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException

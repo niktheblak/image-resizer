@@ -7,7 +7,7 @@ import akka.actor.{ ActorSystem, Props }
 import akka.routing.BalancingPool
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import org.ntb.imageresizer.actor.{ DownloadActor, ImageBrokerActor, ResizeActor }
+import org.ntb.imageresizer.actor.{ ImageBrokerActor, DownloadActor, ResizeActor }
 import spray.routing.SimpleRoutingApp
 
 object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {

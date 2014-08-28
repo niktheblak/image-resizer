@@ -1,14 +1,13 @@
 package org.ntb.imageresizer.actor
 
-import java.io.{ IOException, File }
+import java.io.{ File, IOException }
 
-import akka.actor.{ Status, Actor }
+import akka.actor.Actor
 import akka.util.ByteString
-import org.ntb.imageresizer.actor.ImageBrokerActor.ImageKey
-import org.ntb.imageresizer.storage.FlatFileImageStore
+import org.ntb.imageresizer.storage.{ FlatFileImageStore, ImageKey }
 
 class ImageDataActor extends Actor with FlatFileImageStore with ActorUtils {
-  import ImageDataActor._
+  import org.ntb.imageresizer.actor.ImageDataActor._
 
   override def receive = {
     case LoadImageRequest(file, offset) ⇒
