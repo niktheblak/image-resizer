@@ -40,14 +40,14 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       val imageKey = ImageKey(getKey(source.toString, size, format), size, format)
       index.get(imageKey) match {
         case Some(pos) ⇒
-          log.info("Serving cached image {}", imageKey)
+          log.debug("Serving cached image {}", imageKey)
           val dataResponse = ask(imageDataLoader, LoadImageRequest(pos.storage, pos.offset)).mapTo[LoadImageResponse]
           pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
         case None ⇒
           val senderRef = sender()
           tasks.get(imageKey) match {
             case Some(task) ⇒
-              log.info("Task for image {} already exists, using existing task", imageKey)
+              log.debug("Task for image {} already exists, using existing task", imageKey)
               task onComplete {
                 case Success((data, offset, storageSize)) ⇒
                   senderRef ! GetImageResponse(data)
@@ -55,7 +55,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
                   senderRef ! Status.Failure(t)
               }
             case None ⇒
-              log.info("Loading image {} from source {}", imageKey, source)
+              log.debug("Loading image {} from source {}", imageKey, source)
               val storage = storageFile
               val task = for (
                 downloaded ← ask(downloadActor, DownloadRequest(source)).mapTo[DownloadResponse];
@@ -65,7 +65,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
               tasks.put(imageKey, task)
               task onComplete {
                 case Success((data, offset, storageSize)) ⇒
-                  log.info("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
+                  log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
                   self ! TaskComplete(imageKey, FilePosition(storage, offset))
                   senderRef ! GetImageResponse(data)
                 case Failure(t) ⇒
@@ -81,18 +81,29 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   }
 
   override def preStart() {
-    loadIndex(index, indexFile)
+    val file = indexFile
+    if (file.exists() && file.length() > 0) {
+      log.info("Loading index from {}", file)
+      loadIndex(index, file)
+    }
+    log.info("Started {} using storage file {} and index file {}", self.path.name, storageFile, indexFile)
   }
 
   override def postStop() {
+    log.info("{} shutting down", self.path.name)
     if (tasks.nonEmpty) {
+      log.info("Awaiting for {} remaining tasks...", tasks.size)
       flushTasks()
     }
-    saveIndex(index, indexFile)
-    index.clear()
+    if (index.nonEmpty) {
+      log.info("Saving index ({} items) to {}", index.size, indexFile)
+      saveIndex(index, indexFile)
+      index.clear()
+    }
   }
 
-  def storageId: String = getClass.getSimpleName
+  def storageId: String =
+    self.path.name
 
   private def flushTasks() {
     val remainingTasks = Future.sequence(tasks.values)
