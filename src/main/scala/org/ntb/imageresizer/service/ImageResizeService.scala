@@ -5,7 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.io.Files
 import java.net.{ URISyntaxException, URI }
-import org.ntb.imageresizer.actor.file.FileCacheImageBrokerActor._
+import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileUtils.createTempFile
 import org.ntb.imageresizer.util.DefaultHasher
@@ -13,7 +13,6 @@ import spray.http._
 import spray.http.HttpHeaders._
 import spray.httpx.unmarshalling._
 import spray.routing._
-import spray.util.pimpFile
 import scala.concurrent.ExecutionContext
 
 trait ImageResizeService extends HttpService with DefaultHasher {
@@ -21,7 +20,6 @@ trait ImageResizeService extends HttpService with DefaultHasher {
 
   implicit val context: ExecutionContext
   implicit val timeout: Timeout
-  val chunkSize = 0xFFFF
   val imageBroker: ActorRef
 
   implicit val String2URIConverter = new FromStringDeserializer[URI] {
@@ -50,7 +48,7 @@ trait ImageResizeService extends HttpService with DefaultHasher {
         val request = GetImageRequest(source, size, imageFormat)
         val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
         val result = resizeTask map { response ⇒
-          response.data.toByteArrayStream(chunkSize)
+          response.data
         }
         respondWithMediaType(mediaType) {
           complete(result)
@@ -69,7 +67,7 @@ trait ImageResizeService extends HttpService with DefaultHasher {
             case _ ⇒ tempFile.delete()
           }
           val result = resizeTask map { response ⇒
-            response.data.toByteArrayStream(chunkSize)
+            response.data
           }
           respondWithMediaType(mediaType) {
             val loc = s"/resize?source=$id&size=$size&format=$imageFormat"
