@@ -66,6 +66,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
                   self ! TaskComplete(imageKey, FilePosition(storage, offset))
                   senderRef ! GetImageResponse(data)
                 case Failure(t) ⇒
+                  self ! TaskFailed(imageKey, t)
                   senderRef ! Status.Failure(t)
               }
           }
@@ -73,6 +74,9 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     case TaskComplete(key, position) ⇒
       tasks.remove(key)
       index.put(key, position)
+    case TaskFailed(key, t) ⇒
+      tasks.remove(key)
+      log.error(t, "Resize task failed for image {}", key)
     case GetLocalImageRequest(source, id, size, format) ⇒
       sender() ! Status.Failure(new NotImplementedError("Method not implemented"))
   }
@@ -128,4 +132,6 @@ object ImageBrokerActor {
   case class GetImageResponse(data: ByteString)
 
   private[actor] case class TaskComplete(key: ImageKey, position: FilePosition)
+
+  private[actor] case class TaskFailed(key: ImageKey, t: Throwable)
 }
