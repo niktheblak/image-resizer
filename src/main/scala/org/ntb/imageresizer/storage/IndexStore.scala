@@ -14,7 +14,7 @@ trait IndexStore extends FormatEncoder {
         case (k, v) ⇒
           output.writeUTF(k.key)
           output.writeInt(k.size)
-          output.writeByte(formatToByte(k.format))
+          output.writeByte(encode(k.format))
           output.writeUTF(v.storage.getPath)
           output.writeLong(v.offset)
       }
@@ -29,7 +29,7 @@ trait IndexStore extends FormatEncoder {
         for (i ← 0 until n) {
           val key = input.readUTF()
           val size = input.readInt()
-          val format = byteToFormat(input.readByte())
+          val format = decode(input.readByte())
           val path = input.readUTF()
           val offset = input.readLong()
           index.put(ImageKey(key, size, format), FilePosition(new File(path), offset))

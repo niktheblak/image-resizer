@@ -28,7 +28,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 
   val index = mutable.Map.empty[ImageKey, FilePosition]
   val tasks = mutable.Map.empty[ImageKey, Future[(ByteString, Long, Long)]]
-  val imageDataActor = context.actorOf(Props[ImageDataActor])
+  val imageDataActor = context.actorOf(Props(classOf[ImageDataActor], storageFile))
   implicit val executionContext = context.dispatcher
   implicit val akkaTimeout = Timeout(30, TimeUnit.SECONDS)
 
@@ -38,7 +38,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       index.get(imageKey) match {
         case Some(pos) ⇒
           log.debug("Serving cached image {}", imageKey)
-          val dataResponse = ask(imageDataActor, LoadImageRequest(pos.storage, pos.offset)).mapTo[LoadImageResponse]
+          val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset)).mapTo[LoadImageResponse]
           pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
         case None ⇒
           val senderRef = sender()
@@ -57,7 +57,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
               val task = for (
                 downloaded ← ask(downloadActor, DownloadRequest(new URI(source))).mapTo[DownloadResponse];
                 resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
-                stored ← ask(imageDataActor, StoreImageRequest(storage, imageKey, resized.data)).mapTo[StoreImageResponse]
+                stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
               ) yield (resized.data, stored.offset, stored.size)
               tasks.put(imageKey, task)
               task onComplete {
@@ -84,10 +84,10 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   override def preStart() {
     val file = indexFile
     if (file.exists() && file.length() > 0) {
-      log.info("Loading index from {}", file)
       loadIndex(index, file)
+      log.info("Loaded {} items to index from {}", index.size, file)
     }
-    log.info("Started {} using storage file {} and index file {}", self.path.name, storageFile, indexFile)
+    log.info("Started {} using storage file {} and index file {}", storageId, storageFile, indexFile)
   }
 
   override def postStop() {

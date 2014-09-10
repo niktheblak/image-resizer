@@ -9,7 +9,7 @@ trait KeyEncoder extends FormatEncoder with DefaultHasher {
     val hasher = hashFunction.newHasher()
     hasher.putUnencodedChars(source)
     hasher.putInt(size)
-    hasher.putByte(formatToByte(format))
+    hasher.putByte(encode(format))
     hasher.hash().toString
   }
 }
