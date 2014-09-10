@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import java.net.URI
+import java.net.{ MalformedURLException, URI }
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
@@ -17,6 +17,7 @@ import scala.util.{ Failure, Success }
 class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     extends Actor
     with ActorLogging
+    with ActorUtils
     with IndexStore
     with KeyEncoder
     with TempDirectoryIndexFile
@@ -27,14 +28,17 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   import ResizeActor._
 
   val index = mutable.Map.empty[ImageKey, FilePosition]
-  val tasks = mutable.Map.empty[ImageKey, Future[(ByteString, Long, Long)]]
-  val imageDataActor = context.actorOf(Props(classOf[ImageDataActor], storageFile))
+  val tasks = mutable.Map.empty[ImageKey, Future[LoadImageTask]]
+  val imageDataActors = mutable.Map.empty[File, ActorRef]
+
   implicit val executionContext = context.dispatcher
   implicit val akkaTimeout = Timeout(30, TimeUnit.SECONDS)
 
   override def receive = {
     case GetImageRequest(source, size, format) ⇒
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
+      val storage = storageFor(imageKey)
+      val imageDataActor = imageDataActorFor(storage)
       log.debug("Looking up image {} from index", imageKey)
       index.get(imageKey) match {
         case Some(pos) ⇒
@@ -47,22 +51,26 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
             case Some(task) ⇒
               log.debug("Task for image {} already exists, using existing task", imageKey)
               task onComplete {
-                case Success((data, offset, storageSize)) ⇒
+                case Success(LoadImageTask(data, offset, storageSize)) ⇒
                   senderRef ! GetImageResponse(data)
                 case Failure(t) ⇒
                   senderRef ! Status.Failure(t)
               }
             case None ⇒
-              log.debug("Loading image {} from source {}", imageKey, source)
-              val storage = storageFile
+              val sourceUri = actorTry(sender()) {
+                new URI(source)
+              } actorCatch {
+                case e: MalformedURLException ⇒ null
+              }
+              log.debug("Loading image {} from source {}", imageKey, sourceUri)
               val task = for (
-                downloaded ← ask(downloadActor, DownloadRequest(new URI(source))).mapTo[DownloadResponse];
+                downloaded ← ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse];
                 resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
                 stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
-              ) yield (resized.data, stored.offset, stored.size)
+              ) yield LoadImageTask(resized.data, stored.offset, stored.size)
               tasks.put(imageKey, task)
               task onComplete {
-                case Success((data, offset, storageSize)) ⇒
+                case Success(LoadImageTask(data, offset, storageSize)) ⇒
                   log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
                   self ! TaskComplete(imageKey, FilePosition(storage, offset))
                   senderRef ! GetImageResponse(data)
@@ -101,11 +109,25 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       flushTasks()
       tasks.clear()
     }
+    imageDataActors.values.foreach(context.stop)
+    imageDataActors.clear()
     if (index.nonEmpty) {
       log.info("Saving index ({} items) to {}", index.size, indexFile)
       saveIndex(index, indexFile)
       index.clear()
     }
+  }
+
+  def imageDataActorFor(file: File): ActorRef = {
+    imageDataActors.getOrElseUpdate(file, {
+      log.info("Creating image data actor for file {}", file)
+      context.actorOf(Props(classOf[ImageDataActor], file))
+    })
+  }
+
+  def storageFor(imageKey: ImageKey): File = {
+    // TODO: Switch to a new cache file if the old gets too large
+    storageFile
   }
 
   def storageId: String =
@@ -138,4 +160,6 @@ object ImageBrokerActor {
   private[actor] case class TaskComplete(key: ImageKey, position: FilePosition)
 
   private[actor] case class TaskFailed(key: ImageKey, t: Throwable)
+
+  private[actor] case class LoadImageTask(data: ByteString, offset: Long, size: Long)
 }
