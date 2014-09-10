@@ -35,6 +35,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   override def receive = {
     case GetImageRequest(source, size, format) ⇒
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
+      log.debug("Looking up image {} from index", imageKey)
       index.get(imageKey) match {
         case Some(pos) ⇒
           log.debug("Serving cached image {}", imageKey)
@@ -86,6 +87,9 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     if (file.exists() && file.length() > 0) {
       loadIndex(index, file)
       log.info("Loaded {} items to index from {}", index.size, file)
+      if (log.isDebugEnabled) {
+        log.debug("Images in index:\n{}", index.keys.mkString("\n"))
+      }
     }
     log.info("Started {} using storage file {} and index file {}", storageId, storageFile, indexFile)
   }
