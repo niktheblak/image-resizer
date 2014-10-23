@@ -10,6 +10,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.io.StdIn
 
 object ImageResizerShell extends App {
   import ImageBrokerActor._
@@ -33,7 +34,7 @@ object ImageResizerShell extends App {
       while (true) {
         Console.print("> ")
         Console.flush()
-        val command = Console.readLine()
+        val command = StdIn.readLine()
         val tokens = command.split(' ').toList
         handleCommand(tokens)
       }

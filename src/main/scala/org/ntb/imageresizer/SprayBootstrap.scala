@@ -12,6 +12,7 @@ import spray.routing.SimpleRoutingApp
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.io.StdIn
 
 object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService {
   val config = ConfigFactory.parseString("""
@@ -44,7 +45,7 @@ object SprayBootstrap extends App with SimpleRoutingApp with ImageResizeService 
   val boundEvent = Await.result(startTask, 10.seconds)
 
   println(s"Server started at ${boundEvent.localAddress}. Press ENTER to quit...")
-  Console.readLine()
+  StdIn.readLine()
   system.stop(imageBroker)
   system.shutdown()
 }
