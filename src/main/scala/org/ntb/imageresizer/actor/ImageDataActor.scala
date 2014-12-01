@@ -4,24 +4,30 @@ import java.io.{ RandomAccessFile, File, IOException }
 
 import akka.actor.Actor
 import akka.util.ByteString
-import org.ntb.imageresizer.storage.{ FlatFileImageStore, ImageKey }
+import org.ntb.imageresizer.storage.{ StorageFileProvider, FlatFileImageStore, ImageKey }
 
-class ImageDataActor(storage: File) extends Actor with FlatFileImageStore with ActorUtils {
+class ImageDataActor(storageFile: File)
+    extends Actor
+    with FlatFileImageStore
+    with StorageFileProvider
+    with ActorUtils {
   import org.ntb.imageresizer.actor.ImageDataActor._
 
   private var storageBackend: RandomAccessFile = _
 
+  def storage = storageBackend
+
   override def receive = {
     case LoadImageRequest(offset) ⇒
       actorTry(sender()) {
-        val data = readImage(storageBackend, offset)
+        val data = readImage(offset)
         sender() ! LoadImageResponse(data)
       } actorCatch {
         case e: IOException ⇒
       }
     case StoreImageRequest(key, data) ⇒
       actorTry(sender()) {
-        val (offset, size) = writeImage(storageBackend, key.key, key.size, key.format, data)
+        val (offset, size) = writeImage(key.key, key.size, key.format, data)
         sender() ! StoreImageResponse(offset, size)
       } actorCatch {
         case e: IOException ⇒
@@ -29,7 +35,7 @@ class ImageDataActor(storage: File) extends Actor with FlatFileImageStore with A
   }
 
   override def preStart() {
-    storageBackend = new RandomAccessFile(storage, "rw")
+    storageBackend = new RandomAccessFile(storageFile, "rw")
   }
 
   override def postStop() {
