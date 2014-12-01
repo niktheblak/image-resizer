@@ -3,7 +3,7 @@ package org.ntb.imageresizer.storage
 import akka.util.ByteString
 import org.ntb.imageresizer.imageformat._
 
-trait FlatFileImageStore extends ImageRecordIO { self: StorageFileProvider ⇒
+trait FlatFileImageStore extends ImageRecordSerializer { self: StorageFileProvider ⇒
   def writeImage(key: String, size: Int, format: ImageFormat, data: ByteString): (Long, Long) = {
     val offset = storage.length()
     storage.seek(offset)

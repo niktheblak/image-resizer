@@ -5,7 +5,7 @@ import java.util
 
 import akka.util.ByteString
 
-trait ImageRecordIO extends FormatEncoder {
+trait ImageRecordSerializer extends FormatEncoder {
   val header = "IMGX".getBytes("US-ASCII")
 
   def writeImageRecord(image: ImageRecord, output: RandomAccessFile) {
