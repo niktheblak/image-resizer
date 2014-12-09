@@ -12,10 +12,10 @@ trait FlatFileImageStore extends ImageRecordSerializer { self: StorageFileProvid
     (offset, storageSize)
   }
 
-  def readImage(offset: Long): ByteString = {
+  def readImage(offset: Long, length: Long): ByteString = {
     require(offset < storage.length())
     storage.seek(offset)
-    val image = readImageRecord(storage)
+    val image = readImageRecord(storage, length)
     image.data
   }
 }

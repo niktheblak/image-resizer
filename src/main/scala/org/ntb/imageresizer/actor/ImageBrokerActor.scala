@@ -43,7 +43,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       index.get(imageKey) match {
         case Some(pos) ⇒
           log.debug("Serving cached image {}", imageKey)
-          val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset)).mapTo[LoadImageResponse]
+          val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset, pos.size)).mapTo[LoadImageResponse]
           pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
         case None ⇒
           val senderRef = sender()
@@ -72,7 +72,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
               task onComplete {
                 case Success(LoadImageTask(data, offset, storageSize)) ⇒
                   log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
-                  self ! TaskComplete(imageKey, FilePosition(storage, offset))
+                  self ! TaskComplete(imageKey, FilePosition(storage, offset, storageSize))
                   senderRef ! GetImageResponse(data)
                 case Failure(t) ⇒
                   self ! TaskFailed(imageKey, t)

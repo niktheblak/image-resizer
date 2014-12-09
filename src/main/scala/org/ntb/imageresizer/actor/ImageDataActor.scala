@@ -18,9 +18,9 @@ class ImageDataActor(storageFile: File)
   def storage = storageBackend
 
   override def receive = {
-    case LoadImageRequest(offset) ⇒
+    case LoadImageRequest(offset, size) ⇒
       actorTry(sender()) {
-        val data = readImage(offset)
+        val data = readImage(offset, size)
         sender() ! LoadImageResponse(data)
       } actorCatch {
         case e: IOException ⇒
@@ -44,7 +44,7 @@ class ImageDataActor(storageFile: File)
 }
 
 object ImageDataActor {
-  case class LoadImageRequest(offset: Long)
+  case class LoadImageRequest(offset: Long, size: Long)
 
   case class LoadImageResponse(data: ByteString)
 
