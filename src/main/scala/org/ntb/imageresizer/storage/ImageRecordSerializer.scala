@@ -14,6 +14,11 @@ trait ImageRecordSerializer extends FormatEncoder {
     else 0
   }
 
+  def writePadding(output: ByteBuffer) {
+    val length = paddingLength(output.position)
+    for (i ← 0 until length) output.put(0.toByte)
+  }
+
   def serializedSize(image: ImageRecord): Int = {
     val length =
       header.length + // Header
@@ -30,7 +35,7 @@ trait ImageRecordSerializer extends FormatEncoder {
   def writeImageRecord(image: ImageRecord, output: RandomAccessFile) {
     val buffer = ByteBuffer.allocate(serializedSize(image))
     writeToBuffer(image, buffer)
-    assert(!buffer.hasRemaining)
+    assert(!buffer.hasRemaining, "Buffer was not completely filled by image write")
     buffer.rewind()
     output.getChannel.write(buffer)
   }
@@ -39,7 +44,7 @@ trait ImageRecordSerializer extends FormatEncoder {
     output.put(header)
     output.put(image.flags.toByte)
     val keyData = image.key.getBytes("UTF-8")
-    require(keyData.length <= Short.MaxValue)
+    require(keyData.length <= Short.MaxValue, s"Key length ${keyData.length} too large")
     output.putShort(keyData.length.toShort)
     output.put(keyData)
     output.putInt(image.size)
@@ -47,7 +52,7 @@ trait ImageRecordSerializer extends FormatEncoder {
     output.putInt(image.data.size)
     image.data.copyToBuffer(output)
     writePadding(output)
-    assert(output.position % 8 == 0)
+    assert(output.position % 8 == 0, s"Output size ${output.position} not aligned to word boundary")
   }
 
   def readImageRecord(input: RandomAccessFile, size: Long): ImageRecord = {
@@ -69,16 +74,15 @@ trait ImageRecordSerializer extends FormatEncoder {
     val size = input.getInt
     val format = decode(input.get)
     val dataSize = input.getInt
-    require(dataSize <= input.remaining(), s"Invalid data size: $dataSize, remaining: ${input.remaining}")
+    require(dataSize <= input.remaining(), s"Data size $dataSize larger than remaining in buffer ${input.remaining}")
     val data = new Array[Byte](dataSize)
     input.get(data)
-    val padding = paddingLength(input.position)
-    input.position(input.position + padding)
+    skipPadding(input)
     ImageRecord(key, size, format, flags, ByteString(data))
   }
 
-  def writePadding(output: ByteBuffer) {
-    val length = paddingLength(output.position)
-    for (i ← 0 until length) output.put(0.toByte)
+  private def skipPadding(buffer: ByteBuffer) {
+    val padding = paddingLength(buffer.position)
+    buffer.position(buffer.position + padding)
   }
 }
