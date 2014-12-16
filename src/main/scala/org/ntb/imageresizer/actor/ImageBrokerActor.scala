@@ -46,6 +46,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
           val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset, pos.size)).mapTo[LoadImageResponse]
           pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
         case None ⇒
+          // Image was not found from index, check ongoing cache tasks
           val senderRef = sender()
           tasks.get(imageKey) match {
             case Some(task) ⇒
@@ -57,27 +58,9 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
                   senderRef ! Status.Failure(t)
               }
             case None ⇒
-              val sourceUri = actorTry(sender()) {
-                new URI(source)
-              } actorCatch {
-                case e: MalformedURLException ⇒ null
-              }
-              log.debug("Loading image {} from source {}", imageKey, sourceUri)
-              val task = for (
-                downloaded ← ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse];
-                resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
-                stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
-              ) yield LoadImageTask(resized.data, stored.offset, stored.size)
-              tasks.put(imageKey, task)
-              task onComplete {
-                case Success(LoadImageTask(data, offset, storageSize)) ⇒
-                  log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
-                  self ! TaskComplete(imageKey, FilePosition(storage, offset, storageSize))
-                  senderRef ! GetImageResponse(data)
-                case Failure(t) ⇒
-                  self ! TaskFailed(imageKey, t)
-                  senderRef ! Status.Failure(t)
-              }
+              // No cache task was found for this image, start a new task
+              val sourceUri = new URI(source)
+              cacheImage(senderRef, imageDataActor, storage, imageKey, sourceUri, size, format)
           }
       }
     case TaskComplete(key, position) ⇒
@@ -87,6 +70,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       tasks.remove(key)
       log.error(t, "Resize task failed for image {}", key)
     case GetLocalImageRequest(source, id, size, format) ⇒
+      // TODO: Implement
       sender() ! Status.Failure(new NotImplementedError("Method not implemented"))
   }
 
@@ -115,6 +99,25 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       log.info("Saving index ({} items) to {}", index.size, indexFile)
       saveIndex(index, indexFile)
       index.clear()
+    }
+  }
+
+  def cacheImage(recipient: ActorRef, imageDataActor: ActorRef, storage: File, imageKey: ImageKey, sourceUri: URI, size: Int, format: ImageFormat) {
+    log.debug("Loading image {} from source {}", imageKey, sourceUri)
+    val cacheTask = for (
+      downloaded ← ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse];
+      resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
+      stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
+    ) yield LoadImageTask(resized.data, stored.offset, stored.size)
+    tasks.put(imageKey, cacheTask)
+    cacheTask onComplete {
+      case Success(LoadImageTask(data, offset, storageSize)) ⇒
+        log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
+        self ! TaskComplete(imageKey, FilePosition(storage, offset, storageSize))
+        recipient ! GetImageResponse(data)
+      case Failure(t) ⇒
+        self ! TaskFailed(imageKey, t)
+        recipient ! Status.Failure(t)
     }
   }
 
@@ -147,6 +150,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 object ImageBrokerActor {
   case class GetImageRequest(source: String, size: Int, format: ImageFormat = JPEG) {
     require(size > 0, "Size must be positive")
+    validateUri(source)
   }
 
   case class GetLocalImageRequest(source: File, id: String, size: Int, format: ImageFormat = JPEG) {
@@ -162,4 +166,13 @@ object ImageBrokerActor {
   private[actor] case class TaskFailed(key: ImageKey, t: Throwable)
 
   private[actor] case class LoadImageTask(data: ByteString, offset: Long, size: Long)
+
+  def validateUri(source: String): URI = {
+    try {
+      new URI(source)
+    } catch {
+      case e: MalformedURLException ⇒
+        throw new IllegalArgumentException(e.getMessage)
+    }
+  }
 }
