@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.3",
   "io.spray" %% "spray-can" % "1.3.2",
   "io.spray" %% "spray-routing" % "1.3.2",
-  "org.mockito" % "mockito-all" % "1.9.5" % "test",
+  "org.mockito" % "mockito-core" % "1.10.19" % "test",
   "org.scalatest" %% "scalatest" % "2.2.1" % "test"
 )
 
