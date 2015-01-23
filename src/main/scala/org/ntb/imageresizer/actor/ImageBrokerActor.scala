@@ -21,8 +21,8 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     with ActorUtils
     with IndexStore
     with KeyEncoder
-    with TempDirectoryIndexFile
-    with TempDirectoryStorageFile {
+    with CurrentDirectoryIndexFile
+    with CurrentDirectoryStorageFile {
   import DownloadActor._
   import ImageBrokerActor._
   import ImageDataActor._
