@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import java.net.{ MalformedURLException, URI }
+import java.net.{ URL, MalformedURLException, URI }
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
@@ -9,6 +9,7 @@ import akka.pattern.{ ask, pipe }
 import akka.util.{ ByteString, Timeout }
 import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
 import org.ntb.imageresizer.storage._
+import org.ntb.imageresizer.util.FileUtils
 
 import scala.collection.mutable
 import scala.concurrent.{ Await, Future }
@@ -39,29 +40,14 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
       val storage = storageFor(imageKey)
       val imageDataActor = imageDataActorFor(storage)
-      log.debug("Looking up image {} from index", imageKey)
-      index.get(imageKey) match {
-        case Some(pos) ⇒
-          log.debug("Serving cached image {}", imageKey)
-          val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset, pos.size)).mapTo[LoadImageResponse]
-          pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
-        case None ⇒
-          // Image was not found from index, check ongoing cache tasks
-          val senderRef = sender()
-          tasks.get(imageKey) match {
-            case Some(task) ⇒
-              log.debug("Task for image {} already exists, using existing task", imageKey)
-              task onComplete {
-                case Success(LoadImageTask(data, offset, storageSize)) ⇒
-                  senderRef ! GetImageResponse(data)
-                case Failure(t) ⇒
-                  senderRef ! Status.Failure(t)
-              }
-            case None ⇒
-              // No cache task was found for this image, start a new task
-              val sourceUri = new URI(source)
-              cacheImage(senderRef, imageDataActor, storage, imageKey, sourceUri, size, format)
-          }
+      handleGetImageRequest(imageDataActor, size, format, imageKey) {
+        // No cache task was found for this image, start a new task
+        actorTry(sender()) {
+          val sourceUrl = new URL(source)
+          cacheRemoteImage(sender(), imageDataActor, storage, imageKey, sourceUrl.toURI, size, format)
+        } actorCatch {
+          case e: MalformedURLException ⇒
+        }
       }
     case TaskComplete(key, position) ⇒
       tasks.remove(key)
@@ -70,8 +56,38 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       tasks.remove(key)
       log.error(t, "Resize task failed for image {}", key)
     case GetLocalImageRequest(source, id, size, format) ⇒
-      // TODO: Implement
-      sender() ! Status.Failure(new NotImplementedError("Method not implemented"))
+      val imageKey = ImageKey(encodeKey(id, size, format), size, format)
+      val storage = storageFor(imageKey)
+      val imageDataActor = imageDataActorFor(storage)
+      handleGetImageRequest(imageDataActor, size, format, imageKey) {
+        // No cache task was found for this image, start a new task
+        cacheLocalImage(sender(), imageDataActor, storage, imageKey, source, size, format)
+      }
+  }
+
+  def handleGetImageRequest(imageDataActor: ActorRef, size: Int, format: ImageFormat, imageKey: ImageKey)(noneHandler: ⇒ Unit) {
+    log.debug("Looking up image {} from index", imageKey)
+    index.get(imageKey) match {
+      case Some(pos) ⇒
+        log.debug("Serving cached image {}", imageKey)
+        val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset, pos.size)).mapTo[LoadImageResponse]
+        pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
+      case None ⇒
+        // Image was not found from index, check ongoing cache tasks
+        val senderRef = sender()
+        tasks.get(imageKey) match {
+          case Some(task) ⇒
+            log.debug("Task for image {} already exists, using existing task", imageKey)
+            task onComplete {
+              case Success(LoadImageTask(data, offset, storageSize)) ⇒
+                senderRef ! GetImageResponse(data)
+              case Failure(t) ⇒
+                senderRef ! Status.Failure(t)
+            }
+          case None ⇒
+            noneHandler
+        }
+    }
   }
 
   override def preStart() {
@@ -102,15 +118,30 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     }
   }
 
-  def cacheImage(recipient: ActorRef, imageDataActor: ActorRef, storage: File, imageKey: ImageKey, sourceUri: URI, size: Int, format: ImageFormat) {
-    log.debug("Loading image {} from source {}", imageKey, sourceUri)
+  def cacheRemoteImage(recipient: ActorRef, imageDataActor: ActorRef, storage: File, imageKey: ImageKey, sourceUri: URI, size: Int, format: ImageFormat) {
+    log.debug("Loading image {} from URL {}", imageKey, sourceUri)
     val cacheTask = for (
       downloaded ← ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse];
       resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
       stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
     ) yield LoadImageTask(resized.data, stored.offset, stored.size)
     tasks.put(imageKey, cacheTask)
-    cacheTask onComplete {
+    installOnCompleteHandler(cacheTask, recipient, storage, imageKey)
+  }
+
+  def cacheLocalImage(recipient: ActorRef, imageDataActor: ActorRef, storage: File, imageKey: ImageKey, sourceFile: File, size: Int, format: ImageFormat) {
+    log.debug("Loading image {} from source file {}", imageKey, sourceFile)
+    val imageData = FileUtils.toByteString(sourceFile)
+    val cacheTask = for (
+      resized ← ask(resizeActor, ResizeImageRequest(imageData, size, format)).mapTo[ResizeImageResponse];
+      stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
+    ) yield LoadImageTask(resized.data, stored.offset, stored.size)
+    tasks.put(imageKey, cacheTask)
+    installOnCompleteHandler(cacheTask, recipient, storage, imageKey)
+  }
+
+  def installOnCompleteHandler(task: Future[ImageBrokerActor.LoadImageTask], recipient: ActorRef, storage: File, imageKey: ImageKey): Unit = {
+    task onComplete {
       case Success(LoadImageTask(data, offset, storageSize)) ⇒
         log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
         self ! TaskComplete(imageKey, FilePosition(storage, offset, storageSize))

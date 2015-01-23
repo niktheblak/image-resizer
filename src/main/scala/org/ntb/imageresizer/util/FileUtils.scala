@@ -1,6 +1,9 @@
 package org.ntb.imageresizer.util
 
 import java.io.File
+import akka.util.ByteString
+import com.google.common.io.Files
+
 import scala.concurrent.duration.Duration
 
 object FileUtils {
@@ -27,5 +30,12 @@ object FileUtils {
     val files = dir.listFiles()
     if (files != null) files.toSeq
     else Seq.empty
+  }
+
+  def toByteString(file: File): ByteString = {
+    val builder = ByteString.newBuilder
+    val output = builder.asOutputStream
+    Files.copy(file, output)
+    builder.result()
   }
 }

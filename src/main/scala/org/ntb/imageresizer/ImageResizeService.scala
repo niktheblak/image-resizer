@@ -61,7 +61,7 @@ trait ImageResizeService extends HttpService with DefaultHasher {
             response.data
           }
           respondWithMediaType(mediaType) {
-            val loc = s"/resize?source=$id&size=$size&format=$imageFormat"
+            val loc = Uri(s"/resize?source=$id&size=$size&format=$imageFormat")
             respondWithHeader(Location(loc)) {
               complete(result)
             }
