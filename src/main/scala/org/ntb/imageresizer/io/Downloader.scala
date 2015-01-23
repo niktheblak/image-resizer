@@ -1,9 +1,8 @@
 package org.ntb.imageresizer.io
 
 import org.ntb.imageresizer.util.Loans.using
-import org.apache.http.HttpException
+import org.apache.http.{ HttpEntity, HttpException, StatusLine }
 import org.apache.http.HttpStatus._
-import org.apache.http.StatusLine
 import org.apache.http.util.EntityUtils
 import com.google.common.io.ByteStreams
 import java.io.{ FileOutputStream, File, InputStream, OutputStream }
@@ -26,12 +25,17 @@ trait Downloader extends BasicHttpOperations { self: HttpClientProvider ⇒
     httpGet(uri) { response ⇒
       val statusLine = response.getStatusLine
       val entity = response.getEntity
-      if (statusLine.getStatusCode != SC_OK) {
-        val msg = if (entity != null) EntityUtils.toString(entity) else ""
-        throw new HttpException(s"Server responded with HTTP ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}: $msg")
-      }
-      using(entity.getContent) { input ⇒
-        f(input)
+      statusLine.getStatusCode match {
+        case SC_OK ⇒
+          using(entity.getContent) { input ⇒
+            f(input)
+          }
+        case SC_NOT_FOUND ⇒
+          val msg = entityToString(entity)
+          throw new HttpNotFoundException(msg)
+        case _ ⇒
+          val msg = entityToString(entity)
+          throw new HttpException(s"Server responded with HTTP ${statusLine.getStatusCode} ${statusLine.getReasonPhrase}: $msg")
       }
     }
   }
@@ -43,5 +47,11 @@ trait Downloader extends BasicHttpOperations { self: HttpClientProvider ⇒
         f(response.getStatusLine, input)
       }
     }
+  }
+
+  private def entityToString(entity: HttpEntity): String = {
+    if (entity != null)
+      EntityUtils.toString(entity)
+    else ""
   }
 }

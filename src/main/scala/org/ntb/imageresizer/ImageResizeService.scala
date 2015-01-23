@@ -1,11 +1,15 @@
 package org.ntb.imageresizer
 
+import java.net.MalformedURLException
+
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.google.common.io.Files
+import org.apache.http.HttpException
 import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
+import org.ntb.imageresizer.io.HttpNotFoundException
 import org.ntb.imageresizer.util.DefaultHasher
 import org.ntb.imageresizer.util.FileUtils.createTempFile
 import spray.http.HttpHeaders._
@@ -38,11 +42,15 @@ trait ImageResizeService extends HttpService with DefaultHasher {
         val mediaType = MediaTypes.forExtension(imageFormat.extension).get
         val request = GetImageRequest(source, size, imageFormat)
         val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
-        val result = resizeTask map { response ⇒
-          response.data
-        }
-        respondWithMediaType(mediaType) {
-          complete(result)
+        val result = resizeTask.map(_.data)
+        complete {
+          result map { data ⇒
+            HttpResponse(entity = HttpEntity(mediaType, data))
+          } recover {
+            case e: HttpNotFoundException ⇒ HttpResponse(status = StatusCodes.NotFound, entity = e.getMessage)
+            case e: HttpException ⇒ HttpResponse(status = StatusCodes.BadGateway, entity = e.getMessage)
+            case e: MalformedURLException ⇒ HttpResponse(status = StatusCodes.BadRequest, entity = e.getMessage)
+          }
         }
     } ~ (post & parameters('size.as[Int], 'format.as[ImageFormat] ?)) {
       (size, format) ⇒

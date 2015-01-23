@@ -47,8 +47,18 @@ class DownloaderTest extends FlatSpec with Matchers with MockHttpClients {
     result should not be 'defined
   }
 
-  it should "throw HttpException when HTTP server responds with an error code" in {
+  it should "throw HttpNotFoundException when the resource does not exist" in {
     val httpClient = statusCodeHttpClient(SC_NOT_FOUND)
+    val downloader = new TestDownloader(httpClient)
+    val output = new ByteArrayOutputStream()
+    an[HttpNotFoundException] should be thrownBy {
+      downloader.download(URI.create("http://localhost/logo.png"), output)
+    }
+    verify(httpClient).execute(any[HttpGet])
+  }
+
+  it should "throw HttpException when HTTP server responds with an error code" in {
+    val httpClient = statusCodeHttpClient(SC_INTERNAL_SERVER_ERROR)
     val downloader = new TestDownloader(httpClient)
     val output = new ByteArrayOutputStream()
     an[HttpException] should be thrownBy {
