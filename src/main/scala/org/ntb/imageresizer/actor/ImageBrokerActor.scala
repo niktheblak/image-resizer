@@ -40,11 +40,14 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
       val storage = storageFor(imageKey)
       val imageDataActor = imageDataActorFor(storage)
+      val recipient = sender()
       handleGetImageRequest(imageDataActor, size, format, imageKey) {
         // No cache task was found for this image, start a new task
         actorTry(sender()) {
           val sourceUrl = new URL(source)
-          cacheRemoteImage(sender(), imageDataActor, storage, imageKey, sourceUrl.toURI, size, format)
+          loadAndCacheRemoteImage(imageDataActor, imageKey, sourceUrl.toURI, size, format) { task ⇒
+            registerNotifications(task, recipient, storage, imageKey)
+          }
         } actorCatch {
           case e: MalformedURLException ⇒
         }
@@ -59,13 +62,16 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       val imageKey = ImageKey(encodeKey(id, size, format), size, format)
       val storage = storageFor(imageKey)
       val imageDataActor = imageDataActorFor(storage)
+      val recipient = sender()
       handleGetImageRequest(imageDataActor, size, format, imageKey) {
         // No cache task was found for this image, start a new task
-        cacheLocalImage(sender(), imageDataActor, storage, imageKey, source, size, format)
+        cacheLocalImage(imageDataActor, imageKey, source, size, format) { task ⇒
+          registerNotifications(task, recipient, storage, imageKey)
+        }
       }
   }
 
-  def handleGetImageRequest(imageDataActor: ActorRef, size: Int, format: ImageFormat, imageKey: ImageKey)(noneHandler: ⇒ Unit) {
+  def handleGetImageRequest(imageDataActor: ActorRef, size: Int, format: ImageFormat, imageKey: ImageKey)(loadImage: ⇒ Unit) {
     log.debug("Looking up image {} from index", imageKey)
     index.get(imageKey) match {
       case Some(pos) ⇒
@@ -85,7 +91,8 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
                 senderRef ! Status.Failure(t)
             }
           case None ⇒
-            noneHandler
+            log.debug("Image {} not found, caching image from remote source", imageKey)
+            loadImage
         }
     }
   }
@@ -118,29 +125,33 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     }
   }
 
-  def cacheRemoteImage(recipient: ActorRef, imageDataActor: ActorRef, storage: File, imageKey: ImageKey, sourceUri: URI, size: Int, format: ImageFormat) {
+  def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceUri: URI, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
     log.debug("Loading image {} from URL {}", imageKey, sourceUri)
-    val cacheTask = for (
-      downloaded ← ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse];
-      resized ← ask(resizeActor, ResizeImageRequest(downloaded.data, size, format)).mapTo[ResizeImageResponse];
-      stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
-    ) yield LoadImageTask(resized.data, stored.offset, stored.size)
-    tasks.put(imageKey, cacheTask)
-    installOnCompleteHandler(cacheTask, recipient, storage, imageKey)
+    val loadImageTask = ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse] map { response ⇒
+      response.data
+    }
+    cacheImage(loadImageTask, listen, imageDataActor, imageKey, size, format)
   }
 
-  def cacheLocalImage(recipient: ActorRef, imageDataActor: ActorRef, storage: File, imageKey: ImageKey, sourceFile: File, size: Int, format: ImageFormat) {
+  def cacheLocalImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceFile: File, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
     log.debug("Loading image {} from source file {}", imageKey, sourceFile)
-    val imageData = FileUtils.toByteString(sourceFile)
-    val cacheTask = for (
-      resized ← ask(resizeActor, ResizeImageRequest(imageData, size, format)).mapTo[ResizeImageResponse];
-      stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
-    ) yield LoadImageTask(resized.data, stored.offset, stored.size)
-    tasks.put(imageKey, cacheTask)
-    installOnCompleteHandler(cacheTask, recipient, storage, imageKey)
+    val loadImageTask = Future {
+      FileUtils.toByteString(sourceFile)
+    }
+    cacheImage(loadImageTask, listen, imageDataActor, imageKey, size, format)
   }
 
-  def installOnCompleteHandler(task: Future[ImageBrokerActor.LoadImageTask], recipient: ActorRef, storage: File, imageKey: ImageKey): Unit = {
+  def cacheImage(loadTask: Future[ByteString], listen: Future[LoadImageTask] ⇒ Unit, imageDataActor: ActorRef, imageKey: ImageKey, size: Int, format: ImageFormat) {
+    val cacheTask = for {
+      imageData ← loadTask
+      resized ← ask(resizeActor, ResizeImageRequest(imageData, size, format)).mapTo[ResizeImageResponse]
+      stored ← ask(imageDataActor, StoreImageRequest(imageKey, resized.data)).mapTo[StoreImageResponse]
+    } yield LoadImageTask(resized.data, stored.offset, stored.size)
+    tasks.put(imageKey, cacheTask)
+    listen(cacheTask)
+  }
+
+  def registerNotifications(task: Future[LoadImageTask], recipient: ActorRef, storage: File, imageKey: ImageKey) {
     task onComplete {
       case Success(LoadImageTask(data, offset, storageSize)) ⇒
         log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
