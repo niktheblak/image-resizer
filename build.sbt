@@ -6,7 +6,7 @@ name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.11.5"
+scalaVersion := "2.11.6"
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % "2.3.9",
@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   "io.spray" %% "spray-can" % "1.3.2",
   "io.spray" %% "spray-routing" % "1.3.2",
   "org.mockito" % "mockito-core" % "1.10.19" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.1" % "test"
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
 
 scalariformSettings
