@@ -18,8 +18,8 @@ libraryDependencies ++= Seq(
   "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided",
   "org.apache.httpcomponents" % "httpclient" % "4.3.6",
   "joda-time" % "joda-time" % "2.7",
-  "io.spray" %% "spray-can" % "1.3.2",
-  "io.spray" %% "spray-routing" % "1.3.2",
+  "io.spray" %% "spray-can" % "1.3.3",
+  "io.spray" %% "spray-routing" % "1.3.3",
   "org.mockito" % "mockito-core" % "1.10.19" % "test",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
