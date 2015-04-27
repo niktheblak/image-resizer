@@ -1,7 +1,6 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import java.net.{ URL, MalformedURLException, URI }
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
@@ -10,6 +9,7 @@ import akka.util.{ ByteString, Timeout }
 import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
+import spray.http.{ IllegalUriException, Uri }
 
 import scala.collection.mutable
 import scala.concurrent.{ Await, Future }
@@ -36,20 +36,21 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   implicit val akkaTimeout = Timeout(30, TimeUnit.SECONDS)
 
   override def receive = {
-    case GetImageRequest(source, size, format) ⇒
+    case request @ GetImageRequest(source, size, format) ⇒
+      actorTry(sender()) {
+        validateGetImageRequest(request)
+      } actorCatch {
+        case e: IllegalArgumentException ⇒
+      }
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
       val storage = storageFor(imageKey)
       val imageDataActor = imageDataActorFor(storage)
       val recipient = sender()
       handleGetImageRequest(imageDataActor, size, format, imageKey) {
         // No cache task was found for this image, start a new task
-        actorTry(sender()) {
-          val sourceUrl = new URL(source)
-          loadAndCacheRemoteImage(imageDataActor, imageKey, sourceUrl.toURI, size, format) { task ⇒
-            registerNotifications(task, recipient, storage, imageKey)
-          }
-        } actorCatch {
-          case e: MalformedURLException ⇒
+        val sourceUrl = validateUri(source)
+        loadAndCacheRemoteImage(imageDataActor, imageKey, sourceUrl, size, format) { task ⇒
+          registerNotifications(task, recipient, storage, imageKey)
         }
       }
     case TaskComplete(key, position) ⇒
@@ -58,7 +59,12 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     case TaskFailed(key, t) ⇒
       tasks.remove(key)
       log.error(t, "Resize task failed for image {}", key)
-    case GetLocalImageRequest(source, id, size, format) ⇒
+    case request @ GetLocalImageRequest(source, id, size, format) ⇒
+      actorTry(sender()) {
+        validateGetLocalImageRequest(request)
+      } actorCatch {
+        case e: IllegalArgumentException ⇒
+      }
       val imageKey = ImageKey(encodeKey(id, size, format), size, format)
       val storage = storageFor(imageKey)
       val imageDataActor = imageDataActorFor(storage)
@@ -125,7 +131,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     }
   }
 
-  def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceUri: URI, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
+  def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceUri: Uri, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
     log.debug("Loading image {} from URL {}", imageKey, sourceUri)
     val loadImageTask = ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse] map { response ⇒
       response.data
@@ -190,31 +196,35 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 }
 
 object ImageBrokerActor {
-  case class GetImageRequest(source: String, size: Int, format: ImageFormat = JPEG) {
-    require(size > 0, "Size must be positive")
-    validateUri(source)
-  }
-
-  case class GetLocalImageRequest(source: File, id: String, size: Int, format: ImageFormat = JPEG) {
-    require(source.exists && source.canRead, "Source file must exist and be readable")
-    require(!id.isEmpty, "Image ID must not be empty")
-    require(size > 0, "Size must be positive")
-  }
-
+  case class GetImageRequest(source: String, size: Int, format: ImageFormat = JPEG)
+  case class GetLocalImageRequest(source: File, id: String, size: Int, format: ImageFormat = JPEG)
   case class GetImageResponse(data: ByteString)
 
   private[actor] case class TaskComplete(key: ImageKey, position: FilePosition)
-
   private[actor] case class TaskFailed(key: ImageKey, t: Throwable)
-
   private[actor] case class LoadImageTask(data: ByteString, offset: Long, size: Long)
 
-  def validateUri(source: String): URI = {
+  def validateGetImageRequest(request: GetImageRequest) {
+    validateUri(request.source)
+    require(request.size > 0, "Size must be positive")
+  }
+
+  def validateGetLocalImageRequest(request: GetLocalImageRequest) {
+    require(request.source.exists && request.source.canRead, "Source file must exist and be readable")
+    require(!request.id.isEmpty, "Image ID must not be empty")
+    require(request.size > 0, "Size must be positive")
+  }
+
+  def validateUri(source: String): Uri = {
     try {
-      new URI(source)
+      val uri = Uri(source, Uri.ParsingMode.Strict)
+      require(!uri.isEmpty && uri.isAbsolute, "Source URI must be absolute")
+      uri
     } catch {
-      case e: MalformedURLException ⇒
+      case e: IllegalUriException ⇒
         throw new IllegalArgumentException(e.getMessage)
+      case e: IllegalArgumentException ⇒
+        throw e
     }
   }
 }

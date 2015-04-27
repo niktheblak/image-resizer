@@ -2,7 +2,6 @@ package org.ntb.imageresizer
 
 import org.ntb.imageresizer.actor.{ ImageBrokerActor, ResizeActor, DownloadActor }
 import com.typesafe.config.ConfigFactory
-import org.apache.http.HttpException
 import org.ntb.imageresizer.resize.UnsupportedImageFormatException
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -59,7 +58,7 @@ object ImageResizerShell extends App {
         } catch {
           case e: NumberFormatException ⇒ Console.err.println(s"Invalid argument for size: ${rest.mkString(" ")}")
           case e: UnsupportedImageFormatException ⇒ Console.err.println(s"Unsupported image format for $path")
-          case e: HttpException ⇒ Console.err.println(s"Could not download $path: ${e.getMessage}")
+          case e: RuntimeException ⇒ Console.err.println(s"Could not download $path: ${e.getMessage}")
         }
       case "exit" :: Nil ⇒
         exit()

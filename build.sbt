@@ -16,10 +16,10 @@ libraryDependencies ++= Seq(
   "org.imgscalr" % "imgscalr-lib" % "4.2",
   "com.google.guava" % "guava" % "18.0",
   "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided",
-  "org.apache.httpcomponents" % "httpclient" % "4.4.1",
   "com.github.nscala-time" %% "nscala-time" % "1.8.0",
   "io.spray" %% "spray-can" % "1.3.3",
   "io.spray" %% "spray-routing" % "1.3.3",
+  "io.spray" %% "spray-client" % "1.3.3",
   "org.mockito" % "mockito-core" % "1.10.19" % "test",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 )
