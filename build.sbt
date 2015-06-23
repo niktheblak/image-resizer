@@ -9,14 +9,14 @@ version := "1.0.0-SNAPSHOT"
 scalaVersion := "2.11.6"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.10",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.10",
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.10" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.11",
+  "com.typesafe.akka" %% "akka-slf4j" % "2.3.11",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.11" % "test",
   "org.slf4j" % "slf4j-simple" % "1.7.12",
   "org.imgscalr" % "imgscalr-lib" % "4.2",
   "com.google.guava" % "guava" % "18.0",
   "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided",
-  "com.github.nscala-time" %% "nscala-time" % "1.8.0",
+  "com.github.nscala-time" %% "nscala-time" % "2.0.0",
   "io.spray" %% "spray-can" % "1.3.3",
   "io.spray" %% "spray-routing" % "1.3.3",
   "io.spray" %% "spray-client" % "1.3.3",
