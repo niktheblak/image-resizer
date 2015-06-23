@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.resize
 
 import java.awt.image.BufferedImage
-import java.io.{InputStream, File}
+import java.io.{ InputStream, File }
 import java.net.URL
 
 import akka.util.ByteString

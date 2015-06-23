@@ -2,8 +2,8 @@ package org.ntb.imageresizer.actor
 
 import java.io.File
 
-import akka.actor.{Status, ActorSystem}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.actor.{ Status, ActorSystem }
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import akka.util.ByteString
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.io.ByteStringIO
