@@ -6,12 +6,12 @@ name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.11",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.11",
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.11" % "test",
+  "com.typesafe.akka" %% "akka-actor" % "2.3.12",
+  "com.typesafe.akka" %% "akka-slf4j" % "2.3.12",
+  "com.typesafe.akka" %% "akka-testkit" % "2.3.12" % "test",
   "org.slf4j" % "slf4j-simple" % "1.7.12",
   "org.imgscalr" % "imgscalr-lib" % "4.2",
   "com.google.guava" % "guava" % "18.0",
