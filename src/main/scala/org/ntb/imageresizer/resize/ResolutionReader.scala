@@ -7,18 +7,18 @@ import java.net.URL
 import akka.util.ByteString
 
 trait ResolutionReader extends JavaImageIOImageReader with BufferedImageLoan {
-  def readResolution(input: InputStream): (Int, Int) =
+  def readResolution(input: InputStream): Resolution =
     usingImage(read(input))(getResolution)
 
-  def readResolution(input: File): (Int, Int) =
+  def readResolution(input: File): Resolution =
     usingImage(read(input))(getResolution)
 
-  def readResolution(input: URL): (Int, Int) =
+  def readResolution(input: URL): Resolution =
     usingImage(read(input))(getResolution)
 
-  def readResolution(input: ByteString): (Int, Int) =
+  def readResolution(input: ByteString): Resolution =
     usingImage(read(input))(getResolution)
 
-  def getResolution(image: BufferedImage): (Int, Int) =
-    (image.getWidth, image.getHeight)
+  def getResolution(image: BufferedImage): Resolution =
+    Resolution(image.getWidth, image.getHeight)
 }

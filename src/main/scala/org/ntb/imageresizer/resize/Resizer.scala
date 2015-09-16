@@ -19,17 +19,17 @@ trait Resizer extends ImgScalrResizer with JavaImageIOImageReader {
     }
   }
 
-  def resizeImage(input: File, target: File, width: Int, height: Int, format: ImageFormat) {
+  def resizeImage(input: File, target: File, resolution: Resolution, format: ImageFormat) {
     using(new FileOutputStream(target)) { output ⇒
       usingImage(read(input)) { image ⇒
-        resizeBufferedImage(image, output, width, height, format)
+        resizeBufferedImage(image, output, resolution, format)
       }
     }
   }
 
-  def resizeImage(input: InputStream, output: OutputStream, width: Int, height: Int, format: ImageFormat) {
+  def resizeImage(input: InputStream, output: OutputStream, resolution: Resolution, format: ImageFormat) {
     usingImage(read(input)) { image ⇒
-      resizeBufferedImage(image, output, width, height, format)
+      resizeBufferedImage(image, output, resolution, format)
     }
   }
 }

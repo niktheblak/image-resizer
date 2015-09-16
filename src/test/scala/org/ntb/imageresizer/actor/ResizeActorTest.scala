@@ -7,7 +7,7 @@ import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import akka.util.ByteString
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.io.ByteStringIO
-import org.ntb.imageresizer.resize.ResolutionReader
+import org.ntb.imageresizer.resize.{ Resolution, ResolutionReader }
 import org.scalatest._
 
 import scala.concurrent.duration._
@@ -43,7 +43,7 @@ class ResizeActorTest
     resizeActor ! ResizeImageRequest(source, 200, JPEG)
     expectMsgPF(testTimeout) {
       case ResizeImageResponse(data) ⇒
-        val (width, height) = readResolution(data)
+        val Resolution(width, height) = readResolution(data)
         width shouldEqual 118
         height shouldEqual 200
     }
