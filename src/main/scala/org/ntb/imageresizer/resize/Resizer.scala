@@ -4,7 +4,7 @@ import java.io.{ File, FileOutputStream, InputStream, OutputStream }
 import org.ntb.imageresizer.imageformat.ImageFormat
 import org.ntb.imageresizer.util.Loans.using
 
-object Resizer extends ImgScalrResizer with JavaImageIOImageReader {
+trait Resizer extends ImgScalrResizer with JavaImageIOImageReader {
   def resizeImage(input: File, target: File, size: Int, format: ImageFormat) {
     using(new FileOutputStream(target)) { output ⇒
       usingImage(read(input)) { image ⇒

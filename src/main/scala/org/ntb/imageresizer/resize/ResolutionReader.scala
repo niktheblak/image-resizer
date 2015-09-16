@@ -5,9 +5,8 @@ import java.io.{ InputStream, File }
 import java.net.URL
 
 import akka.util.ByteString
-import org.ntb.imageresizer.resize.Resizer._
 
-object ResolutionTool extends JavaImageIOImageReader {
+trait ResolutionReader extends JavaImageIOImageReader with BufferedImageLoan {
   def readResolution(input: InputStream): (Int, Int) =
     usingImage(read(input))(getResolution)
 

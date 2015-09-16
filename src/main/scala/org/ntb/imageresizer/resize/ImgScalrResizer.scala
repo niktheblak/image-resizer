@@ -7,7 +7,7 @@ import org.imgscalr.Scalr
 import org.imgscalr.Scalr.Mode
 import org.ntb.imageresizer.imageformat.ImageFormat
 
-trait ImgScalrResizer {
+trait ImgScalrResizer extends BufferedImageLoan {
   def resizeBufferedImage(image: BufferedImage, output: OutputStream, size: Int, format: ImageFormat) {
     usingImage(Scalr.resize(image, size)) { scaled ⇒
       ImageIO.write(scaled, format.extension, output)
@@ -34,14 +34,4 @@ trait ImgScalrResizer {
 
   def fitExact(image: BufferedImage, width: Int, height: Int): BufferedImage =
     Scalr.resize(image, Mode.FIT_EXACT, width, height)
-
-  def usingImage[R](c: BufferedImage)(action: BufferedImage ⇒ R): R = {
-    try {
-      action(c)
-    } finally {
-      if (c != null) {
-        c.flush()
-      }
-    }
-  }
 }
