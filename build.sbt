@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "org.imgscalr" % "imgscalr-lib" % "4.2",
   "com.google.guava" % "guava" % "18.0",
   "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided",
-  "com.github.nscala-time" %% "nscala-time" % "2.0.0",
+  "com.github.nscala-time" %% "nscala-time" % "2.2.0",
   "io.spray" %% "spray-can" % "1.3.3",
   "io.spray" %% "spray-routing" % "1.3.3",
   "io.spray" %% "spray-client" % "1.3.3",
