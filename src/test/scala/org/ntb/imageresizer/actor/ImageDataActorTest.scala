@@ -37,7 +37,7 @@ class ImageDataActorTest
   }
 
   before {
-    storageFile = FileUtils.createTempFile()
+    storageFile = FileUtils.createTempFile(prefix = "ImageDataActorTest")
     storageBackend = new RandomAccessFile(storageFile, "rw")
     imageDataActor = TestActorRef(new ImageDataActor(storageFile))
   }

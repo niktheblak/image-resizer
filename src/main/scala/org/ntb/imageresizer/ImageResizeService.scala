@@ -53,7 +53,7 @@ trait ImageResizeService extends HttpService with DefaultHasher {
           val imageFormat = format.getOrElse(JPEG)
           val mediaType = MediaTypes.forExtension(imageFormat.extension).get
           val id = hashBytes(body)
-          val tempFile = createTempFile()
+          val tempFile = createTempFile(prefix = "resizer")
           Files.write(body, tempFile)
           val request = GetLocalImageRequest(tempFile, id, size, imageFormat)
           val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
