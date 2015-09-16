@@ -1,23 +1,23 @@
 package org.ntb.imageresizer.util
 
 import java.io.File
+
 import akka.util.ByteString
+import com.github.nscala_time.time.Imports._
 import com.google.common.io.Files
 
-import scala.concurrent.duration.Duration
-
 object FileUtils {
-  def createTempFile(): File = {
-    val file = File.createTempFile("FileUtils", ".tmp")
+  def createTempFile(prefix: String = "FileUtils", suffix: String = ".tmp"): File = {
+    val file = File.createTempFile(prefix, suffix)
     file.deleteOnExit()
     file
   }
 
   def hasExpired(file: File, maxAge: Duration): Boolean = {
-    val lastModified = file.lastModified
-    if (maxAge.isFinite() && lastModified > 0L)
-      lastModified + maxAge.toMillis < System.currentTimeMillis()
-    else false
+    file.lastModified match {
+      case 0L ⇒ false
+      case lastModified ⇒ (new DateTime(lastModified) + maxAge).isBeforeNow
+    }
   }
 
   def deleteIfExpired(file: File, maxAge: Duration) {

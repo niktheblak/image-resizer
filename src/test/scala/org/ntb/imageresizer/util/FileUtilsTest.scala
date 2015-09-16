@@ -1,19 +1,19 @@
 package org.ntb.imageresizer.util
 
 import java.io.File
-import org.mockito.Mockito._
+import org.mockito.Mockito.{ never, verify, when }
 import org.scalatest.Matchers
 import org.scalatest.WordSpec
 import org.scalatest.mock.MockitoSugar
-import scala.concurrent.duration._
+import com.github.nscala_time.time.Imports._
 
 class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
   "hasExpired" should {
     "return true if file has been expired" in {
-      val expireTime = currentTimeMinus(2.minutes)
+      val expireTime = DateTime.now - 2.minutes
       val maxAge = 1.minutes
       val file = mock[File]
-      when(file.lastModified()).thenReturn(expireTime)
+      when(file.lastModified()).thenReturn(expireTime.getMillis)
       val expired = FileUtils.hasExpired(file, maxAge)
       expired should equal (true)
     }
@@ -21,7 +21,7 @@ class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
     "return false when file expiration cannot be determined" in {
       val maxAge = 1.minutes
       val file = mock[File]
-      when(file.lastModified()).thenReturn(-1)
+      when(file.lastModified()).thenReturn(0L)
       val expired = FileUtils.hasExpired(file, maxAge)
       expired should equal (false)
     }
@@ -29,28 +29,21 @@ class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
 
   "deleteIfExpired" should {
     "delete the file if it has been expired" in {
-      val expireTime = currentTimeMinus(2.minutes)
+      val expireTime = DateTime.now - 2.minutes
       val maxAge = 1.minutes
       val file = mock[File]
-      when(file.lastModified()).thenReturn(expireTime)
+      when(file.lastModified()).thenReturn(expireTime.getMillis)
       FileUtils.deleteIfExpired(file, maxAge)
       verify(file).delete()
     }
 
     "not delete the file if it has not been expired" in {
-      val expireTime = currentTimeMinus(1.minutes)
+      val expireTime = DateTime.now - 1.minutes
       val maxAge = 2.minutes
       val file = mock[File]
-      when(file.lastModified()).thenReturn(expireTime)
+      when(file.lastModified()).thenReturn(expireTime.getMillis)
       FileUtils.deleteIfExpired(file, maxAge)
       verify(file, never()).delete()
     }
-  }
-
-  def currentTimeMinus(d: Duration): Long = {
-    require(d.isFinite())
-    val t = System.currentTimeMillis() - d.toMillis
-    assume(t > 0)
-    t
   }
 }
