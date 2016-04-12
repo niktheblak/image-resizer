@@ -34,18 +34,23 @@ trait ImageResizeService extends HttpService with DefaultHasher {
   val resizeRoute = path("resize") {
     (get & parameters('source.as[String], 'size.as[Int], 'format.as[ImageFormat] ?)) {
       (source, size, format) ⇒
-        val imageFormat = format.getOrElse(JPEG)
-        val mediaType = MediaTypes.forExtension(imageFormat.extension).get
-        val request = GetImageRequest(source, size, imageFormat)
-        val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
-        val result = resizeTask.map(_.data)
-        complete {
-          result map { data ⇒
-            HttpResponse(entity = HttpEntity(mediaType, data))
-          } recover {
-            case e: IllegalArgumentException ⇒ HttpResponse(status = StatusCodes.BadRequest, entity = e.getMessage)
-            case e: RuntimeException ⇒ HttpResponse(status = StatusCodes.BadGateway, entity = e.getMessage)
+        try {
+          validateGetImageRequest(source, size)
+          val imageFormat = format.getOrElse(JPEG)
+          val mediaType = MediaTypes.forExtension(imageFormat.extension).get
+          val request = GetImageRequest(source, size, imageFormat)
+          val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
+          val result = resizeTask.map(_.data)
+          complete {
+            result map { data ⇒
+              HttpResponse(entity = HttpEntity(mediaType, data))
+            }
           }
+        } catch {
+          case e: IllegalArgumentException ⇒
+            complete(HttpResponse(status = StatusCodes.BadRequest, entity = e.getMessage))
+          case e: RuntimeException ⇒
+            complete(HttpResponse(status = StatusCodes.BadGateway, entity = e.getMessage))
         }
     } ~ (post & parameters('size.as[Int], 'format.as[ImageFormat] ?)) {
       (size, format) ⇒
@@ -70,6 +75,24 @@ trait ImageResizeService extends HttpService with DefaultHasher {
             }
           }
         }
+    }
+  }
+
+  def validateGetImageRequest(source: String, size: Int) {
+    validateUri(source)
+    require(size > 0, "Size must be positive")
+  }
+
+  def validateUri(source: String): Uri = {
+    try {
+      val uri = Uri(source, Uri.ParsingMode.Strict)
+      require(!uri.isEmpty && uri.isAbsolute, "Source URI must be absolute")
+      uri
+    } catch {
+      case e: IllegalUriException ⇒
+        throw new IllegalArgumentException(e.getMessage)
+      case e: IllegalArgumentException ⇒
+        throw e
     }
   }
 }
