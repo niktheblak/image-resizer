@@ -4,20 +4,19 @@ import java.io._
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.pattern.{ ask, pipe }
-import akka.util.{ ByteString, Timeout }
-import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
+import akka.pattern.{ask, pipe}
+import akka.util.{ByteString, Timeout}
+import org.ntb.imageresizer.imageformat.{ImageFormat, JPEG}
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
-import spray.http.Uri
+import play.api.Logger
 
 import scala.collection.mutable
-import scala.concurrent.{ Await, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 
 class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     extends Actor
-    with ActorLogging
     with ActorUtils
     with IndexStore
     with KeyEncoder
@@ -27,7 +26,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   import ImageBrokerActor._
   import ImageDataActor._
   import ResizeActor._
-
+  
   val index = mutable.Map.empty[ImageKey, FilePosition]
   val tasks = mutable.Map.empty[ImageKey, Future[LoadImageTask]]
   val imageDataActors = mutable.Map.empty[File, ActorRef]
@@ -44,8 +43,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       val recipient = sender()
       handleGetImageRequest(imageDataActor, size, format, imageKey) {
         // No cache task was found for this image, start a new task
-        val sourceUrl = Uri(source)
-        loadAndCacheRemoteImage(imageDataActor, imageKey, sourceUrl, size, format) { task ⇒
+        loadAndCacheRemoteImage(imageDataActor, imageKey, source, size, format) { task ⇒
           registerNotifications(task, recipient, storage, imageKey)
         }
       }
@@ -54,7 +52,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       index.put(key, position)
     case TaskFailed(key, t) ⇒
       tasks.remove(key)
-      log.error(t, "Resize task failed for image {}", key)
+      Logger.error(s"Resize task failed for image $key", t)
     case request @ GetLocalImageRequest(source, id, size, format) ⇒
       assert(size > 0, s"Invalid size: $size")
       val imageKey = ImageKey(encodeKey(id, size, format), size, format)
@@ -70,10 +68,10 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   }
 
   def handleGetImageRequest(imageDataActor: ActorRef, size: Int, format: ImageFormat, imageKey: ImageKey)(loadImage: ⇒ Unit) {
-    log.debug("Looking up image {} from index", imageKey)
+    Logger.debug(s"Looking up image $imageKey from index")
     index.get(imageKey) match {
       case Some(pos) ⇒
-        log.debug("Serving cached image {}", imageKey)
+        Logger.debug(s"Serving cached image $imageKey")
         val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset, pos.size)).mapTo[LoadImageResponse]
         pipe(dataResponse map { r ⇒ GetImageResponse(r.data) }) to sender()
       case None ⇒
@@ -81,7 +79,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
         val senderRef = sender()
         tasks.get(imageKey) match {
           case Some(task) ⇒
-            log.debug("Task for image {} already exists, using existing task", imageKey)
+            Logger.debug(s"Task for image $imageKey already exists, using existing task")
             task onComplete {
               case Success(LoadImageTask(data, offset, storageSize)) ⇒
                 senderRef ! GetImageResponse(data)
@@ -89,7 +87,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
                 senderRef ! Status.Failure(t)
             }
           case None ⇒
-            log.debug("Image {} not found, caching image from remote source", imageKey)
+            Logger.debug(s"Image $imageKey not found, caching image from remote source")
             loadImage
         }
     }
@@ -99,40 +97,40 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
     val file = indexFile
     if (file.exists() && file.length() > 0) {
       loadIndex(index, file)
-      log.info("Loaded {} items to index from {}", index.size, file)
-      if (log.isDebugEnabled) {
-        log.debug("Images in index:\n{}", index.keys.mkString("\n"))
+      Logger.info(s"Loaded ${index.size} items to index from $file")
+      if (Logger.isDebugEnabled) {
+        Logger.debug(s"Images in index:\n${index.keys.mkString("\n")}")
       }
     }
-    log.info("Started {} using storage file {} and index file {}", storageId, storageFile, indexFile)
+    Logger.info(s"Started $storageId using storage file $storageFile and index file $indexFile")
   }
 
   override def postStop() {
-    log.info("{} shutting down", self.path.name)
+    Logger.info(s"${self.path.name} shutting down")
     if (tasks.nonEmpty) {
-      log.info("Awaiting for {} remaining tasks...", tasks.size)
+      Logger.info(s"Awaiting for ${tasks.size} remaining tasks...")
       flushTasks()
       tasks.clear()
     }
     imageDataActors.values.foreach(context.stop)
     imageDataActors.clear()
     if (index.nonEmpty) {
-      log.info("Saving index ({} items) to {}", index.size, indexFile)
+      Logger.info(s"Saving index (${index.size} items) to $indexFile")
       saveIndex(index, indexFile)
       index.clear()
     }
   }
 
-  def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceUri: Uri, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
-    log.debug("Loading image {} from URL {}", imageKey, sourceUri)
-    val loadImageTask = ask(downloadActor, DownloadRequest(sourceUri)).mapTo[DownloadResponse] map { response ⇒
+  def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, source: String, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
+    Logger.debug(s"Loading image $imageKey from URL $source")
+    val loadImageTask = ask(downloadActor, DownloadRequest(source)).mapTo[DownloadResponse] map { response ⇒
       response.data
     }
     cacheImage(loadImageTask, listen, imageDataActor, imageKey, size, format)
   }
 
   def cacheLocalImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceFile: File, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
-    log.debug("Loading image {} from source file {}", imageKey, sourceFile)
+    Logger.debug(s"Loading image $imageKey from source file $sourceFile")
     val loadImageTask = Future {
       FileUtils.toByteString(sourceFile)
     }
@@ -152,7 +150,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
   def registerNotifications(task: Future[LoadImageTask], recipient: ActorRef, storage: File, imageKey: ImageKey) {
     task onComplete {
       case Success(LoadImageTask(data, offset, storageSize)) ⇒
-        log.debug("Stored image {} to {}, position {} ({} bytes)", imageKey, storage, offset, storageSize)
+        Logger.debug(s"Stored image $imageKey to $storage, position $offset ($storageSize bytes)")
         self ! TaskComplete(imageKey, FilePosition(storage, offset, storageSize))
         recipient ! GetImageResponse(data)
       case Failure(t) ⇒
@@ -163,7 +161,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
 
   def imageDataActorFor(file: File): ActorRef = {
     imageDataActors.getOrElseUpdate(file, {
-      log.info("Creating image data actor for file {}", file)
+      Logger.info(s"Creating image data actor for file $file")
       context.actorOf(Props(classOf[ImageDataActor], file))
     })
   }
@@ -182,7 +180,7 @@ class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
       Await.result(remainingTasks, akkaTimeout.duration)
     } catch {
       case e: Exception ⇒
-        log.error("Error while shutting down", e)
+        Logger.error("Error while shutting down", e)
     }
   }
 }

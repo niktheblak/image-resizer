@@ -1,36 +1,18 @@
-import scalariform.formatter.preferences._
-import com.typesafe.sbt.SbtScalariform
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
 name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
 
 scalaVersion := "2.11.8"
 
+lazy val root = (project in file(".")).enablePlugins(PlayScala)
+
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor" % "2.3.15",
-  "com.typesafe.akka" %% "akka-slf4j" % "2.3.15",
-  "com.typesafe.akka" %% "akka-testkit" % "2.3.15" % "test",
-  "org.slf4j" % "slf4j-simple" % "1.7.12",
+  ws,
   "org.imgscalr" % "imgscalr-lib" % "4.2",
-  "com.google.guava" % "guava" % "19.0",
-  "com.google.code.findbugs" % "jsr305" % "2.0.1" % "provided",
   "com.github.nscala-time" %% "nscala-time" % "2.12.0",
-  "io.spray" %% "spray-can" % "1.3.3",
-  "io.spray" %% "spray-routing" % "1.3.3",
-  "io.spray" %% "spray-client" % "1.3.3",
-  "org.mockito" % "mockito-core" % "1.10.19" % "test",
-  "org.scalatest" %% "scalatest" % "2.2.6" % "test"
+  "com.typesafe.akka" %% "akka-testkit" % "2.4.4" % Test,
+  "org.mockito" % "mockito-core" % "1.10.19" % Test,
+  "org.scalatest" %% "scalatest" % "2.2.6" % Test
 )
 
-SbtScalariform.scalariformSettings
-
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(RewriteArrowSymbols, true)
-
-mainClass in assembly := Some("org.ntb.imageresizer.service.SprayBootstrap")
-
-assemblyJarName in assembly := "imageresizer.jar"
-
-test in assembly := {}
+resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
