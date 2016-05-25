@@ -1,5 +1,7 @@
 package org.ntb.imageresizer.actor
 
+import javax.inject.Inject
+
 import akka.actor.Actor
 import akka.pattern.pipe
 import akka.util.ByteString
@@ -10,7 +12,7 @@ import play.api.libs.ws.WSClient
 
 import scala.concurrent.duration._
 
-class DownloadActor(ws: WSClient) extends Actor with ActorUtils {
+class DownloadActor @Inject() (ws: WSClient) extends Actor with ActorUtils {
   import context.dispatcher
   import org.ntb.imageresizer.actor.DownloadActor._
 

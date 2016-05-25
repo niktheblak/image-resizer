@@ -2,6 +2,7 @@ package org.ntb.imageresizer.actor
 
 import java.io._
 import java.util.concurrent.TimeUnit
+import javax.inject.{Inject, Named}
 
 import akka.actor._
 import akka.pattern.{ask, pipe}
@@ -15,7 +16,7 @@ import scala.collection.mutable
 import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
 
-class ImageBrokerActor(downloadActor: ActorRef, resizeActor: ActorRef)
+class ImageBrokerActor @Inject() (@Named("downloader") downloadActor: ActorRef, @Named("resizer") resizeActor: ActorRef)
     extends Actor
     with ActorUtils
     with IndexStore

@@ -2,6 +2,7 @@ package org.ntb.imageresizer.service
 
 import javax.inject._
 
+import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import org.ntb.imageresizer.actor.DownloadActor._
@@ -12,14 +13,15 @@ import play.api.mvc._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class ImageResizerController @Inject() (imageBrokerSystem: ImageBrokerSystem) extends Controller {
+@Singleton
+class ImageResizerController @Inject() (@Named("imagebroker") imageBroker: ActorRef) extends Controller {
   import play.api.libs.concurrent.Execution.Implicits._
   implicit val timeout: Timeout = 10.seconds
 
   def resize(source: String, size: Int, format: String) = Action.async {
     val imageFormat = parseRequestedImageFormat(format).getOrElse(JPEG)
     val request = GetImageRequest(source, size, imageFormat)
-    val resizeTask = ask(imageBrokerSystem.imageBroker, request).mapTo[GetImageResponse]
+    val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
     resizeTask.map { r =>
       Ok(r.data).as(imageFormat.mimeType)
     } recoverWith {
