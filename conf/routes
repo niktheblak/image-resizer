@@ -4,6 +4,7 @@
 
 # An example controller showing a sample home page
 GET     /resize                           org.ntb.imageresizer.service.ImageResizerController.resize(source: String, size: Int, format: String ?= "JPEG")
+POST    /resize                           org.ntb.imageresizer.service.ImageResizerController.resizeFromBody(id: Option[String], size: Int, format: String ?= "JPEG")
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
