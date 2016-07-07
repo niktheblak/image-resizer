@@ -1,11 +1,11 @@
 package org.ntb.imageresizer.actor
 
-import akka.actor.{ActorSystem, Status}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.actor.{ ActorSystem, Status }
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import akka.util.ByteString
 import com.google.common.io.ByteStreams
 import org.ntb.imageresizer.imageformat._
-import org.ntb.imageresizer.resize.{Resolution, ResolutionReader}
+import org.ntb.imageresizer.resize.{ Resolution, ResolutionReader }
 import org.scalatest._
 
 import scala.concurrent.duration._

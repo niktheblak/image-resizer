@@ -6,8 +6,7 @@ import akka.actor.Actor
 import akka.pattern.pipe
 import akka.util.ByteString
 import play.api.Logger
-import play.api.http.HeaderNames
-import play.api.http.Status
+import play.api.http.{ HeaderNames, Status }
 import play.api.libs.ws.WSClient
 
 import scala.concurrent.duration._
@@ -24,7 +23,7 @@ class DownloadActor @Inject() (ws: WSClient) extends Actor with ActorUtils {
         val request = ws
           .url(url)
           .withRequestTimeout(10.seconds)
-        request.get() map { r =>
+        request.get() map { r ⇒
           if (r.status != Status.OK) {
             throw new DownloadException(r.status, r.statusText, r.body)
           }
@@ -34,7 +33,7 @@ class DownloadActor @Inject() (ws: WSClient) extends Actor with ActorUtils {
         } pipeTo sender()
       } catch {
         // ws methods can throw before the future is created
-        case e: Exception => sender() ! akka.actor.Status.Failure(e)
+        case e: Exception ⇒ sender() ! akka.actor.Status.Failure(e)
       }
   }
 }
@@ -50,8 +49,8 @@ object DownloadActor {
     try {
       org.asynchttpclient.uri.Uri.create(url)
     } catch {
-      case e: NullPointerException => throw new InvalidUrlException("URL segment is missing", e)
-      case e: IllegalArgumentException => throw new InvalidUrlException("Invalid URL", e)
+      case e: NullPointerException ⇒ throw new InvalidUrlException("URL segment is missing", e)
+      case e: IllegalArgumentException ⇒ throw new InvalidUrlException("Invalid URL", e)
     }
   }
 }

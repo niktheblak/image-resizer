@@ -2,19 +2,19 @@ package org.ntb.imageresizer.actor
 
 import java.io._
 import java.util.concurrent.TimeUnit
-import javax.inject.{Inject, Named}
+import javax.inject.{ Inject, Named }
 
 import akka.actor._
-import akka.pattern.{ask, pipe}
-import akka.util.{ByteString, Timeout}
-import org.ntb.imageresizer.imageformat.{ImageFormat, JPEG}
+import akka.pattern.{ ask, pipe }
+import akka.util.{ ByteString, Timeout }
+import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
 import play.api.Logger
 
 import scala.collection.mutable
-import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ Await, Future }
+import scala.util.{ Failure, Success }
 
 class ImageBrokerActor @Inject() (@Named("downloader") downloadActor: ActorRef, @Named("resizer") resizeActor: ActorRef)
     extends Actor
@@ -27,7 +27,7 @@ class ImageBrokerActor @Inject() (@Named("downloader") downloadActor: ActorRef, 
   import ImageBrokerActor._
   import ImageDataActor._
   import ResizeActor._
-  
+
   val index = mutable.Map.empty[ImageKey, FilePosition]
   val tasks = mutable.Map.empty[ImageKey, Future[LoadImageTask]]
   val imageDataActors = mutable.Map.empty[File, ActorRef]

@@ -1,7 +1,7 @@
 package org.ntb.imageresizer.actor
 
-import akka.actor.{ActorSystem, Status}
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.actor.{ ActorSystem, Status }
+import akka.testkit.{ ImplicitSender, TestActorRef, TestKit }
 import akka.util.ByteString
 import com.google.common.io.ByteStreams
 import org.scalatest._
@@ -28,15 +28,15 @@ class DownloadActorTest
 
   "DownloadActor" should "download file from valid URL" in {
     Server.withRouter() {
-      case GET(p"/test_image.jpeg") => Action {
+      case GET(p"/test_image.jpeg") ⇒ Action {
         Results.Ok.sendResource("test_image.jpeg").as("image/jpeg")
       }
-    } { port =>
-      WsTestClient.withClient { c =>
+    } { port ⇒
+      WsTestClient.withClient { c ⇒
         val downloadActor = TestActorRef(new DownloadActor(c))
         downloadActor ! DownloadRequest(s"http://localhost:${port.value}/test_image.jpeg")
         expectMsgPF(testTimeout) {
-          case DownloadResponse(data) =>
+          case DownloadResponse(data) ⇒
             val data = ByteStreams.toByteArray(getClass.getClassLoader.getResourceAsStream("test_image.jpeg"))
             data shouldEqual ByteString(data)
         }
@@ -46,15 +46,15 @@ class DownloadActorTest
 
   it should "return error if download failed" in {
     Server.withRouter() {
-      case GET(p"/test_image.jpeg") => Action {
+      case GET(p"/test_image.jpeg") ⇒ Action {
         Results.NotFound
       }
-    } { port =>
-      WsTestClient.withClient { c =>
+    } { port ⇒
+      WsTestClient.withClient { c ⇒
         val downloadActor = TestActorRef(new DownloadActor(c))
         downloadActor ! DownloadRequest(s"http://localhost:${port.value}/test_image.jpeg")
         expectMsgPF(testTimeout) {
-          case Status.Failure(t) =>
+          case Status.Failure(t) ⇒
             t.getMessage should startWith ("Server responded with HTTP 404 Not Found")
         }
       }
