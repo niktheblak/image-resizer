@@ -1,4 +1,4 @@
-package org.ntb.imageresizer.service
+package controllers
 
 import java.io.File
 
