@@ -1,29 +1,32 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import java.util.concurrent.TimeUnit
-import javax.inject.{ Inject, Named }
+import javax.inject.{Inject, Named}
 
 import akka.actor._
-import akka.pattern.{ ask, pipe }
-import akka.util.{ ByteString, Timeout }
-import org.ntb.imageresizer.imageformat.{ ImageFormat, JPEG }
+import akka.pattern.{ask, pipe}
+import akka.util.{ByteString, Timeout}
+import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
 import play.api.Logger
+import play.api.http.HeaderNames
+import play.api.libs.ws._
 
 import scala.collection.mutable
-import scala.concurrent.{ Await, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 
-class ImageBrokerActor @Inject() (@Named("downloader") downloadActor: ActorRef, @Named("resizer") resizeActor: ActorRef)
+class DownloadException(msg: String) extends RuntimeException(msg)
+
+class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: ActorRef)
     extends Actor
     with ActorUtils
     with IndexStore
     with KeyEncoder
     with CurrentDirectoryIndexFile
     with CurrentDirectoryStorageFile {
-  import DownloadActor._
   import ImageBrokerActor._
   import ImageDataActor._
   import ResizeActor._
@@ -33,7 +36,8 @@ class ImageBrokerActor @Inject() (@Named("downloader") downloadActor: ActorRef, 
   val imageDataActors = mutable.Map.empty[File, ActorRef]
 
   implicit val executionContext = context.dispatcher
-  implicit val akkaTimeout = Timeout(30, TimeUnit.SECONDS)
+  implicit val akkaTimeout = Timeout(10.seconds)
+  val downloadTimeout = 10.seconds
 
   override def receive = {
     case request @ GetImageRequest(source, size, format) ⇒
@@ -124,10 +128,32 @@ class ImageBrokerActor @Inject() (@Named("downloader") downloadActor: ActorRef, 
 
   def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, source: String, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {
     Logger.debug(s"Loading image $imageKey from URL $source")
-    val loadImageTask = ask(downloadActor, DownloadRequest(source)).mapTo[DownloadResponse] map { response ⇒
-      response.data
-    }
+    val loadImageTask = ws.url(source)
+      .withRequestTimeout(downloadTimeout)
+      .withFollowRedirects(true)
+      .get() map { response ⇒
+        validateResponse(source, response)
+        validateFormat(source, response)
+        response.bodyAsBytes
+      }
     cacheImage(loadImageTask, listen, imageDataActor, imageKey, size, format)
+  }
+
+  def validateResponse(source: String, response: WSResponse) {
+    if (response.status >= 400) {
+      throw new DownloadException(s"Server for $source responded with HTTP ${response.status} ${response.statusText}: ${response.body}")
+    }
+  }
+
+  def validateFormat(source: String, response: WSResponse) {
+    val contentTypeHeader = response.header(HeaderNames.CONTENT_TYPE)
+    val format = for {
+      ct ← contentTypeHeader
+      f ← parseImageFormatFromMimeType(ct)
+    } yield f
+    if (format.isEmpty) {
+      Logger.warn(s"Server response for $source has unknown image format ${contentTypeHeader.getOrElse("")}")
+    }
   }
 
   def cacheLocalImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceFile: File, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] ⇒ Unit) {

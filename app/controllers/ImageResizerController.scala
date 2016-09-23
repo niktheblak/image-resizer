@@ -5,7 +5,7 @@ import javax.inject._
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
-import org.ntb.imageresizer.actor.DownloadActor._
+import org.ntb.imageresizer.actor.DownloadException
 import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import play.api.mvc._
