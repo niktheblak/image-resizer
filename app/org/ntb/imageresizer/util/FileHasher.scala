@@ -1,4 +1,4 @@
-package controllers
+package org.ntb.imageresizer.util
 
 import java.io.File
 
@@ -8,8 +8,6 @@ import com.google.common.io.Files
 trait FileHasher {
   val hashFunction = Hashing.murmur3_128()
 
-  def hash(file: File): String = {
-    val hashCode = Files.hash(file, hashFunction)
-    hashCode.toString
-  }
+  def hash(file: File): String =
+    Files.hash(file, hashFunction).toString
 }

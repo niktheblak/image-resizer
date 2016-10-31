@@ -8,6 +8,7 @@ import akka.util.Timeout
 import org.ntb.imageresizer.actor.DownloadException
 import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
+import org.ntb.imageresizer.util.FileHasher
 import play.api.mvc._
 
 import scala.concurrent.Future
