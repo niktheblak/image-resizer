@@ -1,11 +1,11 @@
 package org.ntb.imageresizer.util
 
 import java.io.File
-import org.mockito.Mockito.{ never, verify, when }
-import org.scalatest.Matchers
-import org.scalatest.WordSpec
-import org.scalatest.mock.MockitoSugar
+
 import com.github.nscala_time.time.Imports._
+import org.mockito.Mockito.{never, verify, when}
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 class FileUtilsTest extends WordSpec with Matchers with MockitoSugar {
   "hasExpired" should {
