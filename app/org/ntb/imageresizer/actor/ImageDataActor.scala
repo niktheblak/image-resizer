@@ -1,10 +1,10 @@
 package org.ntb.imageresizer.actor
 
-import java.io.{ RandomAccessFile, File, IOException }
+import java.io.{File, IOException, RandomAccessFile}
 
 import akka.actor.Actor
 import akka.util.ByteString
-import org.ntb.imageresizer.storage.{ StorageFileProvider, FlatFileImageStore, ImageKey }
+import org.ntb.imageresizer.storage.{FlatFileImageStore, ImageKey, StorageFileProvider}
 
 class ImageDataActor(storageFile: File)
     extends Actor
@@ -15,7 +15,7 @@ class ImageDataActor(storageFile: File)
 
   private var storageBackend: RandomAccessFile = _
 
-  def storage = storageBackend
+  def storage: RandomAccessFile = storageBackend
 
   override def receive = {
     case LoadImageRequest(offset, size) ⇒

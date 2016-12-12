@@ -2,12 +2,12 @@ package org.ntb.imageresizer.storage
 
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
-import java.util
 
 import akka.util.ByteString
+import org.ntb.imageresizer.io.ByteStringIO
 
 trait ImageRecordSerializer extends FormatEncoder {
-  val header = "IMGX".getBytes("US-ASCII")
+  val header: ByteString = ByteString('I', 'M', 'G', 'X')
 
   def paddingLength(position: Int): Int = {
     if (position % 8 != 0) 8 - (position % 8)
@@ -16,7 +16,7 @@ trait ImageRecordSerializer extends FormatEncoder {
 
   def writePadding(output: ByteBuffer) {
     val length = paddingLength(output.position)
-    for (i ← 0 until length) output.put(0.toByte)
+    for (_ ← 0 until length) output.put(0.toByte)
   }
 
   def serializedSize(image: ImageRecord): Int = {
@@ -41,7 +41,7 @@ trait ImageRecordSerializer extends FormatEncoder {
   }
 
   private def writeToBuffer(image: ImageRecord, output: ByteBuffer) {
-    output.put(header)
+    output.put(header.asByteBuffer)
     output.put(image.flags.toByte)
     val keyData = image.key.getBytes("UTF-8")
     require(keyData.length <= Short.MaxValue, s"Key length ${keyData.length} too large")
@@ -63,9 +63,8 @@ trait ImageRecordSerializer extends FormatEncoder {
   }
 
   private def readFromBuffer(input: ByteBuffer): ImageRecord = {
-    val headerData = new Array[Byte](header.length)
-    input.get(headerData)
-    require(util.Arrays.equals(headerData, header), s"Invalid header: ${util.Arrays.toString(headerData)}")
+    val headerData = ByteStringIO.read(input, header.length)
+    require(headerData.equals(header), s"Invalid header: ${headerData.toString()}")
     val flags = input.get
     val keySize = input.getShort
     val keyData = new Array[Byte](keySize)

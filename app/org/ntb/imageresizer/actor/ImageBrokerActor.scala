@@ -1,11 +1,11 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import javax.inject.{ Inject, Named }
+import javax.inject.{Inject, Named}
 
 import akka.actor._
-import akka.pattern.{ ask, pipe }
-import akka.util.{ ByteString, Timeout }
+import akka.pattern.{ask, pipe}
+import akka.util.{ByteString, Timeout}
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
@@ -15,8 +15,8 @@ import play.api.libs.ws._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success}
 
 class DownloadException(msg: String) extends RuntimeException(msg)
 
@@ -31,16 +31,16 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
   import ImageDataActor._
   import ResizeActor._
 
-  val index = mutable.Map.empty[ImageKey, FilePosition]
-  val tasks = mutable.Map.empty[ImageKey, Future[LoadImageTask]]
-  val imageDataActors = mutable.Map.empty[File, ActorRef]
+  private val index = mutable.Map.empty[ImageKey, FilePosition]
+  private val tasks = mutable.Map.empty[ImageKey, Future[LoadImageTask]]
+  private val imageDataActors = mutable.Map.empty[File, ActorRef]
 
-  implicit val executionContext = context.dispatcher
-  implicit val akkaTimeout = Timeout(10.seconds)
-  val downloadTimeout = 10.seconds
+  private implicit val executionContext = context.dispatcher
+  private implicit val akkaTimeout = Timeout(10.seconds)
+  private val downloadTimeout = 10.seconds
 
   override def receive = {
-    case request @ GetImageRequest(source, size, format) ⇒
+    case GetImageRequest(source, size, format) ⇒
       assert(size > 0, s"Invalid size: $size")
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
       val storage = storageFor(imageKey)
@@ -58,7 +58,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
     case TaskFailed(key, t) ⇒
       tasks.remove(key)
       Logger.error(s"Resize task failed for image $key", t)
-    case request @ GetLocalImageRequest(source, id, size, format) ⇒
+    case GetLocalImageRequest(source, id, size, format) ⇒
       assert(size > 0, s"Invalid size: $size")
       val imageKey = ImageKey(encodeKey(id, size, format), size, format)
       val storage = storageFor(imageKey)

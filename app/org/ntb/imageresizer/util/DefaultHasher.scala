@@ -1,9 +1,9 @@
 package org.ntb.imageresizer.util
 
-import com.google.common.hash.Hashing
+import com.google.common.hash.{HashFunction, Hashing}
 
 trait DefaultHasher {
-  val hashFunction = Hashing.md5()
+  val hashFunction: HashFunction = Hashing.md5()
 
   def hashBytes(input: Array[Byte]): String = hashFunction.hashBytes(input).toString
 

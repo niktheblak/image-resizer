@@ -1,14 +1,11 @@
 package org.ntb.imageresizer.io
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.nio.ByteBuffer
 
+import akka.util.{ByteString, ByteStringBuilder}
+import com.google.common.io.{ByteStreams, Files}
 import org.ntb.imageresizer.util.Loans.using
-
-import com.google.common.io.{ Files, ByteStreams }
-
-import akka.util.{ ByteStringBuilder, ByteString }
 
 object ByteStringIO {
   def read(file: File): ByteString = {
@@ -28,6 +25,14 @@ object ByteStringIO {
       ByteStreams.copy(input, builder.asOutputStream)
       builder.result()
     }
+  }
+
+  def read(buffer: ByteBuffer, length: Int): ByteString = {
+    val limit = buffer.limit()
+    buffer.limit(math.min(length, buffer.remaining()))
+    val bs = ByteString.fromByteBuffer(buffer)
+    buffer.limit(limit)
+    bs
   }
 
   def write(file: File, content: ByteString) {

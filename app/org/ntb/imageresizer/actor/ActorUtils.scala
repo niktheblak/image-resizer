@@ -1,8 +1,6 @@
 package org.ntb.imageresizer.actor
 
-import akka.actor.ActorRef
-import akka.actor.Status
-import scala.util.{ Try, Success, Failure }
+import akka.actor.{ActorRef, Status}
 
 trait ActorUtils {
   def requireArgument(sender: ActorRef)(condition: Boolean, message: ⇒ String = "") {

@@ -1,13 +1,14 @@
 package org.ntb.imageresizer
 
 import java.net.URI
+
 import com.google.common.base.Strings
 
 package object imageformat {
   abstract class ImageFormat {
     val extension: String
     val mimeType: String
-    override def toString = extension
+    override def toString: String = extension
   }
 
   case object JPEG extends ImageFormat {

@@ -27,7 +27,7 @@ trait IndexStore extends FormatEncoder {
     if (file.exists() && file.length() > 0) {
       Loans.using(new DataInputStream(new FileInputStream(file))) { input ⇒
         val n = input.readInt()
-        for (i ← 0 until n) {
+        for (_ ← 0 until n) {
           val key = input.readUTF()
           val size = input.readInt()
           val format = decode(input.readByte())
