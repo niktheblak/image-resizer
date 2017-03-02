@@ -1,10 +1,10 @@
 package org.ntb.imageresizer.actor
 
-import java.io.{File, IOException, RandomAccessFile}
+import java.io.{ File, IOException, RandomAccessFile }
 
 import akka.actor.Actor
 import akka.util.ByteString
-import org.ntb.imageresizer.storage.{FlatFileImageStore, ImageKey, StorageFileProvider}
+import org.ntb.imageresizer.storage.{ FlatFileImageStore, ImageKey, StorageFileProvider }
 
 class ImageDataActor(storageFile: File)
     extends Actor

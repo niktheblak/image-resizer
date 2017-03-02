@@ -2,7 +2,7 @@ package org.ntb.imageresizer.util
 
 import java.io.File
 
-import com.google.common.hash.{HashFunction, Hashing}
+import com.google.common.hash.{ HashFunction, Hashing }
 import com.google.common.io.Files
 
 trait FileHasher {

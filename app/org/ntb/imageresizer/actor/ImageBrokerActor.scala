@@ -1,11 +1,11 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import javax.inject.{Inject, Named}
+import javax.inject.{ Inject, Named }
 
 import akka.actor._
-import akka.pattern.{ask, pipe}
-import akka.util.{ByteString, Timeout}
+import akka.pattern.{ ask, pipe }
+import akka.util.{ ByteString, Timeout }
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
@@ -15,8 +15,8 @@ import play.api.libs.ws._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ Await, Future }
+import scala.util.{ Failure, Success }
 
 class DownloadException(msg: String) extends RuntimeException(msg)
 

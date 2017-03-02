@@ -1,10 +1,10 @@
 package org.ntb.imageresizer.io
 
-import java.io.{File, FileInputStream, FileOutputStream}
+import java.io.{ File, FileInputStream, FileOutputStream }
 import java.nio.ByteBuffer
 
-import akka.util.{ByteString, ByteStringBuilder}
-import com.google.common.io.{ByteStreams, Files}
+import akka.util.{ ByteString, ByteStringBuilder }
+import com.google.common.io.{ ByteStreams, Files }
 import org.ntb.imageresizer.util.Loans.using
 
 object ByteStringIO {

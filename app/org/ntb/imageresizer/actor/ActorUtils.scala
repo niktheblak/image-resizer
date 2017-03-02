@@ -1,6 +1,6 @@
 package org.ntb.imageresizer.actor
 
-import akka.actor.{ActorRef, Status}
+import akka.actor.{ ActorRef, Status }
 
 trait ActorUtils {
   def requireArgument(sender: ActorRef)(condition: Boolean, message: ⇒ String = "") {
