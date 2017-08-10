@@ -52,7 +52,7 @@ class ImageDataActorTest
     writeImage("testKey", 100, JPEG, testData)
     imageDataActor ! LoadImageRequest(0, storageBackend.length())
     expectMsgPF(testTimeout) {
-      case LoadImageResponse(data) ⇒
+      case LoadImageResponse(data) =>
         data shouldEqual testData
     }
   }
@@ -61,7 +61,7 @@ class ImageDataActorTest
     val imageKey = ImageKey("testKey", 100, JPEG)
     imageDataActor ! StoreImageRequest(imageKey, testData)
     expectMsgPF(testTimeout) {
-      case StoreImageResponse(storedOffset, storedSize) ⇒
+      case StoreImageResponse(storedOffset, storedSize) =>
         storedOffset shouldEqual 0L
         storedSize shouldEqual storageBackend.length()
     }
@@ -74,13 +74,13 @@ class ImageDataActorTest
     val imageKey2 = ImageKey("testKey2", 100, JPEG)
     imageDataActor ! StoreImageRequest(imageKey1, ByteString(3, 4, 5))
     expectMsgPF(testTimeout) {
-      case StoreImageResponse(storedOffset, storedSize) ⇒
+      case StoreImageResponse(storedOffset, storedSize) =>
         storedOffset shouldEqual 0L
         storedSize shouldEqual storageBackend.length()
     }
     imageDataActor ! StoreImageRequest(imageKey2, testData)
     expectMsgPF(testTimeout) {
-      case StoreImageResponse(storedOffset, storedSize) ⇒
+      case StoreImageResponse(storedOffset, storedSize) =>
         storedOffset shouldEqual 32L
         storedSize shouldEqual 32L
         val storedImageData = readImage(storedOffset, storedSize)

@@ -9,5 +9,5 @@ trait FileHasher {
   val hashFunction: HashFunction = Hashing.murmur3_128()
 
   def hash(file: File): String =
-    Files.hash(file, hashFunction).toString
+    Files.asByteSource(file).hash(hashFunction).toString
 }

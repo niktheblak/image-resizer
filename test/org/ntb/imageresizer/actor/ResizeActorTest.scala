@@ -30,7 +30,7 @@ class ResizeActorTest
     val source = ByteString(ByteStreams.toByteArray(getClass.getClassLoader.getResourceAsStream("test_image.jpeg")))
     resizeActor ! ResizeImageRequest(source, 200, JPEG)
     expectMsgPF(testTimeout) {
-      case ResizeImageResponse(data) ⇒
+      case ResizeImageResponse(data) =>
         val Resolution(width, height) = readResolution(data)
         width shouldEqual 118
         height shouldEqual 200
@@ -42,8 +42,8 @@ class ResizeActorTest
     val source = ByteString(1, 2, 3)
     resizeActor ! ResizeImageRequest(source, 200, JPEG)
     expectMsgPF(testTimeout) {
-      case Status.Failure(t) ⇒
-        t.getMessage should include ("Failed to decode image")
+      case Status.Failure(t) =>
+        t.getMessage should include("Failed to decode image")
     }
   }
 }

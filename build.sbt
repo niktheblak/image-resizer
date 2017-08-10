@@ -24,7 +24,3 @@ libraryDependencies ++= Seq(
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
 SbtScalariform.scalariformSettings
-
-ScalariformKeys.preferences := ScalariformKeys.preferences.value
-  .setPreference(RewriteArrowSymbols, true)
-  .setPreference(PreserveSpaceBeforeArguments, true)

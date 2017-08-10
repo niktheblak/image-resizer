@@ -11,7 +11,7 @@ object ByteStringIO {
   def read(file: File): ByteString = {
     require(file.exists())
     val builder = new ByteStringBuilder
-    using(new FileInputStream(file)) { input ⇒
+    using(new FileInputStream(file)) { input =>
       ByteStreams.copy(input, builder.asOutputStream)
       builder.result()
     }
@@ -21,7 +21,7 @@ object ByteStringIO {
     require(file.exists())
     val builder = new ByteStringBuilder
     val byteSource = Files.asByteSource(file).slice(offset, length)
-    using(byteSource.openStream()) { input ⇒
+    using(byteSource.openStream()) { input =>
       ByteStreams.copy(input, builder.asOutputStream)
       builder.result()
     }
@@ -37,14 +37,14 @@ object ByteStringIO {
 
   def write(file: File, content: ByteString) {
     val input = content.iterator.asInputStream
-    using(new FileOutputStream(file)) { output ⇒
+    using(new FileOutputStream(file)) { output =>
       ByteStreams.copy(input, output)
     }
   }
 
   def append(file: File, content: ByteString) {
     val input = content.iterator.asInputStream
-    using(new FileOutputStream(file, true)) { output ⇒
+    using(new FileOutputStream(file, true)) { output =>
       ByteStreams.copy(input, output)
     }
   }

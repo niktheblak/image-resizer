@@ -10,14 +10,14 @@ class ResizeActor extends Actor with ActorUtils with Resizer {
   import org.ntb.imageresizer.actor.ResizeActor._
 
   def receive = {
-    case ResizeImageRequest(source, size, format) ⇒
+    case ResizeImageRequest(source, size, format) =>
       actorTry(sender()) {
         val input = source.iterator.asInputStream
         val builder = new ByteStringBuilder
         resizeImage(input, builder.asOutputStream, size, format)
         sender ! ResizeImageResponse(builder.result())
       } actorCatch {
-        case e: UnsupportedImageFormatException ⇒
+        case e: UnsupportedImageFormatException =>
       }
   }
 }

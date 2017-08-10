@@ -12,31 +12,31 @@ class ImageFormatTest extends WordSpec with Matchers {
     "return extension of a filename in HTTP URL" in {
       val uri = URI.create("http://www.server.com/logo.png")
       val path = getFileExtension(uri)
-      path.value should equal ("png")
+      path.value should equal("png")
     }
 
     "return extension of a filename in HTTP URL with query parameters" in {
       val uri = URI.create("http://www.server.com/logo.png?sessionId=0abcDE&track=1")
       val path = getFileExtension(uri)
-      path.value should equal ("png")
+      path.value should equal("png")
     }
 
     "return extension of a plain filename" in {
       val uri = URI.create("logo.png")
       val path = getFileExtension(uri)
-      path.value should equal ("png")
+      path.value should equal("png")
     }
 
     "return file extension of a relative path" in {
       val uri = URI.create("/path/to/logo.png")
       val path = getFileExtension(uri)
-      path.value should equal ("png")
+      path.value should equal("png")
     }
 
     "return extension of a filename with dots" in {
       val uri = URI.create("my.prefix.logo.png")
       val path = getFileExtension(uri)
-      path.value should equal ("png")
+      path.value should equal("png")
     }
 
     "return Nothing if path is not specified in HTTP URL" in {

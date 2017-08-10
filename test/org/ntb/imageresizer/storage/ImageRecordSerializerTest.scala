@@ -15,12 +15,12 @@ class ImageRecordSerializerTest extends FlatSpec with Matchers {
   val serializer = new TestImageRecordSerializer
 
   def writeImage(image: ImageRecord, file: File): Unit =
-    Loans.using(new RandomAccessFile(file, "rw")) { raFile ⇒
+    Loans.using(new RandomAccessFile(file, "rw")) { raFile =>
       serializer.writeImageRecord(image, raFile)
     }
 
   def readImage(file: File): ImageRecord =
-    Loans.using(new RandomAccessFile(file, "r")) { raFile ⇒
+    Loans.using(new RandomAccessFile(file, "r")) { raFile =>
       serializer.readImageRecord(raFile, file.length())
     }
 
@@ -28,7 +28,7 @@ class ImageRecordSerializerTest extends FlatSpec with Matchers {
     val file = createTempFile()
     val image = ImageRecord("testKey", 10, JPEG, 0, testData)
     writeImage(image, file)
-    file.length should equal (32)
+    file.length should equal(32)
     file.delete()
   }
 
@@ -37,7 +37,7 @@ class ImageRecordSerializerTest extends FlatSpec with Matchers {
     val image = ImageRecord("testKey", 10, JPEG, 0, testData)
     writeImage(image, file)
     val storedImage = readImage(file)
-    storedImage should equal (image)
+    storedImage should equal(image)
     file.delete()
   }
 
@@ -45,7 +45,7 @@ class ImageRecordSerializerTest extends FlatSpec with Matchers {
     val file = createTempFile()
     val image = ImageRecord("testKey", 10, JPEG, 0, testData)
     writeImage(image, file)
-    file.length should equal (serializer.serializedSize(image))
+    file.length should equal(serializer.serializedSize(image))
     file.delete()
   }
 }

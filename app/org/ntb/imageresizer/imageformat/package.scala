@@ -32,19 +32,19 @@ package object imageformat {
 
   def parseRequestedImageFormat(requestedFormat: String): Option[ImageFormat] =
     requestedFormat.toLowerCase match {
-      case "jpg" ⇒ Some(JPEG)
-      case "jpeg" ⇒ Some(JPEG)
-      case "png" ⇒ Some(PNG)
-      case "gif" ⇒ Some(GIF)
-      case _ ⇒ None
+      case "jpg" => Some(JPEG)
+      case "jpeg" => Some(JPEG)
+      case "png" => Some(PNG)
+      case "gif" => Some(GIF)
+      case _ => None
     }
 
   def parseImageFormatFromMimeType(mimeType: String): Option[ImageFormat] =
     mimeType match {
-      case "image/jpeg" ⇒ Some(JPEG)
-      case "image/png" ⇒ Some(PNG)
-      case "image/gif" ⇒ Some(GIF)
-      case _ ⇒ None
+      case "image/jpeg" => Some(JPEG)
+      case "image/png" => Some(PNG)
+      case "image/gif" => Some(GIF)
+      case _ => None
     }
 
   def parseImageFormatFromUri(uri: URI): Option[ImageFormat] =

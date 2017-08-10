@@ -10,7 +10,7 @@ class Module extends AbstractModule with AkkaGuiceSupport {
   def configure() = {
     ImageIO.setUseCache(false)
     val resizeNodes = math.max(Runtime.getRuntime.availableProcessors() - 1, 1)
-    bindActor[ResizeActor]("resizer", _ ⇒ BalancingPool(resizeNodes).props(Props[ResizeActor]))
+    bindActor[ResizeActor]("resizer", _ => BalancingPool(resizeNodes).props(Props[ResizeActor]))
     bindActor[ImageBrokerActor]("imagebroker")
   }
 }

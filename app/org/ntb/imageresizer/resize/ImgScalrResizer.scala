@@ -9,13 +9,13 @@ import org.ntb.imageresizer.imageformat.ImageFormat
 
 trait ImgScalrResizer extends BufferedImageLoan {
   def resizeBufferedImage(image: BufferedImage, output: OutputStream, size: Int, format: ImageFormat) {
-    usingImage(Scalr.resize(image, size)) { scaled ⇒
+    usingImage(Scalr.resize(image, size)) { scaled =>
       ImageIO.write(scaled, format.extension, output)
     }
   }
 
   def resizeBufferedImage(image: BufferedImage, output: OutputStream, resolution: Resolution, format: ImageFormat) {
-    usingImage(resizeBasedOnWidthAndHeight(image, resolution)) { scaled ⇒
+    usingImage(resizeBasedOnWidthAndHeight(image, resolution)) { scaled =>
       ImageIO.write(scaled, format.extension, output)
     }
   }

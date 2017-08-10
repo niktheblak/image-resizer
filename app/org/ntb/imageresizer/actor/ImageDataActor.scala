@@ -18,19 +18,19 @@ class ImageDataActor(storageFile: File)
   def storage: RandomAccessFile = storageBackend
 
   override def receive = {
-    case LoadImageRequest(offset, size) ⇒
+    case LoadImageRequest(offset, size) =>
       actorTry(sender()) {
         val data = readImage(offset, size)
         sender() ! LoadImageResponse(data)
       } actorCatch {
-        case e: IOException ⇒
+        case e: IOException =>
       }
-    case StoreImageRequest(key, data) ⇒
+    case StoreImageRequest(key, data) =>
       actorTry(sender()) {
         val (offset, size) = writeImage(key.key, key.size, key.format, data)
         sender() ! StoreImageResponse(offset, size)
       } actorCatch {
-        case e: IOException ⇒
+        case e: IOException =>
       }
   }
 
