@@ -11,12 +11,11 @@ import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileHasher
 import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 @Singleton
-class ImageResizerController @Inject() (@Named("imagebroker") imageBroker: ActorRef) extends Controller with FileHasher {
-  import play.api.libs.concurrent.Execution.Implicits._
+class ImageResizerController @Inject() (@Named("imagebroker") imageBroker: ActorRef, implicit val ec: ExecutionContext) extends InjectedController with FileHasher {
   implicit val timeout: Timeout = 10.seconds
 
   def resize(source: String, size: Int, format: String) = Action.async {
@@ -45,7 +44,7 @@ class ImageResizerController @Inject() (@Named("imagebroker") imageBroker: Actor
     val message = GetLocalImageRequest(body.file, finalId, size, imageFormat)
     val resizeTask = ask(imageBroker, message).mapTo[GetImageResponse]
     resizeTask onComplete { _ ⇒
-      body.clean()
+      body.delete()
     }
     resizeTask.map { r ⇒
       val location = s"/resize?source=$finalId&size=$size&format=${imageFormat.extension}"
