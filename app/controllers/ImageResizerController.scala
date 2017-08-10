@@ -11,7 +11,7 @@ import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileHasher
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 
 @Singleton
