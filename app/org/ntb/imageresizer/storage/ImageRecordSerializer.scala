@@ -52,7 +52,7 @@ trait ImageRecordSerializer extends FormatEncoder {
     output.putInt(image.data.size)
     image.data.copyToBuffer(output)
     writePadding(output)
-    assert(output.position % 8 == 0, s"Output size ${output.position} not aligned to word boundary")
+    assert(output.position() % 8 == 0, s"Output size ${output.position()} not aligned to word boundary")
   }
 
   def readImageRecord(input: RandomAccessFile, size: Long): ImageRecord = {
@@ -82,6 +82,6 @@ trait ImageRecordSerializer extends FormatEncoder {
 
   private def skipPadding(buffer: ByteBuffer) {
     val padding = paddingLength(buffer.position)
-    buffer.position(buffer.position + padding)
+    buffer.position(buffer.position() + padding)
   }
 }

@@ -1,13 +1,8 @@
-import com.typesafe.sbt.SbtScalariform
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
-import scalariform.formatter.preferences._
-
 name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.4"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -22,5 +17,3 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
-
-SbtScalariform.scalariformSettings
