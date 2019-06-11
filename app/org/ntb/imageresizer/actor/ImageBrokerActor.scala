@@ -1,28 +1,29 @@
 package org.ntb.imageresizer.actor
 
 import java.io._
-import javax.inject.{ Inject, Named }
 
+import javax.inject.{Inject, Named}
 import akka.actor._
-import akka.pattern.{ ask, pipe }
-import akka.util.{ ByteString, Timeout }
+import akka.pattern.{ask, pipe}
+import akka.util.{ByteString, Timeout}
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.storage._
 import org.ntb.imageresizer.util.FileUtils
-import play.api.Logger
+import play.api.Logging
 import play.api.http.HeaderNames
 import play.api.libs.ws._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, Future }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.util.{Failure, Success}
 
 class DownloadException(msg: String) extends RuntimeException(msg)
 
 class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: ActorRef)
     extends Actor
     with ActorUtils
+    with Logging
     with IndexStore
     with KeyEncoder
     with CurrentDirectoryIndexFile
@@ -35,11 +36,11 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
   private val tasks = mutable.Map.empty[ImageKey, Future[LoadImageTask]]
   private val imageDataActors = mutable.Map.empty[File, ActorRef]
 
-  private implicit val executionContext = context.dispatcher
-  private implicit val akkaTimeout = Timeout(10.seconds)
+  private implicit val executionContext: ExecutionContextExecutor = context.dispatcher
+  private implicit val akkaTimeout: Timeout = Timeout(10.seconds)
   private val downloadTimeout = 10.seconds
 
-  override def receive = {
+  override def receive: PartialFunction[Any, Unit] = {
     case GetImageRequest(source, size, format) =>
       assert(size > 0, s"Invalid size: $size")
       val imageKey = ImageKey(encodeKey(source, size, format), size, format)
@@ -57,7 +58,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
       index.put(key, position)
     case TaskFailed(key, t) =>
       tasks.remove(key)
-      Logger.error(s"Resize task failed for image $key", t)
+      logger.error(s"Resize task failed for image $key", t)
     case GetLocalImageRequest(source, id, size, format) =>
       assert(size > 0, s"Invalid size: $size")
       val imageKey = ImageKey(encodeKey(id, size, format), size, format)
@@ -73,10 +74,10 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
   }
 
   def handleGetImageRequest(imageDataActor: ActorRef, size: Int, format: ImageFormat, imageKey: ImageKey)(loadImage: => Unit) {
-    Logger.debug(s"Looking up image $imageKey from index")
+    logger.debug(s"Looking up image $imageKey from index")
     index.get(imageKey) match {
       case Some(pos) =>
-        Logger.debug(s"Serving cached image $imageKey")
+        logger.debug(s"Serving cached image $imageKey")
         val dataResponse = ask(imageDataActor, LoadImageRequest(pos.offset, pos.size)).mapTo[LoadImageResponse]
         pipe(dataResponse map { r => GetImageResponse(r.data) }) to sender()
       case None =>
@@ -84,7 +85,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
         val senderRef = sender()
         tasks.get(imageKey) match {
           case Some(task) =>
-            Logger.debug(s"Task for image $imageKey already exists, using existing task")
+            logger.debug(s"Task for image $imageKey already exists, using existing task")
             task onComplete {
               case Success(LoadImageTask(data, offset, storageSize)) =>
                 senderRef ! GetImageResponse(data)
@@ -92,7 +93,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
                 senderRef ! Status.Failure(t)
             }
           case None =>
-            Logger.debug(s"Image $imageKey not found, caching image from remote source")
+            logger.debug(s"Image $imageKey not found, caching image from remote source")
             loadImage
         }
     }
@@ -102,32 +103,32 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
     val file = indexFile
     if (file.exists() && file.length() > 0) {
       loadIndex(index, file)
-      Logger.info(s"Loaded ${index.size} items to index from $file")
-      if (Logger.isDebugEnabled) {
-        Logger.debug(s"Images in index:\n${index.keys.mkString("\n")}")
+      logger.info(s"Loaded ${index.size} items to index from $file")
+      if (logger.isDebugEnabled) {
+        logger.debug(s"Images in index:\n${index.keys.mkString("\n")}")
       }
     }
-    Logger.info(s"Started $storageId using storage file $storageFile and index file $indexFile")
+    logger.info(s"Started $storageId using storage file $storageFile and index file $indexFile")
   }
 
   override def postStop() {
-    Logger.info(s"${self.path.name} shutting down")
+    logger.info(s"${self.path.name} shutting down")
     if (tasks.nonEmpty) {
-      Logger.info(s"Awaiting for ${tasks.size} remaining tasks...")
+      logger.info(s"Awaiting for ${tasks.size} remaining tasks...")
       flushTasks()
       tasks.clear()
     }
     imageDataActors.values.foreach(context.stop)
     imageDataActors.clear()
     if (index.nonEmpty) {
-      Logger.info(s"Saving index (${index.size} items) to $indexFile")
+      logger.info(s"Saving index (${index.size} items) to $indexFile")
       saveIndex(index, indexFile)
       index.clear()
     }
   }
 
   def loadAndCacheRemoteImage(imageDataActor: ActorRef, imageKey: ImageKey, source: String, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] => Unit) {
-    Logger.debug(s"Loading image $imageKey from URL $source")
+    logger.debug(s"Loading image $imageKey from URL $source")
     val loadImageTask = ws.url(source)
       .withRequestTimeout(downloadTimeout)
       .withFollowRedirects(true)
@@ -152,12 +153,12 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
       f ← parseImageFormatFromMimeType(ct)
     } yield f
     if (format.isEmpty) {
-      Logger.warn(s"Server response for $source has unknown image format ${contentTypeHeader.getOrElse("")}")
+      logger.warn(s"Server response for $source has unknown image format ${contentTypeHeader.getOrElse("")}")
     }
   }
 
   def cacheLocalImage(imageDataActor: ActorRef, imageKey: ImageKey, sourceFile: File, size: Int, format: ImageFormat)(listen: Future[LoadImageTask] => Unit) {
-    Logger.debug(s"Loading image $imageKey from source file $sourceFile")
+    logger.debug(s"Loading image $imageKey from source file $sourceFile")
     val loadImageTask = Future {
       FileUtils.toByteString(sourceFile)
     }
@@ -177,7 +178,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
   def registerNotifications(task: Future[LoadImageTask], recipient: ActorRef, storage: File, imageKey: ImageKey) {
     task onComplete {
       case Success(LoadImageTask(data, offset, storageSize)) =>
-        Logger.debug(s"Stored image $imageKey to $storage, position $offset ($storageSize bytes)")
+        logger.debug(s"Stored image $imageKey to $storage, position $offset ($storageSize bytes)")
         self ! TaskComplete(imageKey, FilePosition(storage, offset, storageSize))
         recipient ! GetImageResponse(data)
       case Failure(t) =>
@@ -188,7 +189,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
 
   def imageDataActorFor(file: File): ActorRef = {
     imageDataActors.getOrElseUpdate(file, {
-      Logger.info(s"Creating image data actor for file $file")
+      logger.info(s"Creating image data actor for file $file")
       context.actorOf(Props(classOf[ImageDataActor], file))
     })
   }
@@ -207,7 +208,7 @@ class ImageBrokerActor @Inject() (ws: WSClient, @Named("resizer") resizeActor: A
       Await.result(remainingTasks, akkaTimeout.duration)
     } catch {
       case e: Exception =>
-        Logger.error("Error while shutting down", e)
+        logger.error("Error while shutting down", e)
     }
   }
 }

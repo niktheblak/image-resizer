@@ -1,7 +1,6 @@
 package controllers
 
 import javax.inject._
-
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
@@ -9,16 +8,17 @@ import org.ntb.imageresizer.actor.DownloadException
 import org.ntb.imageresizer.actor.ImageBrokerActor._
 import org.ntb.imageresizer.imageformat._
 import org.ntb.imageresizer.util.FileHasher
+import play.api.libs.Files
 import play.api.mvc._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 @Singleton
 class ImageResizerController @Inject() (@Named("imagebroker") imageBroker: ActorRef, implicit val ec: ExecutionContext) extends InjectedController with FileHasher {
   implicit val timeout: Timeout = 10.seconds
 
-  def resize(source: String, size: Int, format: String) = Action.async {
+  def resize(source: String, size: Int, format: String): Action[AnyContent] = Action.async {
     val imageFormat = parseRequestedImageFormat(format).getOrElse(JPEG)
     val request = GetImageRequest(source, size, imageFormat)
     val resizeTask = ask(imageBroker, request).mapTo[GetImageResponse]
@@ -34,14 +34,14 @@ class ImageResizerController @Inject() (@Named("imagebroker") imageBroker: Actor
     }
   }
 
-  def resizeFromBody(id: Option[String], size: Int, format: String) = Action.async(parse.temporaryFile) { request =>
+  def resizeFromBody(id: Option[String], size: Int, format: String): Action[Files.TemporaryFile] = Action.async(parse.temporaryFile) { request =>
     val imageFormat = parseRequestedFormat(request.headers)
     val body = request.body
     val finalId = id match {
       case Some(i) => i
-      case None => hash(body.file)
+      case None => hash(body.path.toFile)
     }
-    val message = GetLocalImageRequest(body.file, finalId, size, imageFormat)
+    val message = GetLocalImageRequest(body.path.toFile, finalId, size, imageFormat)
     val resizeTask = ask(imageBroker, message).mapTo[GetImageResponse]
     resizeTask onComplete { _ =>
       body.delete()
