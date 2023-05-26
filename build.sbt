@@ -2,7 +2,7 @@ name := "image-resizer"
 
 version := "1.0.0-SNAPSHOT"
 
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.17"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
