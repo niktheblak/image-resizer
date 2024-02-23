@@ -11,9 +11,9 @@ libraryDependencies ++= Seq(
   guice,
   "org.imgscalr" % "imgscalr-lib" % "4.2",
   "com.github.nscala-time" %% "nscala-time" % "2.32.0",
-  "com.typesafe.akka" %% "akka-testkit" % "2.8.2" % Test,
-  "org.mockito" % "mockito-core" % "5.3.1" % Test,
-  "org.scalatest" %% "scalatest" % "3.2.16" % Test
+  "com.typesafe.akka" %% "akka-testkit" % "2.8.5" % Test,
+  "org.mockito" % "mockito-core" % "5.10.0" % Test,
+  "org.scalatest" %% "scalatest" % "3.2.18" % Test
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
